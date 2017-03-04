@@ -1,2 +1,13 @@
-add_sources(DATABOARD_SOURCES "factorial.c")
-add_sources(DATABOARD_NATIVE_SOURCES "main.c")
+add_sources(DATA_BOARD_SOURCES "factorial.c")
+add_sources(DATA_BOARD_NATIVE_SOURCES "main.c")
+
+# MSP430 build
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
+  add_compile_options("-mmcu=msp430f5438a")
+  list(APPEND CMAKE_EXE_LINKER_FLAGS "-mmcu=msp430f5438a")
+
+  get_property(DATA_BOARD_SOURCES GLOBAL PROPERTY DATA_BOARD_SOURCES)
+  get_property(DATA_BOARD_NATIVE_SOURCES GLOBAL PROPERTY DATA_BOARD_NATIVE_SOURCES)
+
+  add_executable(databoard.out ${DATA_BOARD_SOURCES} ${DATA_BOARD_NATIVE_SOURCES})
+endif()

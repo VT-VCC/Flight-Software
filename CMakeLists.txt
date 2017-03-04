@@ -26,11 +26,6 @@ if (NOT ${CMAKE_SYSTEM_NAME} STREQUAL Generic)
   add_subdirectory(test)
 elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
   message(STATUS "Test binary will not be built, targetting MSP430")
-
-  get_property(DATABOARD_SOURCES GLOBAL PROPERTY DATABOARD_SOURCES)
-  get_property(DATABOARD_NATIVE_SOURCES GLOBAL PROPERTY DATABOARD_NATIVE_SOURCES)
-
-  add_executable(databoard.txt ${DATABOARD_SOURCES} ${DATABOARD_NATIVE_SOURCES})
 else()
   message(FATAL_ERROR "Unsupported processor ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
