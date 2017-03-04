@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.7)
 
 # Prevent in-source builds
 if ("${CMAKE_BINARY_DIR}" STREQUAL "${CMAKE_SOURCE_DIR}")
-  message(FATAL_ERROR, "In-source builds are not supported.")
+  message(FATAL_ERROR "In-source builds are not supported.")
 endif()
 
 # Set the project name
@@ -20,4 +20,17 @@ include_directories("${CMAKE_SOURCE_DIR}/src")
 add_subdirectory(src)
 
 # must be after all source directories so source list is set up
-add_subdirectory(test) 
+# We only build tests when building on the host platform
+if (NOT ${CMAKE_SYSTEM_NAME} STREQUAL Generic)
+  message(STATUS "We will build the test binary")
+  add_subdirectory(test)
+elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
+  message(STATUS "Test binary will not be built, targetting MSP430")
+
+  get_property(DATABOARD_SOURCES GLOBAL PROPERTY DATABOARD_SOURCES)
+  get_property(DATABOARD_NATIVE_SOURCES GLOBAL PROPERTY DATABOARD_NATIVE_SOURCES)
+
+  add_executable(databoard.txt ${DATABOARD_SOURCES} ${DATABOARD_NATIVE_SOURCES})
+else()
+  message(FATAL_ERROR "Unsupported processor ${CMAKE_SYSTEM_PROCESSOR}")
+endif()

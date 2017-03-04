@@ -3,4 +3,6 @@ set(TEST_SOURCES
   "test_driver.cpp"
 )
 
-add_executable(usip_test ${TEST_SOURCES} ${SRCS})
+get_property(DATABOARD_SOURCES GLOBAL PROPERTY DATABOARD_SOURCES)
+
+add_executable(usip_test ${TEST_SOURCES} ${DATABOARD_SOURCES})

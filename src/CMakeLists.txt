@@ -1,1 +1,1 @@
-add_sources("factorial.c")
+add_subdirectory(data_board)

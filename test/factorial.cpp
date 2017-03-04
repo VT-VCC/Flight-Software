@@ -1,6 +1,6 @@
 #include <catch/catch.hpp>
 
-#include "factorial.h"
+#include "data_board/factorial.h"
 
 TEST_CASE("factorials are computed", "[factorial]") {
   REQUIRE(factorial(0) == 1);
