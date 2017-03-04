@@ -46,8 +46,9 @@ Few key Notes From JPL:
   - Place no more than one statement or declaration per line
   - Use short function with few number of parameters
 
-Be sure to read the rest of the [JPL coding standards](http://lars-lab.jpl.nasa.gov/JPL_Coding_Standard_C.pdf)
+Be sure to read the rest of the [JPL coding standards](http://lars-lab.jpl.nasa.gov/JPL_Coding_Standard_C.pdf).
 
 # About
-For more information email: vtcubesat@gmail.com 
-Written by Flight Software Team
+For more information email: vtcubesat@gmail.com
+
+Written by VT USIP Flight Software Team.
