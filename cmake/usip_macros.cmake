@@ -7,3 +7,14 @@ macro (add_sources SRCS)
   endforeach()
   set_property(GLOBAL APPEND PROPERTY ${SRCS} ${_srcs})
 endmacro()
+
+# Create an executable for flashing on to a specified MCU
+macro(mcu_target TARGET MCU COMMON_SOURCES NATIVE_SOURCES)
+  add_compile_options("-mmcu=${MCU}")
+  list(APPEND CMAKE_EXE_LINKER_FLAGS "-mmcu=${MCU}")
+
+  get_property(_common_sources GLOBAL PROPERTY ${COMMON_SOURCES})
+  get_property(_native_sources GLOBAL PROPERTY ${NATIVE_SOURCES})
+
+  add_executable(${TARGET} ${_common_sources}  ${_native_sources})
+endmacro()
