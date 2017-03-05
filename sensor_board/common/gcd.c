@@ -1,4 +1,4 @@
-#include "sensor_board/gcd.h"
+#include "gcd.h"
 
 int gcd(int a, int b) {
   int c;

@@ -1,4 +1,3 @@
-include(CMakeForceCompiler)
 # Based on the KuBOS MSP 430 target file
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -35,11 +34,17 @@ endif()
 # target build environment root directory
 set(CMAKE_FIND_ROOT_PATH ${MSP430_TOOLCHAIN_ROOT})
 
+# expose the MCU as a cmake variable
+if(NOT MSP430_MCU)
+  set(MSP430_MCU "msp430fr5969" CACHE STRING "MCU to target")
+endif()
+
 # Disable C/C++ features that are inefficient or impossible to implement on a microcontroller
+set(_DISABLE_EXCEPTIONS_FLAGS "-fno-exceptions -fno-unwind-tables ")
+set(_C_FAMILY_FLAGS_INIT "${DISABLE_EXCEPTIONS_FLAGS} -ffunction-sections -fdata-sections -Wextra -gstrict-dwarf -mmcu=${MSP430_MCU}")
+
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-  set(_C_FAMILY_FLAGS_INIT "-fno-exceptions -fno-unwind-tables -ffunction-sections -fdata-sections -Wall -Wextra -gstrict-dwarf")
-else()
-  set(_C_FAMILY_FLAGS_INIT "-fno-exceptions -fno-unwind-tables -ffunction-sections -fdata-sections -Wextra -gstrict-dwarf")
+  set(_C_FAMILY_FLAGS_INIT "${_C_FAMILY_FLAGS_INIT} -Wall")
 endif()
 
 # set some default flags
@@ -47,5 +52,11 @@ set(CMAKE_C_FLAGS_INIT   "--std=gnu99 ${_C_FAMILY_FLAGS_INIT}")
 set(CMAKE_ASM_FLAGS_INIT "-fno-exceptions -fno-unwind-tables -x assembler-with-cpp")
 set(CMAKE_CXX_FLAGS_INIT "--std=gnu++11 ${_C_FAMILY_FLAGS_INIT} -fno-rtti -fno-threadsafe-statics")
 set(CMAKE_MODULE_LINKER_FLAGS_INIT
-    "-fno-exceptions -fno-unwind-tables -Wl,--gc-sections -Wl,--sort-common -Wl,--sort-section=alignment"
+  "${DISABLE_EXCEPTIONS_FLAGS} -Wl,--gc-sections -Wl,--sort-common -Wl,--sort-section=alignment"
 )
+
+# make sure the linker can actually find the link scripts
+link_directories("${MSP430_TOOLCHAIN_ROOT}/include")
+
+# and add the system include directory for the compiler
+include_directories(SYSTEM "${MSP430_TOOLCHAIN_ROOT}/include")

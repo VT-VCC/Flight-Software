@@ -1,4 +1,4 @@
-#include "data_board/factorial.h"
+#include "factorial.h"
 
 uint64_t factorial(uint64_t n) {
   uint64_t tr = 1;

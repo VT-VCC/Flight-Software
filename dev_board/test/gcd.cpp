@@ -1,6 +1,6 @@
 #include <catch/catch.hpp>
 
-#include "sensor_board/gcd.h"
+#include "gcd.h"
 
 TEST_CASE("GCDs are computed", "[sensor_board]") {
   REQUIRE(gcd(1, 2) == 1);
