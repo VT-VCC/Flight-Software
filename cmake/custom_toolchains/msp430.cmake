@@ -23,8 +23,14 @@ set(K_GPP "${MSP430_TOOLCHAIN_ROOT}/bin/msp430-elf-g++")
 set(K_OBJCOPY "${MSP430_TOOLCHAIN_ROOT}/bin/msp430-elf-objcopy")
 
 # force the C/C++ compilers
-set(CMAKE_C_COMPILER ${K_GCC})
-set(CMAKE_CXX_COMPILER ${K_GPP})
+if(CMAKE_VERSION VERSION_LESS "3.6.0")
+  include(CMakeForceCompiler)
+  cmake_force_c_compiler("${K_GCC}" GNU)
+  cmake_force_cxx_Compiler("${K_GPP}" GNU)
+else()
+  set(CMAKE_C_COMPILER ${K_GCC})
+  set(CMAKE_CXX_COMPILER ${K_GPP})
+endif()
 
 # target build environment root directory
 set(CMAKE_FIND_ROOT_PATH ${MSP430_TOOLCHAIN_ROOT})
