@@ -6,7 +6,7 @@ if ("${CMAKE_BINARY_DIR}" STREQUAL "${CMAKE_SOURCE_DIR}")
 endif()
 
 # Set the project name
-project(VT_USIP_SENSOR_BOARD LANGUAGES C CXX)
+project(VT_USIP_SENSOR_BOARD LANGUAGES C)
 
 # Load external CMAKE stuff
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
@@ -24,6 +24,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
   add_subdirectory(native)
 else()
   # test build
+  enable_language(CXX)
   add_subdirectory(test)
 endif()
 
