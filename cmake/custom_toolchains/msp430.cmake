@@ -1,5 +1,5 @@
 # Based on the KuBOS MSP 430 target file
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake")
 
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)
@@ -20,16 +20,6 @@ get_filename_component(MSP430_TOOLCHAIN_ROOT ${_MSP430_TOOLCHAIN_ROOT} DIRECTORY
 # assume that mspgcc is setup like a normal GCC install
 set(K_GPP "${MSP430_TOOLCHAIN_ROOT}/bin/msp430-elf-g++")
 set(K_OBJCOPY "${MSP430_TOOLCHAIN_ROOT}/bin/msp430-elf-objcopy")
-
-# force the C/C++ compilers
-if(CMAKE_VERSION VERSION_LESS "3.6.0")
-  include(CMakeForceCompiler)
-  cmake_force_c_compiler("${K_GCC}" GNU)
-  cmake_force_cxx_Compiler("${K_GPP}" GNU)
-else()
-  set(CMAKE_C_COMPILER ${K_GCC})
-  set(CMAKE_CXX_COMPILER ${K_GPP})
-endif()
 
 # target build environment root directory
 set(CMAKE_FIND_ROOT_PATH ${MSP430_TOOLCHAIN_ROOT})
@@ -54,9 +44,19 @@ set(CMAKE_CXX_FLAGS_INIT "--std=gnu++11 ${_C_FAMILY_FLAGS_INIT} -fno-rtti -fno-t
 set(CMAKE_MODULE_LINKER_FLAGS_INIT
   "${DISABLE_EXCEPTIONS_FLAGS} -Wl,--gc-sections -Wl,--sort-common -Wl,--sort-section=alignment"
 )
+set(CMAKE_EXE_LINKER_FLAGS_INIT "-L ${MSP430_TOOLCHAIN_ROOT}/include" CACHE STRING "")
 
-# make sure the linker can actually find the link scripts
 link_directories("${MSP430_TOOLCHAIN_ROOT}/include")
 
 # and add the system include directory for the compiler
 include_directories(SYSTEM "${MSP430_TOOLCHAIN_ROOT}/include")
+
+# force the C/C++ compilers
+if(CMAKE_VERSION VERSION_LESS "3.6.0")
+  include(CMakeForceCompiler)
+  cmake_force_c_compiler("${K_GCC}" GNU)
+  cmake_force_cxx_Compiler("${K_GPP}" GNU)
+else()
+  set(CMAKE_C_COMPILER ${K_GCC})
+  set(CMAKE_CXX_COMPILER ${K_GPP})
+endif()
