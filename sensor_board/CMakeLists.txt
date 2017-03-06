@@ -1,10 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
 
-# Prevent in-source builds
-if ("${CMAKE_BINARY_DIR}" STREQUAL "${CMAKE_SOURCE_DIR}")
-  message(FATAL_ERROR "In-source builds are not supported.")
-endif()
-
 # Set the project name
 project(VT_USIP_SENSOR_BOARD LANGUAGES C)
 
