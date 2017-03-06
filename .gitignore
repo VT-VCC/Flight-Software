@@ -21,3 +21,5 @@ win32
 *.exe
 *.ilk
 *.pdb
+*.db
+*.opendb
