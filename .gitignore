@@ -1,0 +1,17 @@
+# build files
+build-*/
+# Vim temporary files
+.*.sw*
+*~
+
+# Eclipse-CDT files
+.cproject
+.project
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+
+# VS files
+.vs
+win32
