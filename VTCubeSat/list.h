@@ -1,8 +1,10 @@
 #ifndef __LIST_H
 #define __LIST_H
 /* This code is taken from the Pintos education OS.
- * For copyright information, see www.pintos-os.org */
-
+ * For copyright information, see www.pintos-os.org 
+ * (I added slight modification to insert and remove)
+ */
+   
 /* Doubly linked list.
 
    This implementation of a doubly linked list does not require
