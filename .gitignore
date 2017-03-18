@@ -15,3 +15,11 @@ cmake_install.cmake
 # VS files
 .vs
 win32
+*.dir
+*.vcxproj*
+*.sln
+*.exe
+*.ilk
+*.pdb
+*.db
+*.opendb
