@@ -12,10 +12,12 @@ extern "C" {
 
 // Status enum returned by parse function
 typedef enum pinav_parser_status	{	OK, 
-										NULL_OUTPUT,
-										UNRECOGNIZED_SENTENCE,
+										NULL_OUTPUT_PTR,
+										NULL_SENTENCE_PTR,
+										UNRECOGNIZED_SENTENCE_TYPE,
 										IMPROPER_SENTENCE_LENGTH,
-										SENTENCE_FORMAT_ERROR
+										SENTENCE_FORMAT_ERROR,
+										UNKNOWN_ERROR // @TODO: remove once I'm sure this never happens
 									} pinav_parser_status_t;
 
 // This identifies one of several sentence formats described in the piNAV datasheet
@@ -29,11 +31,11 @@ typedef enum fix_quality {
 
 // Struct describing a GGA sentence
 typedef struct pinav_gga {
-	// The time of the fix in milliseconds since the UNIX Epoch
+	// The time of the fix in milliseconds since midnight UTC
 	uint32_t fix_time_millis;
-	// Latitude 90 * (2^(-31)) of a degree
+	// Latitude in millionths of a degree
 	int32_t latitude;
-	// Longitude in 180 * (2^(-31)) of a degree
+	// Longitude in millionths of a degree
 	int32_t longitude;
 	// Elevation in meters
 	int32_t elevations;
@@ -47,7 +49,7 @@ typedef struct pinav_gga {
 
 // Struct describing an LSP sentence
 typedef struct pinav_lsp {
-	// The time of the fix in milliseconds since the UNIX Epoch
+	// The time of the fix in milliseconds since midnight UTC
 	uint32_t fix_time_millis;
 	// x, y, and z position in WGS-84, in centimeters
 	// These types may need refinement, I'm not super confident
