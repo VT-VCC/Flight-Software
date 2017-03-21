@@ -8,5 +8,8 @@ indent_style = space
 [*.{c,h}]
 indent_size = 4
 
+[*.{cpp,hpp}]
+indent_size = 4
+
 [CMakeLists.txt]
 indent_size = 2
