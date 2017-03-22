@@ -48,6 +48,31 @@ Few key Notes From JPL:
 
 Be sure to read the rest of the [JPL coding standards](http://lars-lab.jpl.nasa.gov/JPL_Coding_Standard_C.pdf).
 
+## Building
+Build strategy depends on what you want to do and what platform you're building on.
+
+### Test code, on Windows
+In the root of the project, run
+```
+cmake -G 'Visual Studio'
+```
+
+### Test code, on Linux (CLI development)
+In the root of the project, run
+```
+mkdir -p build-host
+cd build-host
+cmake ../
+```
+Running `make` in this directory will build the test binary
+
+### MSP430 code, on Linux
+Run the `build.sh` script.
+
+### MSP430, on Windows
+Not yet implemented.
+You may be able to build things using commands similar to what `build.sh` does but this hasn't been testd.
+
 # About
 For more information email: vtcubesat@gmail.com
 
