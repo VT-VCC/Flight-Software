@@ -1,7 +1,5 @@
 #include <catch/catch.hpp>
 
-#include "impl/uart.hpp"
-
 #include "uart.h"
 
 TEST_CASE("Test UART implementation can push bytes", "[uart]") {
@@ -14,4 +12,6 @@ TEST_CASE("Test UART implementation can push bytes", "[uart]") {
     REQUIRE(uart_write_bytes(&t, test_data, 3) == UART_NO_ERROR);
 
     REQUIRE_THAT(t, HasWrittenBytes({0x01, 0x02, 0x03, 0x04}));
+
+    uart_close(&t);
 }

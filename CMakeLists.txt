@@ -9,10 +9,12 @@ include(usip_macros)
 include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/3rdparty")
 
 # common modules
-add_subdirectory(board_common)
 include_directories("${CMAKE_SOURCE_DIR}/board_common/common")
+include_directories("${CMAKE_SOURCE_DIR}/board_common/test/impl")
+add_subdirectory(board_common)
 
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
+  add_definitions(-DUSIP_NATIVE)
   # MSP430 build
   if (USIP_DATA_BOARD)
     add_subdirectory(data_board)

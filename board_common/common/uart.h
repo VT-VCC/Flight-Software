@@ -60,6 +60,11 @@ typedef struct uart uart_t;
  */
 bool uart_open(uart_t * out, size_t baud_rate);
 
+/**
+ * Close a connection to a UART channel
+ */
+void uart_close(uart_t * out);
+
 /** Write a byte to the UART channel.
  *
  * Possible return values:
@@ -134,6 +139,12 @@ uart_error_t uart_read_bytes(uart_t * channel, uint8_t * bytes, size_t n);
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef USIP_NATIVE
+#   include "uart_native.h"
+#else
+#   include "uart_test.hpp"
 #endif
 
 #endif // _BOARD_COMMON_UART_H_

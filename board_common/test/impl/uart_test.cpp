@@ -1,13 +1,13 @@
-#include "uart.hpp"
+#include "uart_test.hpp"
 
 /******************************************************************************\
  *  UART structure implementation                                             *
 \******************************************************************************/
-void uart::push_byte(const uint8_t b) {
+void uart_impl::push_byte(const uint8_t b) {
     input.insert(input.begin(), b);
 }
 
-void uart::push_bytes(std::initializer_list<uint8_t> data) {
+void uart_impl::push_bytes(std::initializer_list<uint8_t> data) {
     input.insert(input.begin(), data);
 }
 
@@ -19,7 +19,7 @@ std::ostream & operator<<(std::ostream & o, const uart_t & t) {
     auto f = o.flags();
 
     o.setf(std::ios::hex);
-    for (const auto & i : t.output) {
+    for (const auto & i : t._impl->output) {
         o << " " << std::setw(2) << std::setfill('0') << (int)i;
     }
 
@@ -37,27 +37,35 @@ std::ostream & operator<<(std::ostream & o, const uart_error_t & err) {
  *  UART interface implementation                                             *
 \******************************************************************************/
 bool uart_open(uart_t * out, size_t baud_rate) {
-    out->open = true;
+    out->_impl = new uart_impl();
+    out->_impl->open = true;
+
+    return true;
+}
+
+void uart_close(uart_t * out) {
+    delete out->_impl;
+    out->_impl = nullptr;
 }
 
 uart_error_t uart_write_byte(uart_t * channel, uint8_t byte) {
-    if (!channel->open) {
+    if (!channel->_impl || !channel->_impl->open) {
         return UART_CHANNEL_CLOSED;
     }
-    channel->output.push_back(byte);
+    channel->_impl->output.push_back(byte);
 
     return UART_NO_ERROR;
 }
 
 uart_error_t uart_read_byte(uart_t * channel, uint8_t * output) {
-    if (!channel->open) {
+    if (!channel->_impl || !channel->_impl->open) {
         return UART_CHANNEL_CLOSED;
     }
-    if (channel->input.size() == 0) {
+    if (channel->_impl->input.size() == 0) {
         return UART_SIGNAL_FAULT;
     }
-    *output = channel->input.back();
-    channel->input.pop_back();
+    *output = channel->_impl->input.back();
+    channel->_impl->input.pop_back();
 
     return UART_NO_ERROR;
 }
@@ -72,13 +80,17 @@ HasWrittenBytes::HasWrittenBytes(const std::vector<uint8_t> data) :
     _bytes(data) {}
 
 bool HasWrittenBytes::match(const uart_t & e) const {
-    if (e.output.size() < _bytes.size()) {
+    if (!e._impl) {
         return false;
     }
-    auto output_it = e.output.begin() + (e.output.size() - _bytes.size());
+    if (e._impl->output.size() < _bytes.size()) {
+        return false;
+    }
+    std::vector<uint8_t> & output = e._impl->output;
+    auto output_it = output.begin() + (output.size() - _bytes.size());
     auto bytes_it = _bytes.begin();
 
-    auto end_it = e.output.end();
+    auto end_it = output.end();
     while(output_it != end_it) {
         if (*output_it != *bytes_it) {
             return false;
