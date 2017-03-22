@@ -12,6 +12,7 @@ include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/../3rdparty")
 
 # common modules
 add_subdirectory(common)
+add_subdirectory(../board_common ${CMAKE_BINARY_DIR}/.deps/board_common.dir)
 include_directories("${CMAKE_SOURCE_DIR}/common")
 
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
