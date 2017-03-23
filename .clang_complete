@@ -1,0 +1,15 @@
+-I 3rdparty
+-I board_common/common
+-I board_common/native
+-I board_common/test
+-I board_common/test/impl
+-I dev_board/common
+-I dev_board/native
+-I dev_board/test
+-I data_board/common
+-I data_board/native
+-I data_board/test
+-I sensor_board/common
+-I sensor_board/native
+-I sensor_board/test
+-std=c++11
