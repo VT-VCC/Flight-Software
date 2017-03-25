@@ -8,17 +8,17 @@ typedef enum generic_status { FAIL = 0, SUCCESS = 1 } generic_status_t;
 static pinav_parser_status_t verify_inputs(pinav_parse_output_t * out, uint8_t * sentence) {
 	// Verify pointers
 	if (!out) {
-		return NULL_OUTPUT_PTR;
+		return PN_PARSE_NULL_OUTPUT_PTR;
 	}
 	if (!sentence) {
 		out->id = NONE;
-		return NULL_SENTENCE_PTR;
+		return PN_PARSE_NULL_SENTENCE_PTR;
 	}
 
 	// Verify that the sentence starts with '$'
 	if (*sentence != '$') {
 		out->id = NONE;
-		return SENTENCE_FORMAT_ERROR;
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
 	}
 
 	// Verify that the CR+LF sequence is within the 
@@ -34,17 +34,17 @@ static pinav_parser_status_t verify_inputs(pinav_parse_output_t * out, uint8_t *
 	}
 	if (!found) {
 		out->id = NONE;
-		return IMPROPER_SENTENCE_LENGTH;
+		return PN_PARSE_IMPROPER_SENTENCE_LENGTH;
 	}
 
-	return OK;
+	return PN_PARSE_OK;
 }
 
 // Private helper function to determine whether a string can be converted to a number
 static generic_status_t can_convert_stoi(const uint8_t * s, size_t len) {
 	generic_status_t result = SUCCESS;
 	
-	uint8_t * it;
+	const uint8_t * it;
 	for (it = s; it < s + len; ++it) {
 		if ((*it < '0') || (*it > '9')) {
 			result = FAIL;
@@ -67,6 +67,21 @@ static generic_status_t stoi(uint32_t * i, uint8_t * s, size_t length) {
 		return SUCCESS;
 	}
 	return FAIL;
+}
+
+// Private helper function to find next comma 
+// Returns number of characters >= 0 between *it and next occurance of ','
+// Returns -1 if ',' not found
+static int8_t next_comma(uint8_t * it) {
+	int8_t count = 0;
+	while (*it != ',') {
+		if ((*it == '\r') || (*it == '\n') || (*it == '\0')) {
+			return -1;
+		}
+		++count;
+		++it;
+	}
+	return count;
 }
 
 // Private helper function for parsing fix time from GGA sentence
@@ -171,13 +186,13 @@ static generic_status_t parse_gga_long(int32_t * lng, uint8_t * it) {
 	int32_t millionths_of_degrees = (six_100000s_of_degrees * 10) / 6;
 
 	// check N/S
-	if (it[9] != ',') {	// If this isn't safe, we would have failed by now
+	if (it[10] != ',') {	// If this isn't safe, we would have failed by now
 		return FAIL;
 	}
-	if (it[10] == 'E') {
+	if (it[11] == 'E') {
 		*lng = millionths_of_degrees;
 	}
-	else if (it[10] == 'W') {
+	else if (it[11] == 'W') {
 		*lng = 0 - millionths_of_degrees;
 	}
 	else {
@@ -187,20 +202,21 @@ static generic_status_t parse_gga_long(int32_t * lng, uint8_t * it) {
 	return SUCCESS;
 }
 
-// Private helper function to find next comma 
-// Returns number of characters >= 0 between *it and next occurance of ','
-// Returns -1 if ',' not found
-static int8_t next_comma(uint8_t * it) {
-	int8_t count = 0;
-	while (*it != ',') {
-		if ((*it == '\r') || (*it == '\n') || (*it == '\0')) {
-			return -1;
-		}
-		++count;
+// Private helper function for parsing the gga
+// "Number of satellites being tracked" field
+// uint8_t * it should point to the start of the field
+static generic_status_t parse_gga_tracked_sats(uint8_t * out, uint8_t * it) {
+	uint32_t sat_count;
+	int8_t len;
+	len = next_comma(it);
+	if (len < 1 || len > 2) { // Can't track a 3+ digit number of satellites
+		return FAIL;
 	}
-	return count;
+	if (stoi(&sat_count, it, len)) {
+		*out = (uint8_t) sat_count;
+	}
+	return SUCCESS;
 }
-
 
 // Private helper function to parse the valid gga sentence
 // pointed to by sentence into the output struct pointed to by out
@@ -212,27 +228,35 @@ static pinav_parser_status_t parse_gga(pinav_parse_output_t * out, uint8_t * sen
 
 	it = sentence + 7; // place iterator at start of fix time field
 	if (!parse_gga_fix_time(&(out->data.gga.fix_time_millis), it)) {
-		return SENTENCE_FORMAT_ERROR;
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
 	}
 	if (it[10] != ',') {	// If this isn't safe, parse_gga_fix_time would have failed
-		return SENTENCE_FORMAT_ERROR;
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
 	}
 	it += 11; // Place iterator at start of lat field 
 	if (!parse_gga_lat(&(out->data.gga.latitude), it)) {
-		return SENTENCE_FORMAT_ERROR;
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
 	}
 	it += 12; // Place iterator at start of long field
 	if (!parse_gga_long(&(out->data.gga.longitude), it)) {
-		return SENTENCE_FORMAT_ERROR;
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
 	}
-
-	/*to_next_comma = next_comma(it);
-	if (to_next_comma < 1) {
-		return SENTENCE_FORMAT_ERROR;
+	it += 13; // Place iterator on the Fix Quality field
+	if (*it == '0') {
+		out->data.gga.fix_quality = FIX_INVALID;
+	}
+	else if (*it == '1') {
+		out->data.gga.fix_quality = FIX_VALID;
 	}
 	else {
-		it += (to_next_comma + 1);
-	}*/
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += 2; // Place iterator at the start of the tracked satellites field
+	if (!parse_gga_tracked_sats(&out->data.gga.sat_count, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_comma(it);	// if this were unsafe, parse_gga_tracked_sats would have failed
+	
 
 	return UNKNOWN_ERROR;
 }
@@ -248,7 +272,7 @@ static pinav_parser_status_t parse_lsp(pinav_parse_output_t * out, uint8_t * sen
 pinav_parser_status_t parse_pinav_sentence(pinav_parse_output_t * out, uint8_t * sentence){
 	// Basic checks to be performed before parsing
 	pinav_parser_status_t input_check = verify_inputs(out, sentence);
-	if (input_check != OK) {
+	if (input_check != PN_PARSE_OK) {
 		return input_check;
 	}
 
@@ -262,5 +286,5 @@ pinav_parser_status_t parse_pinav_sentence(pinav_parse_output_t * out, uint8_t *
 
 	// Default if sentence not recognized:
 	out->id = NONE;
-	return UNRECOGNIZED_SENTENCE_TYPE;
+	return PN_PARSE_UNRECOGNIZED_SENTENCE_TYPE;
 }

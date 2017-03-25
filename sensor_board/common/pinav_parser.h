@@ -11,12 +11,12 @@ extern "C" {
 #endif
 
 // Status enum returned by parse function
-typedef enum pinav_parser_status	{	OK, 
-										NULL_OUTPUT_PTR,
-										NULL_SENTENCE_PTR,
-										UNRECOGNIZED_SENTENCE_TYPE,
-										IMPROPER_SENTENCE_LENGTH,
-										SENTENCE_FORMAT_ERROR,
+typedef enum pinav_parser_status	{	PN_PARSE_OK, 
+										PN_PARSE_NULL_OUTPUT_PTR,
+										PN_PARSE_NULL_SENTENCE_PTR,
+										PN_PARSE_UNRECOGNIZED_SENTENCE_TYPE,
+										PN_PARSE_IMPROPER_SENTENCE_LENGTH,
+										PN_PARSE_SENTENCE_FORMAT_ERROR,
 										UNKNOWN_ERROR // @TODO: remove once I'm sure this never happens
 									} pinav_parser_status_t;
 
@@ -37,8 +37,9 @@ typedef struct pinav_gga {
 	int32_t latitude;
 	// Longitude in millionths of a degree
 	int32_t longitude;
-	// Elevation in meters
-	int32_t elevations;
+	// Elevation in centimeters
+	// This could overflow only if we end up ~50x higher than the ISS
+	int32_t elevation;
 	// HDOP, represented as an 8.8 fixed point integer
 	uint16_t hdop;
 	// Number of satellites in view
