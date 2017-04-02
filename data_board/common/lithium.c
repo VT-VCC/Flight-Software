@@ -24,6 +24,27 @@ lithium_result_t lithium_send_noop(lithium_t * radio) {
     return lithium_send_header(radio, NO_OP_COMMAND, 0);
 }
 
+// Haroun 3/31/2017
+
+lithium_result_t lithium_send_transmit(lithium_t * radio, lithium_t * push, uint16_t size ) {
+    
+	if(lithium_send_header(radio, TRANSMIT_DATA, payload_size) != LITHIUM_BAD_COMMUNICATION)
+	{
+		return lithium_packet_send(radio, push, payload_size);
+	}
+	
+	return LITHIUM_BAD_COMMUNICATION;
+	
+	
+}
+
+lithium_result_t lithium_receive(lithium_t * radio, lithium_t * pull){
+	return lithium_packet_receive(radio, pull);	
+	
+}
+
+// End Haroun 3/31/2017
+
 /******************************************************************************\
  *  Private support function implementations                                  *
 \******************************************************************************/
@@ -54,3 +75,28 @@ lithium_result_t lithium_send_header(lithium_t * radio, uint8_t command, uint16_
     }
     return LITHIUM_NO_ERROR;
 }
+
+lithium_result_t lithium_packet_send(lithium_t * radio, lithium_t * push, uint16_t size){
+	uart_error_t err = uart_write_bytes(&radio->uart, &push, size);
+    if (err != UART_NO_ERROR) {
+        return LITHIUM_BAD_COMMUNICATION;
+    }
+    return LITHIUM_NO_ERROR;	
+	
+}
+
+lithium_result_t lithium_packet_receive(lithium_t * radio, lithium_t * pull){
+	uart_error_t err = uart_read_bytes(&radio->uart, &pull, 8);
+    if (err != UART_NO_ERROR) {
+        return LITHIUM_BAD_COMMUNICATION;
+    }
+    return LITHIUM_NO_ERROR;	
+	
+}
+
+
+
+
+
+
+
