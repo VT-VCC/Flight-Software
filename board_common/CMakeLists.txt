@@ -5,11 +5,19 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/common")
 add_subdirectory(common)
 
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
+  message(STATUS "Building vt_usip_common for msp430")
   # MSP430 build
+  add_definitions(-DUSIP_NATIVE)
   add_subdirectory(native)
+  include_directories(native)
 else()
+  message(STATUS "Building vt_usip_common for host")
   # test build
   add_subdirectory(test)
+  include_directories(test)
+  include_directories(test/impl)
+
+  enable_language(CXX)
 endif()
 
 # generate static library

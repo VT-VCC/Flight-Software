@@ -31,6 +31,13 @@ typedef enum uart_error {
 const char * uart_error_string(uart_error_t t);
 #endif
 
+/******************************************************************************\
+ *  Supported UART baud rates                                                 *
+\******************************************************************************/
+typedef enum uart_baud_rate {
+    BAUD_9600,
+    BAUD_115200
+} uart_baud_rate_t;
 
 /******************************************************************************\
  *  UART type                                                                 *
@@ -47,18 +54,6 @@ const char * uart_error_string(uart_error_t t);
  *
  */
 typedef struct uart uart_t;
-
-/**
- * Open a connection to the UART channel
- *
- * @TODO Revisit this API. We probably need more parameters.
- *
- * @param out The output parameter
- * @param baud_rate The baud rate at which we should be running
- *
- * @return True if the UART channel opens successfully
- */
-bool uart_open(uart_t * out, size_t baud_rate);
 
 /**
  * Close a connection to a UART channel

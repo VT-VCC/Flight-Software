@@ -13,3 +13,4 @@
 -I sensor_board/native
 -I sensor_board/test
 -std=c++11
+-I 3rdparty/msp430_driverlib/MSP430FR5xx_6xx
