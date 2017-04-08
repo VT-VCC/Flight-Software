@@ -12,12 +12,14 @@ include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/3rdparty")
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
   # MSP430F5xx_6xx
   if(${MSP430_MCU} MATCHES "msp430f5.*" OR ${MSP430_MCU} MATCHES "msp430f6.*")
-    include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/3rdparty/msp430_driverlib/MSP430F5xx_6xx")
+    include_directories(SYSTEM "3rdparty/msp430_driverlib/MSP430F5xx_6xx")
+    add_subdirectory("3rdparty/msp430_driverlib/MSP430F5xx_6xx")
     add_definitions(-DMSP430_CLASS_F5xx_6xx)
     set(MSP_SYSTEM_CLASS MSP430_F5xx_6xx)
   # MSP430FR2xx_4xx
   elseif(${MSP430_MCU} MATCHES "msp430f2.*" OR ${MSP430_MCU} MATCHES "msp430f4.*")
-    include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/3rdparty/msp430_driverlib/MSP430F2xx_4xx")
+    include_directories(SYSTEM "$3rdparty/msp430_driverlib/MSP430F2xx_4xx")
+    add_subdirectory("3rdparty/msp430_driverlib/MSP430F2xx_4xx")
     add_definitions(-DMSP430_CLASS_F2xx_4xx)
     set(MSP_SYSTEM_CLASS MSP430_F2xx_4xx)
   # MSP430FR57xx
@@ -28,6 +30,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
   # MSP430FR5xx_6xx
   elseif(${MSP430_MCU} MATCHES "msp430fr5.*" OR ${MSP430_MCU} MATCHES "msp430fr6.*")
     include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/3rdparty/msp430_driverlib/MSP430FR5xx_6xx")
+    add_subdirectory("3rdparty/msp430_driverlib/MSP430FR5xx_6xx")
     add_definitions(-DMSP430_CLASS_FR5xx_6xx)
     set(MSP_SYSTEM_CLASS MSP430_CLASS_6xx)
   # MSP430i2xx

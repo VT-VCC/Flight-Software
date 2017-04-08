@@ -112,7 +112,7 @@ uart_error_t uart_read_byte(uart_t * channel, uint8_t * output);
  *
  * @return UART error enumeration representing the error, see docs.
  */
-uart_error_t uart_write_bytes(uart_t * channel, uint8_t * bytes, size_t n);
+uart_error_t uart_write_bytes(uart_t * channel, const uint8_t * bytes, size_t n);
 
 /** Blocking read of several bytes from a UART channel
  *
