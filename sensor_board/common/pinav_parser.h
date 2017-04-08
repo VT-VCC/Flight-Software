@@ -17,6 +17,7 @@ typedef enum pinav_parser_status	{	PN_PARSE_OK,
 										PN_PARSE_UNRECOGNIZED_SENTENCE_TYPE,
 										PN_PARSE_IMPROPER_SENTENCE_LENGTH,
 										PN_PARSE_SENTENCE_FORMAT_ERROR,
+										PN_PARSE_UNEXPECTED_UNIT_ENCOUNTERED,
 										UNKNOWN_ERROR // @TODO: remove once I'm sure this never happens
 									} pinav_parser_status_t;
 
@@ -37,27 +38,28 @@ typedef struct pinav_gga {
 	int32_t latitude;
 	// Longitude in millionths of a degree
 	int32_t longitude;
-	// Elevation in centimeters
-	// This could overflow only if we end up ~50x higher than the ISS
-	int32_t elevation;
-	// HDOP, represented as an 8.8 fixed point integer
-	uint16_t hdop;
-	// Number of satellites in view
-	uint8_t sat_count;
 	// Fix quality
 	fix_quality_t fix_quality;
+	// Number of satellites in view
+	uint8_t sat_count;
+	// HDOP, represented as an 8.8 fixed point integer
+	uint16_t hdop;
+	// Altitude above WGS84 ellipsoid in centimeters
+	// This could overflow only if we end up ~50x higher than the ISS
+	int32_t altitude;
 } pinav_gga_t;
 
 // Struct describing an LSP sentence
 typedef struct pinav_lsp {
-	// The time of the fix in milliseconds since midnight UTC
-	uint32_t fix_time_millis;
-	// x, y, and z position in WGS-84, in centimeters
-	// These types may need refinement, I'm not super confident
-	// in my understanding of WGS-84
-	int32_t wgs_x;
-	int32_t wgs_y;
-	int32_t wgs_z;
+	// 32.32 fixed point representation of GPS seconds
+	uint64_t gps_time_seconds;
+	// GPS week number
+	uint16_t gps_week;
+	// x, y, and z position in WGS-84, in meters
+	// Represented with 32.32 fixed-point
+	int64_t wgs_x;
+	int64_t wgs_y;
+	int64_t wgs_z;
 	// Number of satellites in view
 	uint8_t sat_count;
 	// PDOP, represented as an 8.8 fixed point integer

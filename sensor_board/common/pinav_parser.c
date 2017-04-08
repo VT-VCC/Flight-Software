@@ -40,41 +40,67 @@ static pinav_parser_status_t verify_inputs(pinav_parse_output_t * out, uint8_t *
 	return PN_PARSE_OK;
 }
 
-// Private helper function to determine whether a string can be converted to a number
-static generic_status_t can_convert_stoi(const uint8_t * s, size_t len) {
-	generic_status_t result = SUCCESS;
-	
-	const uint8_t * it;
-	for (it = s; it < s + len; ++it) {
-		if ((*it < '0') || (*it > '9')) {
-			result = FAIL;
-			break;
-		}
+// Private helper function to determine whether a character represents an integer
+static generic_status_t isInteger(uint8_t character) {
+	if (character >= '0' && character <= '9') {
+		return SUCCESS;
 	}
-
-	return result;
+	else {
+		return FAIL;
+	}
 }
 
 // Private helper function for converting string to int
-static generic_status_t stoi(uint32_t * i, uint8_t * s, size_t length) {
-	if (can_convert_stoi(s, length)) {
+static generic_status_t stoi(int32_t * i, uint8_t * s, size_t length) {
+	uint8_t negative = 0; //@TODO: change this to a bool if we figure out how we're handling bools
+	if (*s == '-') {
+		negative = 1;
+		++s;
+	}
+
+	if (isInteger(s[0])) {
 		*i = *s - '0';
-		uint8_t * it;
-		for (it = s + 1; it < s + length; ++it) {
+	}
+	else {
+		return FAIL;
+	}
+	uint8_t * it;
+	for (it = s + 1; it < s + length; ++it) {
+		if (isInteger(*it)) {
 			*i *= 10;
 			*i += *it - '0';
 		}
-		return SUCCESS;
+		else {
+			return FAIL;
+		}
 	}
-	return FAIL;
+	if (negative) {
+		*i = 0 - *i;
+	}
+	
+	return SUCCESS;
 }
 
-// Private helper function to find next comma 
-// Returns number of characters >= 0 between *it and next occurance of ','
-// Returns -1 if ',' not found
-static int8_t next_comma(uint8_t * it) {
+// Private helper function to find the number of characters from *it to the next occurence of '.'
+// Returns -1 if ',' or end of string are encountered before '.' is found
+static size_t charsToDecimalPoint(uint8_t * it) {
+	size_t len = 0;
+	while (*it != '.') {
+		if (*it == ',' || *it == '\r' || *it == '\n') {
+			return -1;
+		}
+		++len;
+		++it;
+	}
+	return len;
+}
+
+// Private helper function to find next field deliminator 
+// Returns number of characters >= 0 between *it and next occurance of ',' or '*' (* denotes start of checksum)
+// Returns -1 if ',' or '*' not found
+static int8_t next_deliminator(uint8_t * it) {
 	int8_t count = 0;
-	while (*it != ',') {
+	while (*it != ',' && *it != '*') {
 		if ((*it == '\r') || (*it == '\n') || (*it == '\0')) {
 			return -1;
 		}
@@ -82,6 +108,66 @@ static int8_t next_comma(uint8_t * it) {
 		++it;
 	}
 	return count;
+}
+
+// Private helper function for converting a string to a 32.32 fixed point number
+// out should point to the number to be written into
+// s should point to the start of the field to be parsed
+// Note: the function expects a deliminator at the end of the number, 
+//		and will fail if used on the last field in a sentence
+static generic_status_t string_to_fixed_point(int64_t * out, uint8_t * s) {
+	uint8_t negative = 0;	//@TODO: replace with bool once we figure out how we're handling bools
+	if (*s == '-') {
+		negative = 1;
+		++s;
+	}
+
+	// Integer portion
+	size_t integerLength = charsToDecimalPoint(s);
+	if (integerLength == -1) {	// Handle number with no decimal
+		integerLength = next_deliminator(s);
+		if (integerLength == -1) {
+			return FAIL;
+		}
+	}
+	int32_t intergerPortion;
+	if (!stoi(&intergerPortion, s, integerLength)) {
+		return FAIL;
+	}
+	s += integerLength;
+	// Fractional portion
+	uint32_t fractionalPortion = 0;
+	if(*s == '.') {
+		++s; //move pointer past the decimal point
+		size_t fractionalLength = next_deliminator(s);
+		if (fractionalLength == -1) {
+			return FAIL;
+		}
+		uint32_t numerator;
+		if (!stoi((uint32_t*)&numerator, s, fractionalLength)) {
+			return FAIL;
+		}
+		uint32_t denominator = 1;
+		size_t i;
+		for (i = 0; i < fractionalLength; ++i) { // denominator = 10^fractionalLength
+			denominator *= 10;
+		}
+		for (i = 0; i < 32; ++i) {	// Calculate each bit of fractionalPortion
+			numerator *= 2;
+			fractionalPortion <<= 1;
+			fractionalPortion += numerator / denominator;
+			numerator -= (numerator / denominator) * denominator;
+		}
+	}
+	int64_t result = intergerPortion;
+	result <<= 32;
+	result |= fractionalPortion;
+	if (negative) {
+		result = 0 - result;
+	}
+	*out = result;
+
+	return SUCCESS;
 }
 
 // Private helper function for parsing fix time from GGA sentence
@@ -118,18 +204,18 @@ static generic_status_t parse_gga_fix_time(uint32_t * time, uint8_t * start) {
 // uint8_t * it should point to the start of the latitude field
 static generic_status_t parse_gga_lat(int32_t * lat, uint8_t * it) {
 	int32_t degrees;
-	if (!stoi((uint32_t *)&degrees, it, 2)) {
+	if (!stoi(&degrees, it, 2)) {
 		return FAIL;
 	}
 	int32_t minutes;
-	if (!stoi((uint32_t *)&minutes, it + 2, 2)) {
+	if (!stoi(&minutes, it + 2, 2)) {
 		return FAIL;
 	}
 	if (it[4] != '.') {
 		return FAIL;
 	}
 	int32_t ten_thousandths_of_minute;
-	if (!stoi((uint32_t *)&ten_thousandths_of_minute, it + 5, 4)) {
+	if (!stoi(&ten_thousandths_of_minute, it + 5, 4)) {
 		return FAIL;
 	}
 
@@ -162,18 +248,18 @@ static generic_status_t parse_gga_lat(int32_t * lat, uint8_t * it) {
 // uint8_t * it should point to the start of the longitude field
 static generic_status_t parse_gga_long(int32_t * lng, uint8_t * it) {
 	int32_t degrees;
-	if (!stoi((uint32_t *)&degrees, it, 3)) {
+	if (!stoi(&degrees, it, 3)) {
 		return FAIL;
 	}
 	int32_t minutes;
-	if (!stoi((uint32_t *)&minutes, it + 3, 2)) {
+	if (!stoi(&minutes, it + 3, 2)) {
 		return FAIL;
 	}
 	if (it[5] != '.') {
 		return FAIL;
 	}
 	int32_t ten_thousandths_of_minute;
-	if (!stoi((uint32_t *)&ten_thousandths_of_minute, it + 6, 4)) {
+	if (!stoi(&ten_thousandths_of_minute, it + 6, 4)) {
 		return FAIL;
 	}
 
@@ -205,24 +291,42 @@ static generic_status_t parse_gga_long(int32_t * lng, uint8_t * it) {
 // Private helper function for parsing the gga
 // "Number of satellites being tracked" field
 // uint8_t * it should point to the start of the field
-static generic_status_t parse_gga_tracked_sats(uint8_t * out, uint8_t * it) {
+static generic_status_t parse_tracked_sats(uint8_t * out, uint8_t * it) {
 	uint32_t sat_count;
 	int8_t len;
-	len = next_comma(it);
+	len = next_deliminator(it);
 	if (len < 1 || len > 2) { // Can't track a 3+ digit number of satellites
 		return FAIL;
 	}
-	if (stoi(&sat_count, it, len)) {
+	if (stoi((uint32_t*)&sat_count, it, len)) {
 		*out = (uint8_t) sat_count;
 	}
 	return SUCCESS;
+}
+
+static generic_status_t parse_gga_hdop(uint16_t * out, uint8_t * it) {
+	int64_t hdop;
+	if (!string_to_fixed_point(&hdop, it)) {
+		return FAIL;
+	}
+	hdop >>= 24; // Convert to 8.8 fixed point
+	*out = (uint16_t)hdop;
+}
+
+// Private helper function to parse gga altitude field
+static generic_status_t parse_gga_altitude(int32_t * out, uint8_t * it) {
+	int64_t altitude;
+	if (!string_to_fixed_point(&altitude, it)) {
+		return FAIL;
+	}
+	altitude *= 100; // Convert meters to cm
+	*out = altitude >> 32; // Convert fixed-point to integer
 }
 
 // Private helper function to parse the valid gga sentence
 // pointed to by sentence into the output struct pointed to by out
 static pinav_parser_status_t parse_gga(pinav_parse_output_t * out, uint8_t * sentence){
 	uint8_t * it; // iterator for parsing sentence
-	int8_t to_next_comma;	// distance to next comma in sentence
 
 	out->id = GGA;
 
@@ -252,21 +356,70 @@ static pinav_parser_status_t parse_gga(pinav_parse_output_t * out, uint8_t * sen
 		return PN_PARSE_SENTENCE_FORMAT_ERROR;
 	}
 	it += 2; // Place iterator at the start of the tracked satellites field
-	if (!parse_gga_tracked_sats(&out->data.gga.sat_count, it)) {
+	if (!parse_tracked_sats(&out->data.gga.sat_count, it)) {
 		return PN_PARSE_SENTENCE_FORMAT_ERROR;
 	}
-	it += next_comma(it);	// if this were unsafe, parse_gga_tracked_sats would have failed
-	
+	it += next_deliminator(it) + 1;	// Place iterator on the HDOP field
+								// If this were unsafe, parse_gga_tracked_sats would have failed
+	if (!parse_gga_hdop(&out->data.gga.hdop, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_deliminator(it) + 1; // Place iterator on the altitude field
+	if (!parse_gga_altitude(&out->data.gga.altitude, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_deliminator(it) + 1;
+	if (*it != 'M') {
+		return PN_PARSE_UNEXPECTED_UNIT_ENCOUNTERED;
+	}
 
-	return UNKNOWN_ERROR;
+	// We've got everything we need
+
+	return PN_PARSE_OK;
 }
 
 // Private helper function to parse the valid lsp sentence
 // pointed to by sentence into the output struct pointed to by out
 static pinav_parser_status_t parse_lsp(pinav_parse_output_t * out, uint8_t * sentence){
+	uint8_t * it; // iterator for parsing sentence
+
 	out->id = LSP;
 
-	return UNKNOWN_ERROR;
+	it = sentence + 7; // place iterator at start of gps time seconds field
+	if (!string_to_fixed_point(&(int64_t)out->data.lsp.gps_time_seconds, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_deliminator(it) + 1; // place iterator at the start of the gps week field
+	int64_t gps_week;
+	if (!string_to_fixed_point(&gps_week, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	out->data.lsp.gps_week = (uint16_t)(gps_week >> 32); // Convert to 16-bit integer
+	it += next_deliminator(it) + 1; // Place iterator at start of X position field
+	if (!string_to_fixed_point(&out->data.lsp.wgs_x, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_deliminator(it) + 1; // Place iterator at start of Y position field
+	if (!string_to_fixed_point(&out->data.lsp.wgs_y, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_deliminator(it) + 1; // Place iterator at start of Z position field
+	if (!string_to_fixed_point(&out->data.lsp.wgs_z, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_deliminator(it) + 1; // Place iterator at start of the sat_count field
+	if (!parse_tracked_sats(&out->data.lsp.sat_count, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_deliminator(it) + 1;	// Place iterator on the PDOP field
+	int64_t pdop;
+	if (!string_to_fixed_point(&pdop, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	pdop >>= 24; // Convert to 8.8 fixed point
+	out->data.lsp.pdop = (uint16_t)pdop;
+
+	return PN_PARSE_OK;
 }
 
 pinav_parser_status_t parse_pinav_sentence(pinav_parse_output_t * out, uint8_t * sentence){
