@@ -60,6 +60,29 @@ void lithium_close(lithium_t * out);
  */
 lithium_result_t lithium_send_noop(lithium_t * radio);
 
+/*
+	* Send a transmit command to open lithium radio
+	*
+	* @param radio The radio to communicate with
+	*
+	* @return LITHIUM_OK if and only if communication succeeds.
+	*
+
+ */
+lithium_result_t lithium_send_transmit(lithium_t * radio, lithium_t * push, uint16_t size);
+
+/*
+* Send a transmit receive command to open lithium radio
+*
+* @param radio The radio to communicate with
+*
+* @return LITHIUM_OK if and only if communication succeeds.
+*
+
+*/
+
+lithium_result_t lithium_receive(lithium_t * radio, lithium_t * pull);
+
 #ifdef __cplusplus
 }
 #endif
