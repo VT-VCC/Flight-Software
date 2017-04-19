@@ -5,6 +5,7 @@
 
 int main(void) {
     const char * output_str = "hello, world!\r\n";
+    const char * got_data = "got data\r\n";
     uart_t output;
     WDTCTL = WDTPW | WDTHOLD;               // Stop watchdog timer
     PM5CTL0 &= ~LOCKLPM5;                   // Disable the GPIO power-on default high-impedance mode
@@ -34,7 +35,7 @@ int main(void) {
     // GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN0, GPIO_SECONDARY_MODULE_FUNCTION);
     GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN5);
     GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN5);
-    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P2, GPIO_PIN6, GPIO_SECONDARY_MODULE_FUNCTION);
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P2, GPIO_PIN1, GPIO_SECONDARY_MODULE_FUNCTION);
     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN0, GPIO_SECONDARY_MODULE_FUNCTION);
 
     // Configure GPIO to use LFXT
@@ -76,12 +77,13 @@ int main(void) {
         }
     }
 
+    __enable_interrupt();
+
     uart_open(EUSCI_A0, BAUD_9600, &output);
 
     for(;;) {
         __delay_cycles(8000000UL);
-        P4OUT = 1 << 6;
-        __delay_cycles(8000000UL);
+
         P1OUT ^= 0x01;
         uart_write_bytes(&output, output_str, 15);
         P1OUT ^= 0x01;

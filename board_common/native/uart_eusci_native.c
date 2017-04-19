@@ -36,6 +36,7 @@ void USCI_A0_ISR(void) {
     switch (__even_in_range(UCA0IV, 18)) {
         case USCI_NONE: break;
         case USCI_UART_UCRXIFG:
+            P4OUT = 1 << 6;
             read_byte = EUSCI_A_UART_receiveData(EUSCI_A0_BASE);
             break;
         case USCI_UART_UCTXIFG: break;
@@ -93,12 +94,15 @@ bool uart_open(eusci_t on, uart_baud_rate_t baud_rate, uart_t * out) {
 
     uint16_t base_address = BASE_ADDRESSES[on];
 
-    EUSCI_A_UART_init(base_address, &param);
-    EUSCI_A_UART_enable(base_address);
+    EUSCI_A_UART_disable(base_address);
 
-    // EUSCI_A_UART_clearInterrupt(base_address, EUSCI_A_UART_RECEIVE_INTERRUPT);
-    EUSCI_A_UART_enableInterrupt(base_address, EUSCI_A_UART_RECEIVE_INTERRUPT); // Enable interrupt
+    EUSCI_A_UART_init(base_address, &param);
+
+    EUSCI_A_UART_enable(base_address);
+    EUSCI_A_UART_resetDormant(base_address);
+
     // XXX: TODO: rewrite transmit/recieve using interrupts
+    EUSCI_A_UART_enableInterrupt(base_address, EUSCI_A_UART_RECEIVE_INTERRUPT); // Enable interrupt
 
     out->eusci = on;
 
@@ -111,9 +115,11 @@ uart_error_t uart_write_byte(uart_t * channel, uint8_t byte) {
     EUSCI_A_UART_transmitData(BASE_ADDRESSES[channel->eusci], byte);
 
     if (read_byte) {
-        P4OUT = 0;
+        for (int i = 0; i < 32; ++i) {
+            P4OUT ^= 1 << 6;
+            __delay_cycles(800000UL);
+        }
         read_byte = 0;
-        __delay_cycles(8000000UL);
     }
 
     return UART_NO_ERROR;
