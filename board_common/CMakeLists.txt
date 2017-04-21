@@ -2,6 +2,7 @@
 # boards.
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/common")
 
+# common sources
 add_subdirectory(common)
 
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
@@ -23,3 +24,5 @@ endif()
 # generate static library
 get_property(BOARD_COMMON_SOURCES GLOBAL PROPERTY BOARD_COMMON_SOURCES)
 add_library(vt_usip_common STATIC ${BOARD_COMMON_SOURCES})
+target_compile_options(vt_usip_common PRIVATE -Wall)
+target_compile_options(vt_usip_common PRIVATE -Wextra)

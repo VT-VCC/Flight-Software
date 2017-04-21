@@ -20,6 +20,7 @@ get_filename_component(MSP430_TOOLCHAIN_ROOT ${_MSP430_TOOLCHAIN_ROOT} DIRECTORY
 # assume that mspgcc is setup like a normal GCC install
 set(K_GPP "${MSP430_TOOLCHAIN_ROOT}/bin/msp430-elf-g++")
 set(K_OBJCOPY "${MSP430_TOOLCHAIN_ROOT}/bin/msp430-elf-objcopy")
+set(K_AS "${MSP430_TOOLCHAIN_ROOT}/bin/msp430-elf-as")
 
 # target build environment root directory
 set(CMAKE_FIND_ROOT_PATH ${MSP430_TOOLCHAIN_ROOT})
@@ -31,20 +32,28 @@ endif()
 
 # Disable C/C++ features that are inefficient or impossible to implement on a microcontroller
 set(_DISABLE_EXCEPTIONS_FLAGS "-fno-exceptions -fno-unwind-tables ")
-set(_C_FAMILY_FLAGS_INIT "${DISABLE_EXCEPTIONS_FLAGS} -ffunction-sections -fdata-sections -Wextra -gstrict-dwarf -mmcu=${MSP430_MCU}")
+#Options for large code/data model:
+set(_M_OPTIONS "-mmcu=${MSP430_MCU} -mrelax -mlarge -D__LARGE_DATA_MODEL__ -D__LARGE_CODE_MODEL__")
+#Regular 16 bit operation:
+# set(_M_OPTIONS "-mmcu=${MSP430_MCU} -mrelax")
+set(_C_FAMILY_FLAGS_INIT "${_DISABLE_EXCEPTIONS_FLAGS} -ffunction-sections -fdata-sections ${_M_OPTIONS}")
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-  set(_C_FAMILY_FLAGS_INIT "${_C_FAMILY_FLAGS_INIT} -Wall")
+  set(_C_FAMILY_FLAGS_INIT "${_C_FAMILY_FLAGS_INIT} -gstrict-dwarf")
 endif()
 
 # set some default flags
 set(CMAKE_C_FLAGS_INIT   "--std=gnu99 ${_C_FAMILY_FLAGS_INIT}")
-set(CMAKE_ASM_FLAGS_INIT "-fno-exceptions -fno-unwind-tables -x assembler-with-cpp")
+
+set(CMAKE_ASM_FLAGS_INIT "${_DISABLE_EXCEPTIONS_FLAGS} ${_M_OPTIONS}")
+
+set(LINKER_FLAGS_COMMON "-Wl,--gc-sections -Wl,--sort-common -Wl,--sort-section=alignment")
+
 set(CMAKE_CXX_FLAGS_INIT "--std=gnu++11 ${_C_FAMILY_FLAGS_INIT} -fno-rtti -fno-threadsafe-statics")
 set(CMAKE_MODULE_LINKER_FLAGS_INIT
-  "${DISABLE_EXCEPTIONS_FLAGS} -Wl,--gc-sections -Wl,--sort-common -Wl,--sort-section=alignment"
+  "${DISABLE_EXCEPTIONS_FLAGS} ${LINKER_FLAGS_COMMON}"
 )
-set(CMAKE_EXE_LINKER_FLAGS_INIT "-L ${MSP430_TOOLCHAIN_ROOT}/include" CACHE STRING "")
+set(CMAKE_EXE_LINKER_FLAGS_INIT "${LINKER_FLAGS_COMMON} -L ${MSP430_TOOLCHAIN_ROOT}/include" CACHE STRING "")
 
 link_directories("${MSP430_TOOLCHAIN_ROOT}/include")
 
@@ -56,7 +65,9 @@ if(CMAKE_VERSION VERSION_LESS "3.6.0")
   include(CMakeForceCompiler)
   cmake_force_c_compiler("${K_GCC}" GNU)
   cmake_force_cxx_Compiler("${K_GPP}" GNU)
+  cmake_force_asm_compiler("${K_GCC}" GNU)
 else()
   set(CMAKE_C_COMPILER ${K_GCC})
   set(CMAKE_CXX_COMPILER ${K_GPP})
+  set(CMAKE_ASM_COMPILER ${K_GCC})
 endif()

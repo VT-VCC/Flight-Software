@@ -43,7 +43,6 @@ void USCI_A0_ISR(void) {
         case USCI_UART_UCSTTIFG: break;
         case USCI_UART_UCTXCPTIFG: break;
     }
-    if (!read_byte) { read_byte = 1; }
 }
 
 __attribute__((interrupt(USCI_A1_VECTOR)))
@@ -57,7 +56,6 @@ void USCI_A1_ISR(void) {
         case USCI_UART_UCSTTIFG: break;
         case USCI_UART_UCTXCPTIFG: break;
     }
-    if (!read_byte) { read_byte = 1; }
 }
 
 bool uart_open(eusci_t on, uart_baud_rate_t baud_rate, uart_t * out) {

@@ -41,6 +41,10 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
   else()
     message(FATAL_ERROR "Unknown MSP430 MCU ${MSP430_MCU}")
   endif()
+  # freertos includes
+  include_directories(SYSTEM "3rdparty/freertos")
+  include_directories(SYSTEM "3rdparty/freertos/include")
+  include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/3rdparty/freertos/portable/MSP430X")
 endif()
 
 # common modules
@@ -73,6 +77,9 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
 
     add_subdirectory(sensor_board)
   endif()
+
+  # freertos build
+  add_subdirectory("3rdparty/freertos/")
 else()
   message(STATUS "Building test binary")
   # test build
