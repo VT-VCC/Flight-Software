@@ -83,3 +83,7 @@ add_library(msp430_driverlib STATIC
   wdt_a.c
   wdt_a.h
 )
+
+# Disable int to pointer casts since these should always be safe inside the
+# driver library
+target_compile_options(msp430_driverlib PRIVATE -Wno-int-to-pointer-cast)

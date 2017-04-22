@@ -28,4 +28,8 @@ add_library(freertos STATIC
   portable/MemMang/heap_4.c
 )
 
-set_target_properties(freertos PROPERTIES NO_SYSTEM_FROM_IMPORTED TRUE)
+# This should always be safe since we are really confident in our ability to
+# use appropriately sized integer types. We have also inserted _Static_assert s
+# to detect incorrect casts
+target_compile_options(freertos PRIVATE -Wno-int-to-pointer-cast)
+target_compile_options(freertos PRIVATE -Wno-pointer-to-int-cast)

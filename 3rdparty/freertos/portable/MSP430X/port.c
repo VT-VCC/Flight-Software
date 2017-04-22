@@ -137,6 +137,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 	and code model used. */
 	if( sizeof( pxCode ) == sizeof( uint16_t ) )
 	{
+		_Static_assert(sizeof(ulTemp) >= sizeof(pxCode), "Integer for top of stack is large enough");
 		pusTopOfStack = ( uint16_t * ) pxTopOfStack;
 		ulTemp = ( portPOINTER_SIZE_TYPE ) pxCode;
 		*pusTopOfStack = ( uint16_t ) ulTemp;
