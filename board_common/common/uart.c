@@ -14,6 +14,18 @@ uart_error_t uart_write_bytes(uart_t * channel, const uint8_t * bytes, size_t n)
     return UART_NO_ERROR;
 }
 
+uart_error_t uart_write_string(uart_t * channel, const char * str) {
+    uart_error_t err;
+    while (*str) {
+        err = uart_write_byte(channel, (uint8_t) *str);
+        if (err != UART_NO_ERROR) {
+            return err;
+        }
+        ++str;
+    }
+    return err;
+}
+
 #ifndef NDEBUG
 const char * uart_error_string(uart_error_t t) {
     switch(t) {

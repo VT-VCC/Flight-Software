@@ -114,6 +114,15 @@ uart_error_t uart_read_byte(uart_t * channel, uint8_t * output);
  */
 uart_error_t uart_write_bytes(uart_t * channel, const uint8_t * bytes, size_t n);
 
+/** Write a cstring to the UART channel
+ *
+ * @param channel The channel to write to
+ * @param bytes Pointer to the buffer which will be written out
+ *
+ * @return UART error enumeration representing the error, see docs.
+ */
+uart_error_t uart_write_string(uart_t * channel, const char * str);
+
 /** Blocking read of several bytes from a UART channel
  *
  * Possible return values:
