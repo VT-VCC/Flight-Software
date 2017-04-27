@@ -73,8 +73,8 @@
   # Save all the general purpose registers
   pushm.a #12, r15
   # Save the current critical section nesting
-  mova usCriticalNesting, r14
-  pushm.a #1, r14
+  mov.w usCriticalNesting, r14
+  pushx.a r14
   # Save the current stack pointer to the task control block
   mova pxCurrentTCB, r12
   mova r1, @r12
@@ -87,10 +87,15 @@
   mova pxCurrentTCB, r12
   mova @r12, r1
   # Restore the current critical section nesting
-  popm.a #1, r15
-  mova r15, usCriticalNesting
+  popx.a r15
+  mov.w r15, &usCriticalNesting
   # Restore general purpose registers
   popm.a #12, r15
+  # Restore status flags and return in to user code
+  nop
+  pop r2
+  nop
+  reta
   .endm
 #-----------------------------------------------------------
 
@@ -107,75 +112,70 @@
   .align 2
 
 vPortPreemptiveTickISR:
-
-  # The sr is not saved in portSAVE_CONTEXT() because vPortYield() needs
-  #to save it manually before it gets modified (interrupts get disabled).
-  push sr
+  # Save the sr. Needs to be done out here so vPortYield can be special
+  push r2
   portSAVE_CONTEXT
 
   call.a  #xTaskIncrementTick
   call.a  #vTaskSwitchContext
 
   portRESTORE_CONTEXT
-;-----------------------------------------------------------
+#-----------------------------------------------------------
 
   .align 2
 
 vPortCooperativeTickISR:
-
-  ; The sr is not saved in portSAVE_CONTEXT() because vPortYield() needs
-  ;to save it manually before it gets modified (interrupts get disabled).
-  push.w sr
+  # Save the sr. Needs to be done out here so vPortYield can be special
+  push r2
   portSAVE_CONTEXT
 
   call.a  #xTaskIncrementTick
 
   portRESTORE_CONTEXT
 
-;-----------------------------------------------------------
+#-----------------------------------------------------------
 
-;
-; Manual context switch called by the portYIELD() macro.
-;
+#
+# Manual context switch called by the portYIELD() macro.
+#
 
   .align 2
 
 vPortYield:
+  # The sr needs saving before it is modified.
+  push  r2
 
-  ; The sr needs saving before it is modified.
-  push.w  sr
-
-  ; Now the SR is stacked we can disable interrupts.
+  # Now the SR is stacked we can disable interrupts.
   dint
   nop
 
-  ; Save the context of the current task.
+  # Save the context of the current task.
   portSAVE_CONTEXT
 
-  ; Select the next task to run.
+  # Select the next task to run.
   call.a  #vTaskSwitchContext
 
-  ; Restore the context of the new task.
+  # Restore the context of the new task.
   portRESTORE_CONTEXT
-;-----------------------------------------------------------
+#-----------------------------------------------------------
 
 
-;
-; Start off the scheduler by initialising the RTOS tick timer, then restoring
-; the context of the first task.
-;
+#
+# Start off the scheduler by initialising the RTOS tick timer, then restoring
+# the context of the first task.
+#
 
   .align 2
 
 xPortStartScheduler:
 
-  ; Setup the hardware to generate the tick.  Interrupts are disabled
-  ; when this function is called.
+  # Setup the hardware to generate the tick.  Interrupts are disabled
+  # when this function is called.
   call.a  #vPortSetupTimerInterrupt
 
-  ; Restore the context of the first task that is going to run.
+  # Restore the context of the first task that is going to run.
   portRESTORE_CONTEXT
-;-----------------------------------------------------------
+#-----------------------------------------------------------
 
   .end
 

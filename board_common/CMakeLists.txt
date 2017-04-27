@@ -24,5 +24,5 @@ endif()
 # generate static library
 get_property(BOARD_COMMON_SOURCES GLOBAL PROPERTY BOARD_COMMON_SOURCES)
 add_library(vt_usip_common STATIC ${BOARD_COMMON_SOURCES})
-target_compile_options(vt_usip_common PRIVATE -Wall)
-target_compile_options(vt_usip_common PRIVATE -Wextra)
+# target_compile_options(vt_usip_common PRIVATE -Wall)
+# target_compile_options(vt_usip_common PRIVATE -Wextra)

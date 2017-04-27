@@ -81,16 +81,25 @@
  * http://www.freertos.org/a00110.html
  *----------------------------------------------------------*/
 
-/* The array used as the heap is declared by the application to allow the
-__persistent keyword to be used.  See http://www.freertos.org/a00111.html#heap_4 */
-#define configAPPLICATION_ALLOCATED_HEAP		1
+/* Setting configSUPPORT_STATIC_ALLOCATION to 1 allows RTOS objects to be
+created using only application supplied memory.  No dynamic memory allocation
+will be performed. */
+#define configSUPPORT_STATIC_ALLOCATION			1
+
+/* Setting configSUPPORT_DYNAMIC_ALLOCATION to 0 results in all calls to
+pvPortMalloc() returning NULL, and all calls to vPortFree() being ignored.
+Therefore the application can be built without providing an implementation of
+either of these functions (so none of the normal heap_n.c files described on
+http://www.freertos.org/a00111.html are required).  Note that
+configTOTAL_HEAP_SIZE is not defined. */
+#define configSUPPORT_DYNAMIC_ALLOCATION		0
+
 #define configUSE_PREEMPTION					1
 #define configMAX_PRIORITIES					( 5 )
 #define configCPU_CLOCK_HZ						( 8000000 )
 /* In this non-real time simulated environment the tick frequency has to be at
  * least a multiple of the Win32 tick frequency, and therefore very slow. */
-#define configTICK_RATE_HZ						( 1000 )
-#define configTOTAL_HEAP_SIZE					( 4 * 1024 )
+#define configTICK_RATE_HZ						( 10 )
 #define configMAX_TASK_NAME_LEN					( 15 )
 #define configUSE_TRACE_FACILITY				1
 #define configUSE_16_BIT_TICKS					0
@@ -121,7 +130,7 @@ __persistent keyword to be used.  See http://www.freertos.org/a00111.html#heap_4
 #define configUSE_EVENT_GROUPS			0
 
 /* Run time stats gathering definitions. */
-#define configGENERATE_RUN_TIME_STATS	1
+#define configGENERATE_RUN_TIME_STATS	0
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() vConfigureTimerForRunTimeStats()
 /* Return the current timer counter value + the overflow counter. */
 #define portGET_RUN_TIME_COUNTER_VALUE() 	( ( ( uint32_t ) TA1R ) + ulRunTimeCounterOverflows )
@@ -154,7 +163,7 @@ tables. */
 #define configUSE_STATS_FORMATTING_FUNCTIONS	1
 
 /* Assert call defined for debug builds. */
-#define configASSERT( x ) if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
+#define configASSERT( x ) if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ) { P1OUT ^= 1 << 5; __delay_cycles(80000UL); } }
 
 /* The MSP430X port uses a callback function to configure its tick interrupt.
 This allows the application to choose the tick interrupt source.

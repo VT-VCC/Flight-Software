@@ -124,71 +124,92 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 	/*
 		Place a few bytes of known values on the bottom of the stack.
 		This is just useful for debugging and can be included if required.
-
-		*pxTopOfStack = ( StackType_t ) 0x1111;
-		pxTopOfStack--;
-		*pxTopOfStack = ( StackType_t ) 0x2222;
-		pxTopOfStack--;
-		*pxTopOfStack = ( StackType_t ) 0x3333;
-		pxTopOfStack--;
 	*/
+
+	*pxTopOfStack = ( StackType_t ) 0x1111;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0x2222;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0x3333;
+	pxTopOfStack--;
 
 	/* Data types are need either 16 bits or 32 bits depending on the data 
 	and code model used. */
-	if( sizeof( pxCode ) == sizeof( uint16_t ) )
+	if( sizeof( pxCode ) == sizeof( *pxTopOfStack ) )
 	{
-		_Static_assert(sizeof(ulTemp) >= sizeof(pxCode), "Integer for top of stack is large enough");
-		pusTopOfStack = ( uint16_t * ) pxTopOfStack;
-		ulTemp = ( portPOINTER_SIZE_TYPE ) pxCode;
-		*pusTopOfStack = ( uint16_t ) ulTemp;
+		/* Here the code and stack data elements are the same size */
+		_Static_assert(sizeof(ulTemp) >= sizeof(pxCode),
+				"Integer for top of stack is large enough");
+		*pxTopOfStack = (StackType_t) pxCode;
+		/* We need to write a 16-bit value to the stack for the status register */
+		pusTopOfStack = (uint16_t *) pxTopOfStack;
+		pusTopOfStack--; // Make room
+		*pusTopOfStack = portFLAGS_INT_ENABLED;
+
+		/* And make room for the next item */
+		pxTopOfStack = (uint32_t *) pusTopOfStack;
+		pxTopOfStack--;
 	}
-	else
+	else if (sizeof(pxCode) == sizeof(uint32_t))
 	{
-		/* Make room for a 20 bit value stored as a 32 bit value. */
-		pusTopOfStack = ( uint16_t * ) pxTopOfStack;		
+		/* Here we have 20 bit code pointers but a 16 bit stack */
+		pusTopOfStack = ( uint16_t * ) pxTopOfStack;
+		/* Make room for a 20 bit value stored as a 32 bit value by further
+		 * decrementing the top of stack */
 		pusTopOfStack--;
 		pulTopOfStack = ( uint32_t * ) pusTopOfStack;
 		*pulTopOfStack = ( portPOINTER_SIZE_TYPE ) pxCode;
+		/* Make room for the next data element on the stack */
+		pusTopOfStack--;
+		/* Write the initial saved status registers, as a 16 bit value */
+		*pusTopOfStack = portFLAGS_INT_ENABLED;
+		/* And make room for the next element */
+		pusTopOfStack--;
+		/* Write back in to pxTopOfStack to share the rest of the code */
+		pxTopOfStack = ( StackType_t * ) pusTopOfStack;
+	}
+	else
+	{
+		/* Here we have 16 bit code pointers but a 32 bit stack */
+		pusTopOfStack = ( uint16_t * ) pxTopOfStack;
+		/* Write the return address and the status register state as 16 bit
+		 * quantities */
+		*pusTopOfStack = ( portPOINTER_SIZE_TYPE ) pxCode;
+		pusTopOfStack--;
+		*pusTopOfStack = portFLAGS_INT_ENABLED;
+		pusTopOfStack--;
+		/* Write back in to pxTopOfStack to share the rest of the code */
+		pxTopOfStack = ( StackType_t * ) pusTopOfStack;
 	}
 
-	pusTopOfStack--;
-	*pusTopOfStack = portFLAGS_INT_ENABLED;
-	pusTopOfStack -= ( sizeof( StackType_t ) / 2 );
 	
 	/* From here on the size of stacked items depends on the memory model. */
-	pxTopOfStack = ( StackType_t * ) pusTopOfStack;
 
 	/* Next the general purpose registers. */
-	#ifdef PRELOAD_REGISTER_VALUES
-		*pxTopOfStack = ( StackType_t ) 0xffff;
-		pxTopOfStack--;
-		*pxTopOfStack = ( StackType_t ) 0xeeee;
-		pxTopOfStack--;
-		*pxTopOfStack = ( StackType_t ) 0xdddd;
-		pxTopOfStack--;
-		*pxTopOfStack = ( StackType_t ) pvParameters;
-		pxTopOfStack--;
-		*pxTopOfStack = ( StackType_t ) 0xbbbb;
-		pxTopOfStack--;
-		*pxTopOfStack = ( StackType_t ) 0xaaaa;
-		pxTopOfStack--;
-		*pxTopOfStack = ( StackType_t ) 0x9999;
-		pxTopOfStack--;
-		*pxTopOfStack = ( StackType_t ) 0x8888;
-		pxTopOfStack--;	
-		*pxTopOfStack = ( StackType_t ) 0x5555;
-		pxTopOfStack--;
-		*pxTopOfStack = ( StackType_t ) 0x6666;
-		pxTopOfStack--;
-		*pxTopOfStack = ( StackType_t ) 0x5555;
-		pxTopOfStack--;
-		*pxTopOfStack = ( StackType_t ) 0x4444;
-		pxTopOfStack--;
-	#else
-		pxTopOfStack -= 3;
-		*pxTopOfStack = ( StackType_t ) pvParameters;
-		pxTopOfStack -= 9;
-	#endif
+	*pxTopOfStack = ( StackType_t ) 0xffff;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0xeeee;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0xdddd;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) pvParameters;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0xbbbb;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0xaaaa;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0x9999;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0x8888;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0x5555;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0x6666;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0x5555;
+	pxTopOfStack--;
+	*pxTopOfStack = ( StackType_t ) 0x4444;
+	pxTopOfStack--;
 
 	/* A variable is used to keep track of the critical section nesting.
 	This variable has to be stored as part of the task context and is
@@ -220,9 +241,8 @@ void vPortSetupTimerInterrupt( void )
 __attribute__((interrupt(TIMER0_A0_VECTOR)))
 void vTickISREntry( void )
 {
+	P4OUT = 0;
 extern void vPortTickISR( void );
-
-	__bic_SR_register_on_exit( SCG1 + SCG0 + OSCOFF + CPUOFF );
 	#if configUSE_PREEMPTION == 1
 		extern void vPortPreemptiveTickISR( void );
 		vPortPreemptiveTickISR();
@@ -230,6 +250,8 @@ extern void vPortTickISR( void );
 		extern void vPortCooperativeTickISR( void );
 		vPortCooperativeTickISR();
 	#endif
+	// __bic_SR_register_on_exit( SCG1 + SCG0 + OSCOFF + CPUOFF );
+	P4OUT = 1 << 6;
 }
 
 	

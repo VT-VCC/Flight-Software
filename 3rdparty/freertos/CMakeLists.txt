@@ -25,7 +25,6 @@ add_library(freertos STATIC
   portable/MSP430X/port.c
   portable/MSP430X/portext.S
   portable/MSP430X/portmacro.h
-  portable/MemMang/heap_4.c
 )
 
 # This should always be safe since we are really confident in our ability to

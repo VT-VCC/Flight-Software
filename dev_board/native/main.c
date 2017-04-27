@@ -9,6 +9,8 @@
 
 #include "uart.h"
 
+#define PERSISTENT __attribute__((section(".persistent")))
+
 /******************************************************************************\
  *  Static variables                                                          *
 \******************************************************************************/
@@ -17,7 +19,11 @@
 static uart_t standard_output;
 
 /// LED flash queue
-static QueueHandle_t blink_queue = NULL;
+#define BLINK_QUEUE_LENGTH 8
+typedef uint16_t blink_queue_item_t;
+static QueueHandle_t PERSISTENT blink_queue_handle;
+static StaticQueue_t PERSISTENT blink_queue;
+static uint8_t PERSISTENT blink_queue_storage[BLINK_QUEUE_LENGTH * sizeof(blink_queue_item_t)];
 
 const char * output_str = "hello, world!\r\n";
 const char * got_data = "got data\r\n";
@@ -32,12 +38,16 @@ static void test_aclk();
 
 /* Prototypes for the standard FreeRTOS callback/hook functions implemented
 within this file. */
-void vApplicationMallocFailedHook( void );
 void vApplicationIdleHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 void vApplicationTickHook( void );
 
+static TaskHandle_t PERSISTENT blink_led_task;
+void task_blink_led_start();
 void task_blink_led(void * params);
+
+static TaskHandle_t PERSISTENT transmit_blink_signal_task;
+void task_transmit_blink_signal_start();
 void task_transmit_blink_signal(void * params);
 
 /******************************************************************************\
@@ -52,18 +62,34 @@ int main(void) {
 
     test_aclk();
 
+    P1OUT |= 0xFF;
+
     uart_open(EUSCI_A0, BAUD_9600, &standard_output);
-    blink_queue = xQueueCreate(4, sizeof(uint32_t));
 
-    for(;;) {
-        __delay_cycles(8000000UL);
+    blink_queue_handle = xQueueCreateStatic(
+            BLINK_QUEUE_LENGTH,
+            sizeof(blink_queue_item_t),
+            blink_queue_storage,
+            &blink_queue);
 
-        P1OUT ^= 0x01;
-        uart_write_bytes(&standard_output, output_str, 15);
-        P1OUT ^= 0x01;
-    }
+    task_blink_led_start();
+    // task_transmit_blink_signal_start();
+
+    uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
+
+    P1OUT ^= 1 << 6;
+    vTaskStartScheduler();
+
+    // there is no way to get here since we are using statically allocated
+    // kernel structures
 
     return 0;
+}
+
+__attribute__((interrupt(TIMER1_A1_VECTOR)))
+void kek( void ) {
+    P1OUT &= ~(1 << 7);
+    TA1CTL &= ~TAIFG;
 }
 
 static void hardware_config() {
@@ -127,30 +153,85 @@ static void test_aclk() {
     }
 }
 
-void vApplicationMallocFailedHook( void ) {
-}
-
 void vApplicationIdleHook( void ) {
+    P1OUT = 0;
 }
 
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName ) {
 }
 
 void vApplicationTickHook( void ) {
-    P4OUT ^= 1 << 6;
 }
 
+/******************************************************************************\
+ *  task_blink_led implementation                                             *
+\******************************************************************************/
+StaticTask_t PERSISTENT blink_task;
+StackType_t PERSISTENT blink_task_stack[configMINIMAL_STACK_SIZE];
+
+void task_blink_led_start() {
+
+    blink_led_task = xTaskCreateStatic(
+        task_blink_led,
+        "blink_led",
+        configMINIMAL_STACK_SIZE,
+        NULL,
+        1,
+        blink_task_stack,
+        &blink_task
+    );
+}
+
+void task_blink_led(void * params) {
+    volatile unsigned int sentinal = 0xBEEF;
+    // taskENTER_CRITICAL();
+    // uart_write_string(&standard_output, "Starting blink task\n");
+    // taskEXIT_CRITICAL();
+    for (;;) {
+        // uart_write_string(&standard_output, "T1\n");
+        // P1OUT++;
+        P1OUT ^= 0x1;
+        // vTaskDelay(1);
+        __delay_cycles(10000000UL);
+    }
+}
+
+/******************************************************************************\
+ *  task_transmit_blink_signal implementation                                 *
+\******************************************************************************/
+StaticTask_t PERSISTENT transmit_task;
+StackType_t PERSISTENT transmit_task_stack[configMINIMAL_STACK_SIZE];
+void task_transmit_blink_signal_start() {
+
+    transmit_blink_signal_task = xTaskCreateStatic(
+        task_transmit_blink_signal,
+        "transmit_blink_signal",
+        configMINIMAL_STACK_SIZE,
+        NULL,
+        1,
+        transmit_task_stack,
+        &transmit_task
+    );
+}
+
+void task_transmit_blink_signal(void * params) {
+    taskENTER_CRITICAL();
+    uart_write_string(&standard_output, "Starting signal task\n");
+    taskEXIT_CRITICAL();
+    for(;;) {
+        P4OUT ^= 1 << 6;
+        uart_write_string(&standard_output, "T2\n");
+        vTaskDelay(1000);
+    }
+}
 
 /******************************************************************************\
  *  Random support functions and variables                                    *
- *      All shamelesly stolen from the MSP430FR5969 demo in the FreeRTOS      *
- *      distribution.                                                         *
+ *      All shamelesly stolen from the demos in the FreeRTOS distribution.    *
 \******************************************************************************/
 
 /* Used for maintaining a 32-bit run time stats counter from a 16-bit timer. */
 volatile uint32_t ulRunTimeCounterOverflows = 0;
-
-uint8_t __attribute__((section(".persistent"))) ucHeap[ configTOTAL_HEAP_SIZE ];
 
 /* The MSP430X port uses this callback function to configure its tick interrupt.
 This allows the application to choose the tick interrupt source.
@@ -196,4 +277,52 @@ void vConfigureTimerForRunTimeStats( void ) {
 
     /* Run the timer from the ACLK/8, continuous mode, interrupt enable. */
     TA1CTL = TASSEL_1 | ID__8 | MC__CONTINUOUS | TAIE;
+}
+
+/* If the buffers to be provided to the Idle task are declared inside this
+function then they must be declared static - otherwise they will be allocated on
+the stack and so not exists after this function exits. */
+StaticTask_t PERSISTENT xIdleTaskTCB;
+StackType_t PERSISTENT uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+/* configUSE_STATIC_ALLOCATION is set to 1, so the application must provide an
+implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
+used by the Idle task. */
+void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize )
+{
+
+    /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
+    state will be stored. */
+    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
+
+    /* Pass out the array that will be used as the Idle task's stack. */
+    *ppxIdleTaskStackBuffer = uxIdleTaskStack;
+
+    /* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configMINIMAL_STACK_SIZE is specified in words, not bytes. */
+    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+}
+
+/* If the buffers to be provided to the Timer task are declared inside this
+function then they must be declared static - otherwise they will be allocated on
+the stack and so not exists after this function exits. */
+StaticTask_t PERSISTENT xTimerTaskTCB;
+StackType_t PERSISTENT uxTimerTaskStack[ configTIMER_TASK_STACK_DEPTH ];
+/* configUSE_STATIC_ALLOCATION and configUSE_TIMERS are both set to 1, so the
+application must provide an implementation of vApplicationGetTimerTaskMemory()
+to provide the memory that is used by the Timer service task. */
+void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer, StackType_t **ppxTimerTaskStackBuffer, uint32_t *pulTimerTaskStackSize )
+{
+
+    /* Pass out a pointer to the StaticTask_t structure in which the Timer
+    task's state will be stored. */
+    *ppxTimerTaskTCBBuffer = &xTimerTaskTCB;
+
+    /* Pass out the array that will be used as the Timer task's stack. */
+    *ppxTimerTaskStackBuffer = uxTimerTaskStack;
+
+    /* Pass out the size of the array pointed to by *ppxTimerTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configMINIMAL_STACK_SIZE is specified in words, not bytes. */
+    *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
 }
