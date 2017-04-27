@@ -241,8 +241,8 @@ void vPortSetupTimerInterrupt( void )
 __attribute__((interrupt(TIMER0_A0_VECTOR)))
 void vTickISREntry( void )
 {
-	P4OUT = 0;
 extern void vPortTickISR( void );
+	__bic_SR_register_on_exit( SCG1 + SCG0 + OSCOFF + CPUOFF );
 	#if configUSE_PREEMPTION == 1
 		extern void vPortPreemptiveTickISR( void );
 		vPortPreemptiveTickISR();
@@ -250,8 +250,4 @@ extern void vPortTickISR( void );
 		extern void vPortCooperativeTickISR( void );
 		vPortCooperativeTickISR();
 	#endif
-	// __bic_SR_register_on_exit( SCG1 + SCG0 + OSCOFF + CPUOFF );
-	P4OUT = 1 << 6;
 }
-
-	

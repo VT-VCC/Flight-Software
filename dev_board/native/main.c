@@ -73,7 +73,7 @@ int main(void) {
             &blink_queue);
 
     task_blink_led_start();
-    // task_transmit_blink_signal_start();
+    task_transmit_blink_signal_start();
 
     uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
 
@@ -185,8 +185,7 @@ void task_blink_led(void * params) {
         // uart_write_string(&standard_output, "T1\n");
         // P1OUT++;
         P1OUT ^= 0x1;
-        // vTaskDelay(1);
-        __delay_cycles(10000000UL);
+        vTaskDelay(1);
     }
 }
 
@@ -202,7 +201,7 @@ void task_transmit_blink_signal_start() {
         "transmit_blink_signal",
         configMINIMAL_STACK_SIZE,
         NULL,
-        1,
+        2,
         transmit_task_stack,
         &transmit_task
     );
@@ -215,7 +214,7 @@ void task_transmit_blink_signal(void * params) {
     for(;;) {
         P4OUT ^= 1 << 6;
         uart_write_string(&standard_output, "T2\n");
-        vTaskDelay(1000);
+        vTaskDelay(10);
     }
 }
 
@@ -274,6 +273,7 @@ void vConfigureTimerForRunTimeStats( void ) {
 }
 __attribute__((interrupt(TIMER1_A1_VECTOR)))
 void run_time_stats_isr( void ) {
+    __bic_SR_register_on_exit( SCG1 + SCG0 + OSCOFF + CPUOFF );
     TA1CTL &= ~TAIFG;
     /* 16-bit overflow, so add 17th bit. */
     ulRunTimeCounterOverflows += 0x10000;
