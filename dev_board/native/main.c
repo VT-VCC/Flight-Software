@@ -86,12 +86,6 @@ int main(void) {
     return 0;
 }
 
-__attribute__((interrupt(TIMER1_A1_VECTOR)))
-void kek( void ) {
-    P1OUT &= ~(1 << 7);
-    TA1CTL &= ~TAIFG;
-}
-
 static void hardware_config() {
     WDTCTL = WDTPW | WDTHOLD;               // Stop watchdog timer
     PM5CTL0 &= ~LOCKLPM5;                   // Disable the GPIO power-on default high-impedance mode
@@ -278,6 +272,13 @@ void vConfigureTimerForRunTimeStats( void ) {
     /* Run the timer from the ACLK/8, continuous mode, interrupt enable. */
     TA1CTL = TASSEL_1 | ID__8 | MC__CONTINUOUS | TAIE;
 }
+__attribute__((interrupt(TIMER1_A1_VECTOR)))
+void run_time_stats_isr( void ) {
+    TA1CTL &= ~TAIFG;
+    /* 16-bit overflow, so add 17th bit. */
+    ulRunTimeCounterOverflows += 0x10000;
+}
+
 
 /* If the buffers to be provided to the Idle task are declared inside this
 function then they must be declared static - otherwise they will be allocated on
