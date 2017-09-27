@@ -4,6 +4,48 @@
 
 typedef enum generic_status { FAIL = 0, SUCCESS = 1 } generic_status_t;
 
+// Private helper function for verifying that the sentence has a valid checksum
+// The checksum is calculated as the logical XOR of all of the bytes after the initial '$'
+static generic_status_t verifyChecksum(uint8_t * sentence) {
+	uint8_t calculatedChecksum = sentence[1];
+	size_t i;
+	// XOR all bytes up to the * character
+	for (i = 2; sentence[i] != '*'; ++i) {
+		if ((sentence[i] == '\r') || (sentence[i] == '\n')) {
+			return FAIL;
+		}
+		calculatedChecksum ^= sentence[i];
+	}
+	uint8_t expectedChecksum;
+	size_t checksumChar = i + 1;
+	// Check for valid hex characters and read expected value
+	if ((sentence[checksumChar] >= '0') && (sentence[checksumChar] <= '9')) {
+		expectedChecksum = sentence[checksumChar] - '0';
+	}
+	else if ((sentence[checksumChar] >= 'A') && (sentence[checksumChar] <= 'F')) {
+		expectedChecksum = 10 + sentence[checksumChar] - 'A';
+	}
+	else {
+		return FAIL;
+	}
+	expectedChecksum <<= 4;
+	checksumChar += 1;
+	if ((sentence[checksumChar] >= '0') && (sentence[checksumChar] <= '9')) {
+		expectedChecksum |= (sentence[checksumChar] - '0');
+	}
+	else if ((sentence[checksumChar] >= 'A') && (sentence[checksumChar] <= 'F')) {
+		expectedChecksum |= (10 + sentence[checksumChar] - 'A');
+	}
+	else {
+		return FAIL;
+	}
+	// Fail out if expected and calculated checksums don't match
+	if (expectedChecksum != calculatedChecksum) {
+		return FAIL;
+	}
+	return SUCCESS;
+}
+
 // Private helper function to perform initial input validity checks
 static pinav_parser_status_t verify_inputs(pinav_parse_output_t * out, uint8_t * sentence) {
 	// Verify pointers
@@ -35,6 +77,10 @@ static pinav_parser_status_t verify_inputs(pinav_parse_output_t * out, uint8_t *
 	if (!found) {
 		out->id = NONE;
 		return PN_PARSE_IMPROPER_SENTENCE_LENGTH;
+	}
+
+	if (!verifyChecksum(sentence)) {
+		return PN_PARSE_CHECKSUM_FAILURE;
 	}
 
 	return PN_PARSE_OK;
@@ -311,6 +357,8 @@ static generic_status_t parse_gga_hdop(uint16_t * out, uint8_t * it) {
 	}
 	hdop >>= 24; // Convert to 8.8 fixed point
 	*out = (uint16_t)hdop;
+
+	return SUCCESS;
 }
 
 // Private helper function to parse gga altitude field
@@ -321,6 +369,8 @@ static generic_status_t parse_gga_altitude(int32_t * out, uint8_t * it) {
 	}
 	altitude *= 100; // Convert meters to cm
 	*out = altitude >> 32; // Convert fixed-point to integer
+
+	return SUCCESS;
 }
 
 // Private helper function to parse the valid gga sentence
@@ -420,6 +470,19 @@ static pinav_parser_status_t parse_lsp(pinav_parse_output_t * out, uint8_t * sen
 	out->data.lsp.pdop = (uint16_t)pdop;
 
 	return PN_PARSE_OK;
+}
+
+// Private helper function to parse the valid gga sentence
+// pointed to by sentence into the output struct pointed to by out
+pinav_parser_status_t parse_rmc(pinav_parse_output_t * out, uint8_t * sentence) {
+	uint8_t * it; // iterator for parsing sentence
+
+	out->id = RMC;
+
+	it = sentence + 7; // place iterator at start of gps time seconds field
+
+	// TODO: IN PROGRESS
+	return PN_PARSE_UNRECOGNIZED_SENTENCE_TYPE;
 }
 
 pinav_parser_status_t parse_pinav_sentence(pinav_parse_output_t * out, uint8_t * sentence){

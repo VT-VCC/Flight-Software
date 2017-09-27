@@ -19,29 +19,29 @@ TEST_CASE("Valid GGA sentence", "[pinav_parser]") {
 
 TEST_CASE("Valid LSP sentence", "[pinav_parser]") {
 	pinav_parse_output_t output;
-	char * sentence = "$PSLSP,193772.250,780,3963889.500,1001383.750,4879428.125,5,4.5*72\r\n";
+	char * sentence = "$PSLSP,193772.0585851,780,3963889.204,1001383.917,4879428.991,5,4.5*72\r\n";
 	pinav_parser_status_t result = parse_pinav_sentence(&output, (uint8_t *)sentence);
 	REQUIRE(result == PN_PARSE_OK);
 	REQUIRE(output.id == LSP);
 	int64_t expected_val = 193772;
 	expected_val <<= 32;
-	uint32_t fraction = 0b01000000 << 24;
+	uint32_t fraction = 0b00001110111111110110111011100000;
 	expected_val |= fraction;
 	REQUIRE(output.data.lsp.gps_time_seconds == expected_val);
 	REQUIRE(output.data.lsp.gps_week == 780);
 	expected_val = 3963889;
 	expected_val <<= 32;
-	fraction = 0b10000000 << 24;
+	fraction = 0b00110100001110010101100000010000;
 	expected_val |= fraction;
 	REQUIRE(output.data.lsp.wgs_x == expected_val);
 	expected_val = 1001383;
 	expected_val <<= 32;
-	fraction = 0b11000000 << 24;
+	fraction = 0b11101010110000001000001100010010;
 	expected_val |= fraction;
 	REQUIRE(output.data.lsp.wgs_y == expected_val);
 	expected_val = 4879428;
 	expected_val <<= 32;
-	fraction = 0b00100000 << 24;
+	fraction = 0b11111101101100100010110100001110;
 	expected_val |= fraction;
 	REQUIRE(output.data.lsp.wgs_z == expected_val);
 	REQUIRE(output.data.lsp.sat_count == 5);
@@ -82,8 +82,15 @@ TEST_CASE("Invalid sentence length", "[pinav_parser]") {
 
 TEST_CASE("Invalid sentence type", "[pinav_parser]") {
 	pinav_parse_output_t output;
-	char * sentence = "$GPABC,\r\n";
+	char * sentence = "$GPABC,*7B\r\n";
 	pinav_parser_status_t result = parse_pinav_sentence(&output, (uint8_t *)sentence);
 	REQUIRE(result == PN_PARSE_UNRECOGNIZED_SENTENCE_TYPE);
 	REQUIRE(output.id == NONE);
+}
+
+TEST_CASE("Invalid Checksum", "[pinav_parser]") {
+	pinav_parse_output_t output;
+	char * sentence = "$GPGGA,172120.384,5219.0671,N,05117.0926,E,1,9,0.9,371262.1,M,0,M,,,*53\r\n";
+	pinav_parser_status_t result = parse_pinav_sentence(&output, (uint8_t *)sentence);
+	REQUIRE(result == PN_PARSE_CHECKSUM_FAILURE);
 }
