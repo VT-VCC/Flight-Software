@@ -16,19 +16,26 @@ typedef enum pinav_parser_status	{	PN_PARSE_OK,
 										PN_PARSE_NULL_SENTENCE_PTR,
 										PN_PARSE_UNRECOGNIZED_SENTENCE_TYPE,
 										PN_PARSE_IMPROPER_SENTENCE_LENGTH,
+										PN_PARSE_CHECKSUM_FAILURE,
 										PN_PARSE_SENTENCE_FORMAT_ERROR,
 										PN_PARSE_UNEXPECTED_UNIT_ENCOUNTERED,
 										UNKNOWN_ERROR // @TODO: remove once I'm sure this never happens
 									} pinav_parser_status_t;
 
 // This identifies one of several sentence formats described in the piNAV datasheet
-typedef enum pinav_sentence_id {NONE, GGA, LSP} pinav_sentence_id_t;
+typedef enum pinav_sentence_id {NONE, GGA, LSP, RMC} pinav_sentence_id_t;
 
 // Used in the pinav_gga struct
 typedef enum fix_quality {
 	FIX_INVALID = 0,
 	FIX_VALID = 1
 } fix_quality_t;
+
+// Used in the pinav_rmc struct
+typedef enum rmc_status {
+	VOID = 0,
+	ACTIVE = 1
+} rmc_status_t;
 
 // Struct describing a GGA sentence
 typedef struct pinav_gga {
@@ -65,6 +72,24 @@ typedef struct pinav_lsp {
 	// PDOP, represented as an 8.8 fixed point integer
 	uint16_t pdop;
 } pinav_lsp_t;
+
+// Struct describing an RMC sentence
+typedef struct pinav_rmc {
+	// The time of the fix in milliseconds since midnight UTC
+	uint32_t fix_time_millis;
+	// GPS status
+	rmc_status_t status;
+	// Latitude in millionths of a degree
+	int32_t latitude;
+	// Longitude in millionths of a degree
+	int32_t longitude;
+	// Speed over the ground in knots
+	int32_t ground_speed;
+	// Track angle in degrees true
+	int16_t track_angle;
+	// Date @TODO: format??
+	int16_t date;
+} pinav_rmc_t;
 
 // Union holding all possible piNAV sentence types
 typedef union pinav_data {
