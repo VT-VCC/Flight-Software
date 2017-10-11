@@ -31,6 +31,13 @@ typedef enum uart_error {
 const char * uart_error_string(uart_error_t t);
 #endif
 
+/******************************************************************************\
+ *  Supported UART baud rates                                                 *
+\******************************************************************************/
+typedef enum uart_baud_rate {
+    BAUD_9600,
+    BAUD_115200
+} uart_baud_rate_t;
 
 /******************************************************************************\
  *  UART type                                                                 *
@@ -47,18 +54,6 @@ const char * uart_error_string(uart_error_t t);
  *
  */
 typedef struct uart uart_t;
-
-/**
- * Open a connection to the UART channel
- *
- * @TODO Revisit this API. We probably need more parameters.
- *
- * @param out The output parameter
- * @param baud_rate The baud rate at which we should be running
- *
- * @return True if the UART channel opens successfully
- */
-bool uart_open(uart_t * out, size_t baud_rate);
 
 /**
  * Close a connection to a UART channel
@@ -117,7 +112,16 @@ uart_error_t uart_read_byte(uart_t * channel, uint8_t * output);
  *
  * @return UART error enumeration representing the error, see docs.
  */
-uart_error_t uart_write_bytes(uart_t * channel, uint8_t * bytes, size_t n);
+uart_error_t uart_write_bytes(uart_t * channel, const uint8_t * bytes, size_t n);
+
+/** Write a cstring to the UART channel
+ *
+ * @param channel The channel to write to
+ * @param bytes Pointer to the buffer which will be written out
+ *
+ * @return UART error enumeration representing the error, see docs.
+ */
+uart_error_t uart_write_string(uart_t * channel, const char * str);
 
 /** Blocking read of several bytes from a UART channel
  *

@@ -9,6 +9,8 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
   get_property(SENSOR_BOARD_SOURCES GLOBAL PROPERTY SENSOR_BOARD_SOURCES)
 
   add_executable(sensor_board ${SENSOR_BOARD_SOURCES})
+  # target_compile_options(sensor_board PRIVATE -Wall)
+  # target_compile_options(sensor_board PRIVATE -Wextra)
 else()
   # test build
   add_subdirectory(test)

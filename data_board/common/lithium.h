@@ -39,10 +39,12 @@ typedef struct lithium {
  * Open a connection to a Lithium radio.
  *
  * @param out Output parameter
+ * @param uart The UART channel to use. Takes ownership of the lifecycle of this
+ *      channel
  *
  * @return True if and only if the radio connection succeeds
  */
-bool lithium_open(lithium_t * out);
+bool lithium_open(lithium_t * out, uart_t * uart);
 
 /**
  * Close a connection to a lithium radio.

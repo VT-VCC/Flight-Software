@@ -11,9 +11,9 @@ lithium_result_t lithium_send_header(lithium_t * radio, uint8_t command, uint16_
 /******************************************************************************\
  *  Pulic interface implementations                                           *
 \******************************************************************************/
-bool lithium_open(lithium_t * out) {
-    /// XXX confirm that this is the correct baud rate
-    return uart_open(&(out->uart), 9600);
+bool lithium_open(lithium_t * out, uart_t * uart) {
+    out->uart = *uart;
+    return true;
 }
 
 void lithium_close(lithium_t * out) {

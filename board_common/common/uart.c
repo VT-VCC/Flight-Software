@@ -3,7 +3,7 @@
 /******************************************************************************\
  *  Public interface implementations                                          *
 \******************************************************************************/
-uart_error_t uart_write_bytes(uart_t * channel, uint8_t * bytes, size_t n) {
+uart_error_t uart_write_bytes(uart_t * channel, const uint8_t * bytes, size_t n) {
     uart_error_t err;
     for (size_t i = 0; i < n; ++i) {
         err = uart_write_byte(channel, bytes[i]);
@@ -12,6 +12,18 @@ uart_error_t uart_write_bytes(uart_t * channel, uint8_t * bytes, size_t n) {
         }
     }
     return UART_NO_ERROR;
+}
+
+uart_error_t uart_write_string(uart_t * channel, const char * str) {
+    uart_error_t err;
+    while (*str) {
+        err = uart_write_byte(channel, (uint8_t) *str);
+        if (err != UART_NO_ERROR) {
+            return err;
+        }
+        ++str;
+    }
+    return err;
 }
 
 #ifndef NDEBUG

@@ -4,7 +4,8 @@
 
 TEST_CASE("The radio interface can send noops", "[data_board][lithium]") {
     lithium_t t;
-    lithium_open(&t);
+    uart_t uart;
+    lithium_open(&t, &uart);
 
     REQUIRE(lithium_send_noop(&t) == LITHIUM_NO_ERROR);
 

@@ -5,8 +5,8 @@ cd $(dirname $0)
 
 mkdir -p build-host
 cd build-host
-cmake ../
-make
+cmake -G 'Ninja' ../
+ninja
 cd ../
 
 for i in data-board dev-board sensor-board
@@ -30,7 +30,7 @@ do
   echo "********************************************************************************"
   echo
 
-  cmake -DCMAKE_TOOLCHAIN_FILE=${toolchain_file} ${cmake_args} ../
-  make
+  cmake -G 'Ninja' -DCMAKE_TOOLCHAIN_FILE=${toolchain_file} ${cmake_args} ../
+  ninja
   cd ../
 done
