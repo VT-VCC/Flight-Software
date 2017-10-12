@@ -56,6 +56,11 @@ typedef enum uart_baud_rate {
 typedef struct uart uart_t;
 
 /**
+ * Open a connection to a UART channel
+ */
+bool uart_open(uart_t * out, size_t baud_rate);
+
+/**
  * Close a connection to a UART channel
  */
 void uart_close(uart_t * out);
