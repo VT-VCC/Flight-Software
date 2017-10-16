@@ -7,3 +7,13 @@ macro (add_sources SRCS)
   endforeach()
   set_property(GLOBAL APPEND PROPERTY ${SRCS} ${_srcs})
 endmacro()
+
+macro (add_msp430_executable NAME SRCS)
+  get_property(SOURCE GLOBAL PROPERTY ${SRCS})
+
+  add_executable(${NAME} ${SOURCE})
+
+  add_custom_command(TARGET ${NAME}
+    POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${NAME}> $<TARGET_FILE_DIR:${NAME}>/${NAME}.hex)
+endmacro()
