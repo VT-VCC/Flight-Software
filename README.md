@@ -66,8 +66,28 @@ cmake ../
 ```
 Running `make` in this directory will build the test binary
 
-### MSP430 code, on Linux
+### MSP430 code, on Linux (and other UNIXes)
 Run the `build.sh` script.
+
+#### Flashing the MSP430 from UNIX
+Two tools are required to flash the binaries on to an MSP430:
+  - [MSP 430 flasher](http://www.ti.com/tool/msp430-flasher).
+  - `msp430-elf-objcopy` from the [MSP430 GCC toolchain](http://www.ti.com/tool/MSP430-GCC-OPENSOURCE) (you should have this already since the native builds use `msp430-elf-gcc`).
+The build system should automatically generate an intel hex formatted `.hex` file for all of the bboard builds.
+To flash these on to a board using the `MSP430Flasher` command line tool, use the command:
+
+```
+MSP430Flasher -z [VCC] -w $PATH_TO_HEX_FILE
+```
+
+Where `$PATH_TO_HEX_FILE` is the path to the hex file you want to flash.
+In general, these are generated in the `build-*-board` build folders under the corresponding `*_board` folder.
+The development board hex file is generated at `build-dev-board/dev_board/dev_board.hex` for example.
+
+*NOTE*: Make sure the executable you are flashing was built with the correct target MCU.
+This can be checked by running `ccmake ../` in the build directory, toggling on advanced mode with `t` and checking the value of `-mmcu=` in `CMAKE_C_FLAGS` or `CMAKE_ASM_FLAGS`.
+If the MCU does not match the one you currently have, tweak the appropriate `cmake_args=` line in `build.sh` so the board is built using the correct MCU, remove the build directory, and rerun `build.sh`
+
 
 ### MSP430, on Windows
 Not yet implemented.
