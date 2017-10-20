@@ -22,6 +22,7 @@ void lithium_close(lithium_t * out) {
     uart_close(&out->uart);
 }
 
+
 lithium_result_t lithium_send_packet(lithium_t * radio, lithium_packet_t * packet) {
     //TODO check if I/O message
 
@@ -34,7 +35,7 @@ lithium_result_t lithium_send_packet(lithium_t * radio, lithium_packet_t * packe
     else {
         // Create packet body including the payload and checksum
         uint16_t body_length = packet->payload_length + 2;
-        uint8_t body[255/*payload*/ + 2*1/*checksum*/];
+        uint8_t body[MAX_PACKET_BODY_SIZE];
 
         // Copy payload into body, followed by the calculated checksum
         memcpy(body, packet->payload, packet->payload_length);
@@ -49,6 +50,7 @@ lithium_result_t lithium_send_packet(lithium_t * radio, lithium_packet_t * packe
         }
     }
 }
+
 
 /* Commands with no payload */
 
@@ -70,6 +72,7 @@ EMIT_SEND(read_fw_version, READ_FIRMWARE_REVISION)
 #define EMIT_SEND_PAYLOAD(name, cmd, data_param, length_param, ...) \
     lithium_result_t lithium_send_##name(lithium_t * radio, __VA_ARGS__) { \
         lithium_packet_t packet = { \
+            .type = LITHIUM_I_MESSAGE, \
             .command = LITHIUM_COMMAND_##cmd, \
             .payload_length = length_param \
         }; \
@@ -109,6 +112,40 @@ EMIT_SEND_PAYLOAD(set_pa_level, FAST_PA_SET,
     uint8_t speed)
 
 #undef EMIT_SEND_PAYLOAD
+
+lithium_result_t lithium_parse_packet(uint8_t * data, uint16_t length, lithium_packet_t * packet) {
+    bool has_bytes_for_header = (length >= PACKET_HEADER_SIZE);
+    bool has_sync_bytes = (data[0] == SYNC_1 && data[1] == SYNC_2);
+    if (!has_bytes_for_header || !has_sync_bytes) {
+        return LITHIUM_INVALID_PACKET;
+    }
+
+    lithium_command_type_t type = data[2];
+    lithium_command_t command = data[3];
+
+    bool is_valid_message_type = (type == LITHIUM_I_MESSAGE || type == LITHIUM_O_MESSAGE);
+    bool is_valid_command = (command < LITHIUM_COMMAND_count);
+    if (!is_valid_message_type || !is_valid_command) {
+        return LITHIUM_INVALID_PACKET + 1;
+    }
+
+    uint16_t payload_size = (data[4] << 4) | data[5];
+
+    bool is_ack_nack_packet = (type == LITHIUM_I_MESSAGE &&
+        (payload_size == ACK_SIZE || payload_size == NACK_SIZE));
+    bool has_valid_payload_size = (payload_size <= MAX_PACKET_PAYLOAD_SIZE);
+    bool has_bytes_for_body = (length == PACKET_HEADER_SIZE + payload_size + CHECKSUM_SIZE);
+    if (!is_ack_nack_packet && (!has_valid_payload_size || !has_bytes_for_body)) {
+        return LITHIUM_INVALID_PACKET + 2;
+    }
+
+    packet->type = type;
+    packet->command = command;
+    packet->payload_length = payload_size;
+    memcpy(packet->payload, data + PACKET_HEADER_SIZE, payload_size);
+
+    return LITHIUM_NO_ERROR;
+}
 
 /******************************************************************************\
  *  Private support function implementations                                  *

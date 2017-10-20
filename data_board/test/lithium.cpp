@@ -98,9 +98,54 @@ TEST_CASE("The radio interface can send power amplifier changes", "[data_board][
         0x10, 0x20, // Command
         0x00, 0x01, // Payload length
         0x31, 0x03, // Header checksum
-        5,
+        5, // Payload
         0x05, 0x05  // Payload checksum
     }));
+
+    lithium_close(&t);
+}
+
+TEST_CASE("The radio interface can parse packets", "[data_board][lithium]") {
+    lithium_t t;
+    uart_t uart;
+    uart_open(&uart, 9600);
+    lithium_open(&t, &uart);
+
+    SECTION("Fast PA packet") {
+        uint8_t data[] = {
+            0x48, 0x65, // Synchronization bytes
+            0x10, 0x03, // Command
+            0x00, 0x0f, // Payload length
+            0x22, 0x9c, // Header checksum
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, // Payload
+            0x69, 0x30  // Payload checksum
+        };
+        lithium_packet_t packet;
+
+        REQUIRE(lithium_parse_packet(data, 25, &packet) == LITHIUM_NO_ERROR);
+
+        REQUIRE(packet.command == LITHIUM_COMMAND_TRANSMIT_DATA);
+        REQUIRE(packet.payload_length == 15);
+        REQUIRE(packet.payload[0] == 0);
+    }
+
+    SECTION("Fast PA packet") {
+        uint8_t data[] = {
+            0x48, 0x65, // Synchronization bytes
+            0x10, 0x20, // Command
+            0x00, 0x01, // Payload length
+            0x31, 0x03, // Header checksum
+            5, // Payload
+            0x05, 0x05  // Payload checksum
+        };
+        lithium_packet_t packet;
+
+        REQUIRE(lithium_parse_packet(data, 11, &packet) == LITHIUM_NO_ERROR);
+
+        REQUIRE(packet.command == LITHIUM_COMMAND_FAST_PA_SET);
+        REQUIRE(packet.payload_length == 1);
+        REQUIRE(packet.payload[0] == 5);
+    }
 
     lithium_close(&t);
 }

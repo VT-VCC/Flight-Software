@@ -23,7 +23,8 @@ typedef struct lithium {
  */
 #define LITHIUM_RESULT_LIST(OP) \
     OP(NO_ERROR) \
-    OP(BAD_COMMUNICATION)
+    OP(BAD_COMMUNICATION) \
+    OP(INVALID_PACKET)
 
 /**
  * Enumeration of possible results for trying to communicate with the Lithium
@@ -73,6 +74,7 @@ typedef enum lithium_command {
 #   define STRING_OP(E, V) LITHIUM_COMMAND_##E = V,
     LITHIUM_COMMAND_LIST(STRING_OP)
 #   undef STRING_OP
+    LITHIUM_COMMAND_count
 } lithium_command_t;
 
 #undef LITHIUM_COMMAND_LIST
@@ -174,6 +176,7 @@ lithium_result_t lithium_send_stream_fw_update(lithium_t * radio, uint8_t * data
 
 lithium_result_t lithium_send_set_pa_level(lithium_t * radio, uint8_t speed);
 
+lithium_result_t lithium_parse_packet(uint8_t * data, uint16_t length, lithium_packet_t * packet);
 
 #ifdef __cplusplus
 }
