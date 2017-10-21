@@ -3,4 +3,7 @@ add_sources(BOARD_COMMON_SOURCES
   "uart.cpp"
   "impl/uart_test.cpp"
   "impl/uart_test.hpp"
+  "spi.cpp"
+  "impl/spi_test.cpp"
+  "impl/spi_test.hpp"
 )
