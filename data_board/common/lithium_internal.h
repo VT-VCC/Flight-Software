@@ -4,29 +4,8 @@
 #define I_MESSAGE_TYPE 0x10
 #define O_MESSAGE_TYPE 0x20
 
-#define CHECKSUM_SIZE               2
-#define PACKET_HEADER_SIZE          8
-#define MAX_PACKET_PAYLOAD_SIZE     255
-#define MAX_PACKET_BODY_SIZE        MAX_PACKET_PAYLOAD_SIZE + CHECKSUM_SIZE
-
 #define ACK_SIZE    0x0a0a
 #define NACK_SIZE   0xffff
-
-#define BAUD_RATE_9600      0
-#define BAUD_RATE_19200     1
-#define BAUD_RATE_38400     2
-#define BAUD_RATE_76800     3
-#define BAUD_RATE_115200    4
-
-#define RF_BAUD_RATE_1200   0
-#define RF_BAUD_RATE_9600   1
-#define RF_BAUD_RATE_19200  2
-#define RF_BAUD_RATE_38400  3
-
-#define RF_MODULATION_GFSK  0
-#define RF_MODULATION_AFSK  1
-#define RF_MODULATION_BPSK  2
-
 
 #define TELEMETRY_DUMP_COMMAND  0x30
 #define PING_RETURN_COMMAND     0x31

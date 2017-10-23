@@ -24,7 +24,8 @@ typedef struct lithium {
 #define LITHIUM_RESULT_LIST(OP) \
     OP(NO_ERROR) \
     OP(BAD_COMMUNICATION) \
-    OP(INVALID_PACKET)
+    OP(INVALID_PACKET) \
+    OP(INVALID_CHECKSUM)
 
 /**
  * Enumeration of possible results for trying to communicate with the Lithium
@@ -79,6 +80,48 @@ typedef enum lithium_command {
 
 #undef LITHIUM_COMMAND_LIST
 
+#define LITHIUM_BAUD_LIST(BAUD) \
+    BAUD(9600, 0) \
+    BAUD(19200, 1) \
+    BAUD(38400, 2) \
+    BAUD(76800, 3) \
+    BAUD(115200, 4)
+
+typedef enum lithium_baud {
+#   define STRING_OP(E, V) LITHIUM_BAUD_##E = V,
+    LITHIUM_BAUD_LIST(STRING_OP)
+#   undef STRING_OP
+} lithium_baud_t;
+
+#undef LITHIUM_BAUD_LIST
+
+#define LITHIUM_RF_BAUD_LIST(BAUD) \
+    BAUD(1200, 0) \
+    BAUD(9600, 1) \
+    BAUD(19200, 2) \
+    BAUD(38400, 3)
+
+typedef enum lithium_rf_baud {
+#   define STRING_OP(E, V) LITHIUM_RF_BAUD_##E = V,
+    LITHIUM_RF_BAUD_LIST(STRING_OP)
+#   undef STRING_OP
+} lithium_rf_baud_t;
+
+#undef LITHIUM_RF_BAUD_LIST
+
+#define LITHIUM_RF_MOD_LIST(MOD) \
+    MOD(GFSK, 0) \
+    MOD(AFSK, 1) \
+    MOD(BPSK, 2)
+
+typedef enum lithium_rf_mod {
+#   define STRING_OP(E, V) LITHIUM_RF_MOD_##E = V,
+    LITHIUM_RF_MOD_LIST(STRING_OP)
+#   undef STRING_OP
+} lithium_rf_mod_t;
+
+#undef LITHIUM_RF_MOD_LIST
+
 
 typedef struct lithium_packet {
     lithium_command_type_t type;
@@ -89,12 +132,12 @@ typedef struct lithium_packet {
 
 
 typedef struct lithium_config {
-    uint8_t interface_baud_rate;   //Radio Interface Baud Rate (9600=0x00)
+    lithium_baud_t interface_baud_rate;   //Radio Interface Baud Rate (9600=0x00)
     uint8_t tx_power_amp_level;    //Tx Power Amp level (min = 0x00 max = 0xFF)
-    uint8_t rx_rf_baud_rate;       //Radio RX RF Baud Rate (9600=0x00)
-    uint8_t tx_rf_baud_rate;       //Radio TX RF Baud Rate (9600=0x00)
-    uint8_t rx_modulation;         //(0x00 = GFSK);
-    uint8_t tx_modulation;         //(0x00 = GFSK);
+    lithium_rf_baud_t rx_rf_baud_rate;       //Radio RX RF Baud Rate (9600=0x00)
+    lithium_rf_baud_t tx_rf_baud_rate;       //Radio TX RF Baud Rate (9600=0x00)
+    lithium_rf_mod_t rx_modulation;         //(0x00 = GFSK);
+    lithium_rf_mod_t tx_modulation;         //(0x00 = GFSK);
     uint32_t rx_freq;               //Channel Rx Frequency (ex: 45000000)
     uint32_t tx_freq;               //Channel Tx Frequency (ex: 45000000)
     unsigned char source[6];      //AX25 Mode Source Call Sign (default NOCALL)
@@ -144,7 +187,9 @@ bool lithium_open(lithium_t * out, uart_t * uart);
  */
 void lithium_close(lithium_t * out);
 
+
 lithium_result_t lithium_send_packet(lithium_t * radio, lithium_packet_t * packet);
+
 
 lithium_result_t lithium_send_no_op(lithium_t * radio);
 
@@ -176,7 +221,23 @@ lithium_result_t lithium_send_stream_fw_update(lithium_t * radio, uint8_t * data
 
 lithium_result_t lithium_send_set_pa_level(lithium_t * radio, uint8_t speed);
 
-lithium_result_t lithium_parse_packet(uint8_t * data, uint16_t length, lithium_packet_t * packet);
+
+lithium_result_t lithium_receive_packet(lithium_t * radio, lithium_packet_t * packet);
+
+
+lithium_result_t lithium_parse_header(uint8_t * data, lithium_packet_t * packet, uint16_t * remaining_bytes);
+
+lithium_result_t lithium_parse_body(uint8_t * data, lithium_packet_t * packet);
+
+
+bool lithium_is_i_message(lithium_packet_t * packet);
+
+bool lithium_is_o_message(lithium_packet_t * packet);
+
+bool lithium_is_ack(lithium_packet_t * packet);
+
+bool lithium_is_nack(lithium_packet_t * packet);
+
 
 #ifdef __cplusplus
 }

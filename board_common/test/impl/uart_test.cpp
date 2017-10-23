@@ -70,6 +70,22 @@ uart_error_t uart_read_byte(uart_t * channel, uint8_t * output) {
     return UART_NO_ERROR;
 }
 
+
+uart_error_t uart_read_bytes(uart_t * channel, uint8_t * bytes, size_t n) {
+    if (!channel->_impl || !channel->_impl->open) {
+        return UART_CHANNEL_CLOSED;
+    }
+    if (channel->_impl->input.size() < n) {
+        return UART_SIGNAL_FAULT;
+    }
+    for (auto i = 0; i < n; ++i, ++bytes) {
+        *bytes = channel->_impl->input.back();
+        channel->_impl->input.pop_back();
+    }
+
+    return UART_NO_ERROR;
+}
+
 /******************************************************************************\
  *  HasWrittenBytes implementation                                             *
 \******************************************************************************/

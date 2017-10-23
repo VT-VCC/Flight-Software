@@ -2,149 +2,212 @@
 
 #include <catch/catch.hpp>
 
-TEST_CASE("The radio interface can send noops", "[data_board][lithium]") {
+// Set the input of the mock UART
+#define SET_UART_INPUT(t, ...) \
+    do { \
+        t.uart._impl->input = { __VA_ARGS__ }; \
+        std::reverse(t.uart._impl->input.begin(), t.uart._impl->input.end()); \
+    } while (0)
+
+// Check if a packet's payload has matching bytes
+#define REQUIRE_PAYLOAD_HAS_BYTES(packet, ...) \
+    do { \
+        std::vector<uint8_t> vec(packet.payload, packet.payload + packet.payload_length); \
+        REQUIRE(vec == std::vector<uint8_t>({ __VA_ARGS__ })); \
+    } while (0)
+
+
+TEST_CASE("The radio interface can handle no ops", "[data_board][lithium]") {
     lithium_t t;
     uart_t uart;
     uart_open(&uart, 9600);
     lithium_open(&t, &uart);
 
-    REQUIRE(lithium_send_no_op(&t) == LITHIUM_NO_ERROR);
-
-    REQUIRE_THAT(t.uart, HasWrittenBytes({
-        0x48, 0x65, // Synchronization bytes
-        0x10, 0x01, // Command
-        0x00, 0x00, // Length
-        0x11, 0x65  // Checksum
-    }));
-
-    lithium_close(&t);
-}
-
-TEST_CASE("The radio interface can send reset requests", "[data_board][lithium]") {
-    lithium_t t;
-    uart_t uart;
-    uart_open(&uart, 9600);
-    lithium_open(&t, &uart);
-
-    REQUIRE(lithium_send_reset(&t) == LITHIUM_NO_ERROR);
-
-    REQUIRE_THAT(t.uart, HasWrittenBytes({
-        0x48, 0x65, // Synchronization bytes
-        0x10, 0x02, // Command
-        0x00, 0x00, // Payload length
-        0x12, 0x6a  // Header checksum
-    }));
-
-    lithium_close(&t);
-}
-
-TEST_CASE("The radio interface can send transmissions", "[data_board][lithium]") {
-    lithium_t t;
-    uart_t uart;
-    uart_open(&uart, 9600);
-    lithium_open(&t, &uart);
-
-    SECTION("Data set 1") {
-        uint8_t data[15] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-
-        REQUIRE(lithium_send_transmit(&t, data, 15) == LITHIUM_NO_ERROR);
+    SECTION("Write send") {
+        REQUIRE(lithium_send_no_op(&t) == LITHIUM_NO_ERROR);
 
         REQUIRE_THAT(t.uart, HasWrittenBytes({
-            0x48, 0x65, // Synchronization bytes
-            0x10, 0x03, // Command
-            0x00, 0x0f, // Payload length
-            0x22, 0x9c, // Header checksum
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, // Payload
-            0x69, 0x30  // Payload checksum
+            0x48, 0x65,
+            0x10, 0x01,
+            0x00, 0x00,
+            0x11, 0x43,
         }));
     }
 
-    SECTION("Data set 2") {
-        uint8_t data[] = {
-            7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
-            5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20,
-            4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
-            6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21
-        };
+    SECTION("Parse send") {
+        SET_UART_INPUT(t,
+            0x48, 0x65,
+            0x10, 0x01,
+            0x00, 0x00,
+            0x11, 0x43,
+        );
 
-        REQUIRE(lithium_send_transmit(&t, data, 64) == LITHIUM_NO_ERROR);
-
-        REQUIRE_THAT(t.uart, HasWrittenBytes({
-            0x48, 0x65, // Synchronization bytes
-            0x10, 0x03, // Command
-            0x00, 0x40, // Payload length
-            0x53, 0x2f, // Header checksum
-            7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
-            5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20,
-            4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
-            6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21,
-            0x50, 0x80  // Payload checksum
-        }));
-    }
-
-    lithium_close(&t);
-}
-
-TEST_CASE("The radio interface can send power amplifier changes", "[data_board][lithium]") {
-    lithium_t t;
-    uart_t uart;
-    uart_open(&uart, 9600);
-    lithium_open(&t, &uart);
-
-    REQUIRE(lithium_send_set_pa_level(&t, 5) == LITHIUM_NO_ERROR);
-
-    REQUIRE_THAT(t.uart, HasWrittenBytes({
-        0x48, 0x65, // Synchronization bytes
-        0x10, 0x20, // Command
-        0x00, 0x01, // Payload length
-        0x31, 0x03, // Header checksum
-        5, // Payload
-        0x05, 0x05  // Payload checksum
-    }));
-
-    lithium_close(&t);
-}
-
-TEST_CASE("The radio interface can parse packets", "[data_board][lithium]") {
-    lithium_t t;
-    uart_t uart;
-    uart_open(&uart, 9600);
-    lithium_open(&t, &uart);
-
-    SECTION("Fast PA packet") {
-        uint8_t data[] = {
-            0x48, 0x65, // Synchronization bytes
-            0x10, 0x03, // Command
-            0x00, 0x0f, // Payload length
-            0x22, 0x9c, // Header checksum
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, // Payload
-            0x69, 0x30  // Payload checksum
-        };
         lithium_packet_t packet;
+        REQUIRE(lithium_receive_packet(&t, &packet) == LITHIUM_NO_ERROR);
 
-        REQUIRE(lithium_parse_packet(data, 25, &packet) == LITHIUM_NO_ERROR);
+        REQUIRE(packet.type == LITHIUM_I_MESSAGE);
+        REQUIRE(packet.command == LITHIUM_COMMAND_NO_OP);
+        REQUIRE(packet.payload_length == 0);
+    }
 
+    SECTION("Parse ACK receive") {
+        SET_UART_INPUT(t,
+            0x48, 0x65,
+            0x20, 0x01,
+            0x0a, 0x0a,
+            0x35, 0xa1,
+        );
+
+        lithium_packet_t packet;
+        REQUIRE(lithium_receive_packet(&t, &packet) == LITHIUM_NO_ERROR);
+
+        REQUIRE(packet.type == LITHIUM_O_MESSAGE);
+        REQUIRE(packet.command == LITHIUM_COMMAND_NO_OP);
+        REQUIRE(lithium_is_ack(&packet));
+    }
+
+    SECTION("Parse NACK receive") {
+        SET_UART_INPUT(t,
+            0x48, 0x65,
+            0x20, 0x01,
+            0xff, 0xff,
+            0x1f, 0x80,
+        );
+
+        lithium_packet_t packet;
+        REQUIRE(lithium_receive_packet(&t, &packet) == LITHIUM_NO_ERROR);
+
+        REQUIRE(packet.type == LITHIUM_O_MESSAGE);
+        REQUIRE(packet.command == LITHIUM_COMMAND_NO_OP);
+        REQUIRE(lithium_is_nack(&packet));
+    }
+
+    lithium_close(&t);
+}
+
+TEST_CASE("The radio interface can handle transmissions", "[data_board][lithium]") {
+    lithium_t t;
+    uart_t uart;
+    uart_open(&uart, 9600);
+    lithium_open(&t, &uart);
+
+    SECTION("Write send") {
+        uint8_t data[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        uint16_t length = 10;
+
+        REQUIRE(lithium_send_transmit(&t, data, length) == LITHIUM_NO_ERROR);
+
+        REQUIRE_THAT(t.uart, HasWrittenBytes({
+            0x48, 0x65,
+            0x10, 0x03,
+            0x00, 0x0a,
+            0x1d, 0x53,
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+            0xba, 0x41,
+        }));
+    }
+
+    SECTION("Parse send") {
+        SECTION("Valid") {
+            SET_UART_INPUT(t,
+                0x48, 0x65,
+                0x10, 0x03,
+                0x00, 0x0a,
+                0x1d, 0x53,
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                0xba, 0x41,
+            );
+
+            lithium_packet_t packet;
+            REQUIRE(lithium_receive_packet(&t, &packet) == LITHIUM_NO_ERROR);
+
+            REQUIRE(packet.type == LITHIUM_I_MESSAGE);
+            REQUIRE(packet.command == LITHIUM_COMMAND_TRANSMIT_DATA);
+            REQUIRE(packet.payload_length == 10);
+            REQUIRE_PAYLOAD_HAS_BYTES(packet,
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+            );
+        }
+
+        SECTION("Bad header checksum") {
+            SET_UART_INPUT(t,
+                0x48, 0x65,
+                0x10, 0x03,
+                0x00, 0x0a,
+                0x1e, 0x54,
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                0xba, 0x41,
+            );
+
+            lithium_packet_t packet;
+            REQUIRE(lithium_receive_packet(&t, &packet) == LITHIUM_INVALID_CHECKSUM);
+        }
+
+        SECTION("Invalid payload size") {
+            SET_UART_INPUT(t,
+                0x48, 0x65,
+                0x10, 0x03,
+                0x0b, 0x0a,
+                0x9a, 0x49,
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                0xba, 0x41,
+            );
+
+            lithium_packet_t packet;
+            REQUIRE(lithium_receive_packet(&t, &packet) == LITHIUM_INVALID_PACKET);
+        }
+    }
+
+    SECTION("Parse ACK receive") {
+        SET_UART_INPUT(t,
+            0x48, 0x65,
+            0x20, 0x03,
+            0x0a, 0x0a,
+            0x37, 0xa7,
+        );
+
+        lithium_packet_t packet;
+        REQUIRE(lithium_receive_packet(&t, &packet) == LITHIUM_NO_ERROR);
+
+        REQUIRE(packet.type == LITHIUM_O_MESSAGE);
         REQUIRE(packet.command == LITHIUM_COMMAND_TRANSMIT_DATA);
-        REQUIRE(packet.payload_length == 15);
-        REQUIRE(packet.payload[0] == 0);
+        REQUIRE(lithium_is_ack(&packet));
     }
 
-    SECTION("Fast PA packet") {
-        uint8_t data[] = {
-            0x48, 0x65, // Synchronization bytes
-            0x10, 0x20, // Command
-            0x00, 0x01, // Payload length
-            0x31, 0x03, // Header checksum
-            5, // Payload
-            0x05, 0x05  // Payload checksum
-        };
+    SECTION("Parse NACK receive") {
+        SET_UART_INPUT(t,
+            0x48, 0x65,
+            0x20, 0x03,
+            0xff, 0xff,
+            0x21, 0x86,
+        );
+
         lithium_packet_t packet;
+        REQUIRE(lithium_receive_packet(&t, &packet) == LITHIUM_NO_ERROR);
 
-        REQUIRE(lithium_parse_packet(data, 11, &packet) == LITHIUM_NO_ERROR);
+        REQUIRE(packet.type == LITHIUM_O_MESSAGE);
+        REQUIRE(packet.command == LITHIUM_COMMAND_TRANSMIT_DATA);
+        REQUIRE(lithium_is_nack(&packet));
+    }
 
-        REQUIRE(packet.command == LITHIUM_COMMAND_FAST_PA_SET);
-        REQUIRE(packet.payload_length == 1);
-        REQUIRE(packet.payload[0] == 5);
+    SECTION("Parse received data") {
+        SET_UART_INPUT(t,
+            0x48, 0x65,
+            0x20, 0x04,
+            0x00, 0x0a,
+            0x2e, 0x96,
+            10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+            0x83, 0x23,
+        );
+
+        lithium_packet_t packet;
+        REQUIRE(lithium_receive_packet(&t, &packet) == LITHIUM_NO_ERROR);
+
+        REQUIRE(packet.type == LITHIUM_O_MESSAGE);
+        REQUIRE(packet.command == LITHIUM_COMMAND_RECEIVE_DATA);
+        REQUIRE_PAYLOAD_HAS_BYTES(packet,
+            10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        );
     }
 
     lithium_close(&t);
