@@ -54,7 +54,8 @@ add_subdirectory(board_common)
 
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
   # For msp430 builds, use LTO with size optimization
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto -fno-use-linker-plugin -Os")
+  # We use GCC flag syntax here since we always know we're using msp430-elf-gcc
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -flto -fno-use-linker-plugin -Os")
   message(STATUS "Performing MSP430 build")
   add_definitions(-DUSIP_NATIVE)
   include_directories(board_common/native)
@@ -81,9 +82,13 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
   # freertos build
   add_subdirectory("3rdparty/freertos/")
 else()
-  message(STATUS "Building test binary")
   # test build
+  message(STATUS "Building test binary")
+  # Require C++11
   enable_language(CXX)
+  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
   add_subdirectory(data_board)
   add_subdirectory(dev_board)
   add_subdirectory(sensor_board)
