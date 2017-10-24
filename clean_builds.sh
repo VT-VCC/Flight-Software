@@ -1,2 +1,2 @@
 #!/bin/bash
-find -path '*/build-*/*' -delete
+find ./ -path '*/build-*/*' -delete
