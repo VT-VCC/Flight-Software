@@ -37,6 +37,43 @@ const char * spi_error_string(spi_error_t t);
  */
 typedef struct spi spi_t;
 
+/** Open the given SPI channel so that it can be used.
+ * @param The SPI channel to open.
+ */
+void spi_open(spi_t * out);
+
+/** Safely close the SPI channel so that it can be reused later.
+ * @param The SPI channel to close.
+ */
+void spi_close(spi_t * out);
+
+/** Transfer a byte by SPI.
+ * @param channel The SPI channel to send to.
+ * @param byte The byte to send.
+ * @return An error code. This should always be checked.
+ */
+spi_error_t spi_send_byte(spi_t * channel,
+			  uint8_t byte);
+
+/** Receive a byte from the SPI buffer.
+ * @param channel The SPI channel to read from.
+ * @param byte The address to write the byte to.
+ * @return An error code. This should always be checked.
+ */
+spi_error_t spi_receive_byte(spi_t * channel,
+			     uint8_t * byte);
+  
+/** Transfer a byte from SPI and save the return byte.
+ * @param channel The channel to read from.
+ * @param send_byte The byte to send.
+ * @param receive_byte The address of the byte to save to.
+ *
+ * @return An error code. This should always be checked.
+ */
+spi_error_t spi_transfer_byte(spi_t * channel,
+			      uint8_t send_byte,
+			      uint8_t * receive_byte);
+
 
 /** @} */
 
