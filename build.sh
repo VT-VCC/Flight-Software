@@ -18,7 +18,7 @@ do
       cmake_args='-DUSIP_DATA_BOARD=TRUE -DMSP430_MCU=msp430f5438a'
       ;;
     dev-board)
-      cmake_args='-DUSIP_DEV_BOARD=TRUE -DMSP430_MCU=msp430fr5969'
+      cmake_args='-DUSIP_DEV_BOARD=TRUE -DMSP430_MCU=msp430fr5994'
       ;;
     sensor-board)
       cmake_args='-DUSIP_SENSOR_BOARD=TRUE -DMSP430_MCU=msp430fr5849'

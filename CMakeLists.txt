@@ -5,6 +5,12 @@ project(VT_USIP_FLIGHT_SOFTWARE LANGUAGES C)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(usip_macros)
 
+# We always want C/c++11
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # third-party libraries
 include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/3rdparty")
 
@@ -54,6 +60,7 @@ add_subdirectory(board_common)
 
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
   # For msp430 builds, use LTO with size optimization
+  # We use GCC flag syntax here since we always know we're using msp430-elf-gcc
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto -fno-use-linker-plugin -Os")
   message(STATUS "Performing MSP430 build")
   add_definitions(-DUSIP_NATIVE)
@@ -81,9 +88,11 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
   # freertos build
   add_subdirectory("3rdparty/freertos/")
 else()
-  message(STATUS "Building test binary")
   # test build
+  message(STATUS "Building test binary")
+  # Require C++11
   enable_language(CXX)
+
   add_subdirectory(data_board)
   add_subdirectory(dev_board)
   add_subdirectory(sensor_board)
