@@ -2,13 +2,15 @@
 /******************************************************************************\
  *  Public interface implementations                                          *
 \******************************************************************************/
-void i2c_write_string() {};
+void i2c_open() {}
 
-void i2c_read_string() {};
+void i2c_write_string() {}
 
-void i2c_write_bytes() {};
+void i2c_read_string() {}
 
-void i2c_read_bytes() {};
+void i2c_write_bytes() {}
+
+void i2c_read_bytes() {}
 
 #ifndef NDEBUG
 const char * i2c_error_string(i2c_error_t t) {

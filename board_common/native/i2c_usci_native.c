@@ -2,10 +2,28 @@
 
 #include <assert.h>
 
-bool i2c_open() {}
+bool i2c_open() {
 
-void i2c_write_byte() {}
+  // Initialization parameters for the I2C
 
-void i2c_read_byte() {}
+  EUSCI_B_I2C_initMasterParam param;
+  uint16_t base_address = 0x00;
 
-void i2c_close() {}
+  // Start the I2C in Master mode
+
+  EUSCI_B_I2C_initMaster(base_address, param);
+
+  assert(false);
+}
+
+void i2c_write_byte() {
+  assert(false);
+}
+
+void i2c_read_byte() {
+  assert(false);
+}
+
+void i2c_close() {
+  assert(false);
+}

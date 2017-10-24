@@ -35,6 +35,21 @@ __attribute__((interrupt(USCI_A0_VECTOR)))
 void USCI_A0_ISR(void) {}
 
 __attribute__((interrupt(USCI_A1_VECTOR)))
+void USCI_A1_ISR(void) {}
+
+void i2c_open() {
+
+    // Initialization parameters for the I2C
+
+    USCI_B_I2C_initMasterParam param;
+    uint16_t base_address = 0x00;
+
+    // Start the I2C in Master mode
+
+    USCI_B_I2C_initMaster(base_address, param);
+
+    assert(false);
+}
 
 void i2c_write_string() {}
 
