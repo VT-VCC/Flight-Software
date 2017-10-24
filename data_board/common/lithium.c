@@ -92,15 +92,16 @@ EMIT_SEND_PAYLOAD(stream_fw_update, FIRMWARE_PACKET,
     data, length,
     uint8_t * data, uint16_t length)
 EMIT_SEND_PAYLOAD(set_pa_level, FAST_PA_SET,
-    &speed, 1,
-    uint8_t speed)
+    &output_level, 1,
+    uint8_t output_level)
 
 #undef EMIT_SEND_PAYLOAD
 
 
 lithium_result_t lithium_receive_packet(lithium_t * radio, lithium_packet_t * packet) {
     // Try to read a header
-    uint8_t raw_packet[MAX_PACKET_LENGTH];
+    uint16_t raw_packet_length = MAX_PACKET_LENGTH;
+    uint8_t raw_packet[raw_packet_length];
     uart_error_t uart_err = uart_read_bytes(&radio->uart, raw_packet, HEADER_LENGTH);
     if (uart_err != UART_NO_ERROR) {
         return LITHIUM_BAD_COMMUNICATION;
@@ -108,7 +109,7 @@ lithium_result_t lithium_receive_packet(lithium_t * radio, lithium_packet_t * pa
 
     // Parse the header and see if there's a payload
     uint16_t remaining_bytes;
-    lithium_result_t err = lithium_parse_header(raw_packet, packet, &remaining_bytes);
+    lithium_result_t err = lithium_parse_header(raw_packet, raw_packet_length, packet, &remaining_bytes);
     if (err != LITHIUM_NO_ERROR) {
         return err;
     }
@@ -120,7 +121,7 @@ lithium_result_t lithium_receive_packet(lithium_t * radio, lithium_packet_t * pa
             return LITHIUM_BAD_COMMUNICATION;
         }
 
-        err = lithium_parse_body(raw_packet, packet);
+        err = lithium_parse_body(raw_packet, raw_packet_length, packet);
         if (err != LITHIUM_NO_ERROR) {
             return err;
         }
@@ -130,7 +131,11 @@ lithium_result_t lithium_receive_packet(lithium_t * radio, lithium_packet_t * pa
 }
 
 
-lithium_result_t lithium_parse_header(uint8_t * raw_packet, lithium_packet_t * packet, uint16_t * remaining_bytes) {
+lithium_result_t lithium_parse_header(uint8_t * raw_packet, uint16_t raw_packet_length, lithium_packet_t * packet, uint16_t * remaining_bytes) {
+    if (raw_packet_length < HEADER_LENGTH) {
+        return LITHIUM_INVALID_PACKET;
+    }
+
     // Validate magic bytes
     bool has_sync_bytes = (raw_packet[0] == SYNC_1 && raw_packet[1] == SYNC_2);
     if (!has_sync_bytes) {
@@ -185,7 +190,11 @@ lithium_result_t lithium_parse_header(uint8_t * raw_packet, lithium_packet_t * p
     return LITHIUM_NO_ERROR;
 }
 
-lithium_result_t lithium_parse_body(uint8_t * raw_packet, lithium_packet_t * packet) {
+lithium_result_t lithium_parse_body(uint8_t * raw_packet, uint16_t raw_packet_length, lithium_packet_t * packet) {
+    if (raw_packet_length < HEADER_LENGTH) {
+        return LITHIUM_INVALID_PACKET;
+    }
+
     uint16_t payload_length = packet->payload_length;
     uint8_t payload_checksum[CHECKSUM_LENGTH];
     compute_checksum(raw_packet + SYNC_BYTES_LENGTH, HEADER_DATA_LENGTH + CHECKSUM_LENGTH + payload_length, payload_checksum);
@@ -196,6 +205,10 @@ lithium_result_t lithium_parse_body(uint8_t * raw_packet, lithium_packet_t * pac
         raw_packet[HEADER_LENGTH+payload_length+1] == payload_checksum[1]);
     if (!payload_checksums_match) {
         return LITHIUM_INVALID_CHECKSUM;
+    }
+
+    if (raw_packet_length < HEADER_LENGTH + payload_length + CHECKSUM_LENGTH) {
+        return LITHIUM_INVALID_PACKET;
     }
 
     // Copy payload

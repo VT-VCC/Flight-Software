@@ -395,11 +395,11 @@ lithium_result_t lithium_send_stream_fw_update(lithium_t * radio, uint8_t * data
  * Send a power amplifier level change packet to a Lithium radio
  *
  * @param radio The radio to communicate with
- * @param speed The speed to change the power amplifier level to
+ * @param output_level The power output level to change the power amplifier to
  *
  * @return The result of the operation
  */
-lithium_result_t lithium_send_set_pa_level(lithium_t * radio, uint8_t speed);
+lithium_result_t lithium_send_set_pa_level(lithium_t * radio, uint8_t output_level);
 
 /**
  * Attempt to receive and parse a Lithium packet over the UART channel
@@ -420,7 +420,7 @@ lithium_result_t lithium_receive_packet(lithium_t * radio, lithium_packet_t * pa
  *
  * @return The result of the operation
  */
-lithium_result_t lithium_parse_header(uint8_t * raw_packet, lithium_packet_t * packet, uint16_t * remaining_bytes);
+lithium_result_t lithium_parse_header(uint8_t * raw_packet, uint16_t raw_packet_length, lithium_packet_t * packet, uint16_t * remaining_bytes);
 
 /**
  * Parse the body of an encoded Lithium packet
@@ -430,7 +430,7 @@ lithium_result_t lithium_parse_header(uint8_t * raw_packet, lithium_packet_t * p
  *
  * @return The result of the operation
  */
-lithium_result_t lithium_parse_body(uint8_t * raw_packet, lithium_packet_t * packet);
+lithium_result_t lithium_parse_body(uint8_t * raw_packet, uint16_t raw_packet_length, lithium_packet_t * packet);
 
 /**
  * Check if a packet is an I-Message

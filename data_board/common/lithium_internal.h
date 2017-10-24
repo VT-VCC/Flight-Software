@@ -26,11 +26,11 @@
 // Length of the header/payload checksum bytes
 #define CHECKSUM_LENGTH     2
 // Length of all of the header bytes
-#define HEADER_LENGTH       SYNC_BYTES_LENGTH + HEADER_DATA_LENGTH + CHECKSUM_LENGTH
+#define HEADER_LENGTH       (SYNC_BYTES_LENGTH + HEADER_DATA_LENGTH + CHECKSUM_LENGTH)
 // Maximum length of the payload
 #define MAX_PAYLOAD_LENGTH  255
 // Maximum length of the entire packet
-#define MAX_PACKET_LENGTH   HEADER_LENGTH + MAX_PAYLOAD_LENGTH + CHECKSUM_LENGTH
+#define MAX_PACKET_LENGTH   (HEADER_LENGTH + MAX_PAYLOAD_LENGTH + CHECKSUM_LENGTH)
 
 /**
  * Over-the-air commands
