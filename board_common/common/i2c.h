@@ -40,7 +40,7 @@ typedef struct spi spi_t;
 }
 #endif
 
-void i2c_init();
+void i2c_open();
 
 void i2c_write_string();
 
