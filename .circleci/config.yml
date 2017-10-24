@@ -1,0 +1,18 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: bobtwinkles/usip-cci-image:0.0.2
+    steps:
+      - checkout
+      - run:
+          name: Perform a host build
+          command: |
+            mkdir -p /tmp/build
+            cd /tmp/build
+            cmake3 -G "Ninja" /root/project
+            ninja-build -v
+            ./usip_test
+          environment:
+            CC: clang
+            CXX: clang++

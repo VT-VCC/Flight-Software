@@ -43,7 +43,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 # set some default flags
-set(CMAKE_C_FLAGS_INIT   "--std=gnu99 ${_C_FAMILY_FLAGS_INIT}")
+set(CMAKE_C_FLAGS_INIT   "${_C_FAMILY_FLAGS_INIT}")
 
 set(CMAKE_ASM_FLAGS_INIT "${_DISABLE_EXCEPTIONS_FLAGS} ${_M_OPTIONS}")
 
