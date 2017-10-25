@@ -52,7 +52,7 @@ typedef struct uart {
      * Which USCI module this I2C is connected to
      */
     usci_t usci;
-} uart_t;
+} i2c_t;
 
 /**
  * Open a connection to a I2C channel
