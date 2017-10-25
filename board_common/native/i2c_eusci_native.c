@@ -37,16 +37,17 @@ void USCI_A0_ISR(void) {}
 __attribute__((interrupt(USCI_A1_VECTOR)))
 void USCI_A1_ISR(void) {}
 
-void i2c_open() {
+void i2c_open(eusci_t eusci, i2c_t * out) {
 
-    // Initialization parameters for the I2C
+    USCI_B_I2C_initMasterParam param = {0};
 
-    USCI_B_I2C_initMasterParam param;
-    uint16_t base_address = 0x00;
+    // Initializate parameters for the I2C
+
+    uint16_t base_address = BASE_ADDRESSES;
 
     // Start the I2C in Master mode
 
-    USCI_B_I2C_initMaster(base_address, param);
+    USCI_B_I2C_initMaster(base_address, &param);
 
     assert(false);
 }
