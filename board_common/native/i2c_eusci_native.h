@@ -50,7 +50,7 @@ typedef enum eusci {
     EUSCI_count
 } eusci_t;
 
-struct i2c {
+typedef struct i2c {
     /**
      * Which EUSCI module this I2C is connected to
      */
@@ -59,11 +59,13 @@ struct i2c {
 
 bool i2c_open(eusci_t eusci, i2c_t * out);
 
-void i2c_write_byte();
+// TODO: should be able to accept a slave address
+void i2c_write_byte(i2c_t * channel, uint8_t byte);
 
-void i2c_read_byte();
+// TODO: should be able to accept a slave address
+void i2c_read_byte(i2c_t * channel, uint8_t byte);
 
-void i2c_close();
+void i2c_close(i2c_t channel);
 
 #ifdef __cplusplus
 }
