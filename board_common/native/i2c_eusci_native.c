@@ -31,31 +31,100 @@ static uint16_t BASE_ADDRESSES[EUSCI_count] = {
 
 volatile int read_byte = 0;
 
-__attribute__((interrupt(USCI_A0_VECTOR)))
-void USCI_A0_ISR(void) {}
 
-__attribute__((interrupt(USCI_A1_VECTOR)))
-void USCI_A1_ISR(void) {}
+__attribute__((interrupt(USCI_B0_VECTOR)))
+void USCI_B0_ISR(void) {
+  // TODO: Figure out proper inturrupt vectors to use here
+}
 
-void i2c_open(eusci_t eusci, i2c_t * out) {
 
-    USCI_B_I2C_initMasterParam param = {0};
+__attribute__((interrupt(USCI_B1_VECTOR)))
+void USCI_B1_ISR(void) {
+  // TODO: Figure out proper inturrupt vectors to use here
+}
 
-    // Initializate parameters for the I2C
+bool i2c_open(eusci_t eusci, i2c_t * out) {
 
-    uint16_t base_address = BASE_ADDRESSES;
+    // TODO: Need error check to make sure the same module isn't opened twice
+
+    assert(on < EUSCI_count);
+#ifdef EUSCI_B0_BASE
+    assert(on < EUSCI_B0);
+#endif
+
+    EUSCI_B_I2C_initMasterParam param = {0};
+    param.selectClockSource = EUSCI_B_I2C_CLOCKSOURCE_SMCLK;
+    param.i2cClk = CS_getSMCLK();
+    param.dataRate = EUSCI_B_I2C_SET_DATA_RATE_400KBPS;
+    param.byteCounterThreshold = RXCOUNT;
+    param.autoSTOPGeneration = EUSCI_B_I2C_SEND_STOP_AUTOMATICALLY_ON_BYTECOUNT_THRESHOLD;
+
+    uint16_t base_address = BASE_ADDRESSES[eusci];
 
     // Start the I2C in Master mode
 
-    USCI_B_I2C_initMaster(base_address, &param);
+    EUSCI_B_I2C_initMaster(base_address, &param);
 
-    assert(false);
+    uint8_t slave_address = 0x00;
+
+    EUSCI_B_I2C_setSlaveAddress(base_address, slave_address);
+
+    EUSCI_B_I2C_setMode(base_address, EUSCI_B_I2C_RECEIVE_MODE);
+
+    //Enable I2C Module to start operations
+    EUSCI_B_I2C_enable(base_address);
+
+    EUSCI_B_I2C_clearInterrupt(base_address,
+                               EUSCI_B_I2C_RECEIVE_INTERRUPT0 +
+                               EUSCI_B_I2C_BYTE_COUNTER_INTERRUPT +
+                               EUSCI_B_I2C_NAK_INTERRUPT +
+                               EUSCI_B_I2C_STOP_INTERRUPT
+                               );
+
+    //Enable master Receive interrupt
+    EUSCI_B_I2C_enableInterrupt(base_address,
+                                EUSCI_B_I2C_RECEIVE_INTERRUPT0 +
+                                EUSCI_B_I2C_BYTE_COUNTER_INTERRUPT +
+                                EUSCI_B_I2C_NAK_INTERRUPT +
+                                EUSCI_B_I2C_STOP_INTERRUPT
+                                );
+
+    out->eusci = on;
+
+    return true;
 }
 
-void i2c_write_string() {}
+i2c_error_t i2c_write_byte(uint16_t slave_address, uint8_t byte) {
+    EUSCI_B_I2C_slavePutData(slave_address, byte);
 
-void i2c_read_string() {}
+    // what's happening here?
+    /*if (read_byte) {
+        for (int i = 0; i < 32; ++i) {
+            P4OUT ^= 1 << 6;
+            __delay_cycles(800000UL);
+        }
+        read_byte = 0;
+    }*/
 
-void i2c_write_bytes() {}
+    return I2C_NO_ERROR;
+}
 
-void i2c_read_bytes() {}
+i2c_error_t i2c_read_byte(uint16_t slave_address, uint8_t byte) {
+    EUSCI_B_I2C_slaveGetData(slave_address, byte);
+
+    // what's happening here?
+    /*if (read_byte) {
+        for (int i = 0; i < 32; ++i) {
+            P4OUT ^= 1 << 6;
+            __delay_cycles(800000UL);
+        }
+        read_byte = 0;
+    }*/
+
+    return I2C_NO_ERROR;
+}
+
+void i2c_close(i2c_t * channel) {
+    EUSCI_B_I2C_disable(BASE_ADDRESSES[channel->eusci]);
+    return I2C_NO_ERROR;
+}
