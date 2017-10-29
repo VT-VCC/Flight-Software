@@ -1,7 +1,6 @@
 #include <catch/catch.hpp>
 #include "pinav_parser.h"
 
-// @TODO: incomplete
 TEST_CASE("Valid GGA sentence", "[pinav_parser]") {
 	pinav_parse_output_t output;
 	char * sentence = "$GPGGA,172120.384,5219.0671,N,05117.0926,E,1,9,0.9,371262.1,M,0,M,,,*54\r\n";
@@ -43,6 +42,28 @@ TEST_CASE("Valid LSP sentence", "[pinav_parser]") {
 	expected_val <<= 32;
 	fraction = 0b11111101101100100010110100001110;
 	expected_val |= fraction;
+	REQUIRE(output.data.lsp.wgs_z == expected_val);
+	REQUIRE(output.data.lsp.sat_count == 5);
+	REQUIRE(output.data.lsp.pdop == 0x0480);
+}
+
+TEST_CASE("Valid LSV sentence", "[pinav_parser]") {
+	pinav_parse_output_t output;
+	char * sentence = "$PSLSV,193772.0585851,780,0.051,0.017,0.034,5,4.5*7B\r\n";
+	pinav_parser_status_t result = parse_pinav_sentence(&output, (uint8_t *)sentence);
+	REQUIRE(result == PN_PARSE_OK);
+	REQUIRE(output.id == LSV);
+	int64_t expected_val = 193772;
+	expected_val <<= 32;
+	uint32_t fraction = 0b00001110111111110110111011100000;
+	expected_val |= fraction;
+	REQUIRE(output.data.lsp.gps_time_seconds == expected_val);
+	REQUIRE(output.data.lsp.gps_week == 780);
+	expected_val = 0b00001101000011100101011000000100;	// Expected x velocity (32 bit fractional portion of .051)
+	REQUIRE(output.data.lsp.wgs_x == expected_val);
+	expected_val = 0b00000100010110100001110010101100;	// Expected y velocity (32 bit fractional portion of .017)
+	REQUIRE(output.data.lsp.wgs_y == expected_val);
+	expected_val = 0b00001000101101000011100101011000;	// Expected z velocity (32 bit fractional portion of .034)
 	REQUIRE(output.data.lsp.wgs_z == expected_val);
 	REQUIRE(output.data.lsp.sat_count == 5);
 	REQUIRE(output.data.lsp.pdop == 0x0480);

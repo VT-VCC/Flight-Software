@@ -1,6 +1,6 @@
 #include "pinav_parser.h"
 #include <string.h>
-#include <stdio.h>	// @TODO: remove when not needed for debugging
+//#include <stdio.h>	// @TODO: remove when not needed for debugging
 
 typedef enum generic_status { FAIL = 0, SUCCESS = 1 } generic_status_t;
 
@@ -472,17 +472,48 @@ static pinav_parser_status_t parse_lsp(pinav_parse_output_t * out, uint8_t * sen
 	return PN_PARSE_OK;
 }
 
-// Private helper function to parse the valid gga sentence
+// Private helper function to parse the valid lsv sentence
 // pointed to by sentence into the output struct pointed to by out
-pinav_parser_status_t parse_rmc(pinav_parse_output_t * out, uint8_t * sentence) {
+static pinav_parser_status_t parse_lsv(pinav_parse_output_t * out, uint8_t * sentence) {
 	uint8_t * it; // iterator for parsing sentence
 
-	out->id = RMC;
+	out->id = LSV;
 
 	it = sentence + 7; // place iterator at start of gps time seconds field
+	if (!string_to_fixed_point(&(int64_t)out->data.lsv.gps_time_seconds, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_deliminator(it) + 1; // place iterator at the start of the gps week field
+	int64_t gps_week;
+	if (!string_to_fixed_point(&gps_week, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	out->data.lsv.gps_week = (uint16_t)(gps_week >> 32); // Convert to 16-bit integer
+	it += next_deliminator(it) + 1; // Place iterator at start of X velocity field
+	if (!string_to_fixed_point(&out->data.lsv.wgs_vx, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_deliminator(it) + 1; // Place iterator at start of Y velocity field
+	if (!string_to_fixed_point(&out->data.lsv.wgs_vy, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_deliminator(it) + 1; // Place iterator at start of Z velocity field
+	if (!string_to_fixed_point(&out->data.lsv.wgs_vz, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_deliminator(it) + 1; // Place iterator at start of the sat_count field
+	if (!parse_tracked_sats(&out->data.lsv.sat_count, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	it += next_deliminator(it) + 1;	// Place iterator on the PDOP field
+	int64_t pdop;
+	if (!string_to_fixed_point(&pdop, it)) {
+		return PN_PARSE_SENTENCE_FORMAT_ERROR;
+	}
+	pdop >>= 24; // Convert to 8.8 fixed point
+	out->data.lsv.pdop = (uint16_t)pdop;
 
-	// TODO: IN PROGRESS
-	return PN_PARSE_UNRECOGNIZED_SENTENCE_TYPE;
+	return PN_PARSE_OK;
 }
 
 pinav_parser_status_t parse_pinav_sentence(pinav_parse_output_t * out, uint8_t * sentence){
@@ -498,6 +529,9 @@ pinav_parser_status_t parse_pinav_sentence(pinav_parse_output_t * out, uint8_t *
 	}
 	if (!strncmp(sentence + 1, "PSLSP,", 6)) {
 		return parse_lsp(out, sentence);
+	}
+	if (!strncmp(sentence + 1, "PSLSV,", 6)) {
+		return parse_lsv(out, sentence);
 	}
 
 	// Default if sentence not recognized:
