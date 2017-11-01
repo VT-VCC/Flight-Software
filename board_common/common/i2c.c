@@ -2,15 +2,26 @@
 /******************************************************************************\
  *  Public interface implementations                                          *
 \******************************************************************************/
-void i2c_open() {}
 
-void i2c_write_string() {}
+i2c_error_t i2c_write_bytes(i2_t * channel, const uint8_t * bytes, size_t n) {
+    i2c_error_t err;
+    for (size_t i = 0; i < n; i++) {
+        err = uart_write_byte(channel, bytes[i]);
+        if (err != I2C_NO_ERROR)
+            return err;
+    }
+    return err;
+}
 
-void i2c_read_string() {}
-
-void i2c_write_bytes() {}
-
-void i2c_read_bytes() {}
+i2c_error_t i2c_read_bytes(i2_t * channel, const uint8_t * bytes, size_t n) {
+    i2c_error_t err;
+    for (size_t i = 0; i < n; i++) {
+        err = uart_read_byte(channel, bytes[i]);
+        if (err != I2C_NO_ERROR)
+            return err;
+    }
+    return err;
+}
 
 #ifndef NDEBUG
 const char * i2c_error_string(i2c_error_t t) {

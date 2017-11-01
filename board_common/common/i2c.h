@@ -34,21 +34,15 @@ const char * i2c_error_string(uart_error_t t);
 /** Opaque type for the I2C state
  *
  */
-typedef struct spi spi_t;
+typedef struct i2c i2c_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-void i2c_open();
+i2c_error_t i2c_write_bytes(i2_t * channel, const uint8_t * bytes, size_t n);
 
-void i2c_write_string();
-
-void i2c_read_string();
-
-void i2c_write_bytes();
-
-void i2c_read_bytes();
+i2c_error_t i2c_read_bytes(i2_t * channel, const uint8_t * bytes, size_t n);
 
 #ifdef USIP_NATIVE
 #   include "i2c_native.h"

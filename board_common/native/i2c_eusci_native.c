@@ -62,12 +62,11 @@ bool i2c_open(eusci_t eusci, i2c_t * out) {
     uint16_t base_address = BASE_ADDRESSES[eusci];
 
     // Start the I2C in Master mode
-
     EUSCI_B_I2C_initMaster(base_address, &param);
 
-    uint8_t slave_address = 0x00;
+    //uint8_t slave_address = 0x00;
 
-    EUSCI_B_I2C_setSlaveAddress(base_address, slave_address);
+    //EUSCI_B_I2C_setSlaveAddress(base_address, slave_address);
 
     EUSCI_B_I2C_setMode(base_address, EUSCI_B_I2C_RECEIVE_MODE);
 
@@ -94,8 +93,10 @@ bool i2c_open(eusci_t eusci, i2c_t * out) {
     return true;
 }
 
-i2c_error_t i2c_write_byte(uint16_t slave_address, uint8_t byte) {
-    EUSCI_B_I2C_slavePutData(slave_address, byte);
+i2c_error_t i2c_write_byte(i2c_t * channel, uint8_t slave_address, uint8_t byte) {
+    uint16_t base_address = BASE_ADDRESSES[channel->eusci];
+    EUSCI_B_I2C_setSlaveAddress(base_address, slave_address);
+    EUSCI_B_I2C_masterSendSingleByte(base_address, byte);
 
     // what's happening here?
     /*if (read_byte) {
@@ -109,8 +110,10 @@ i2c_error_t i2c_write_byte(uint16_t slave_address, uint8_t byte) {
     return I2C_NO_ERROR;
 }
 
-i2c_error_t i2c_read_byte(uint16_t slave_address, uint8_t byte) {
-    EUSCI_B_I2C_slaveGetData(slave_address, byte);
+i2c_error_t i2c_read_byte(i2c_t * channel, uint8_t slave_address, uint8_t * byte) {
+    uint16_t base_address = BASE_ADDRESSES[channel->eusci];
+    EUSCI_B_I2C_setSlaveAddress(base_address, slave_address);
+    byte = EUSCI_B_I2C_masterReceiveSingleByte(base_address);
 
     // what's happening here?
     /*if (read_byte) {

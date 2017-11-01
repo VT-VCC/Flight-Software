@@ -4,6 +4,8 @@
 
 bool i2c_open() {
 
+  // TODO: implement this function
+
   // Initialization parameters for the I2C
 
   EUSCI_B_I2C_initMasterParam param;
@@ -17,13 +19,16 @@ bool i2c_open() {
 }
 
 void i2c_write_byte() {
+  // TODO: implement this function
   assert(false);
 }
 
 void i2c_read_byte() {
+  // TODO: implement this function
   assert(false);
 }
 
 void i2c_close() {
+  // TODO: implement this function
   assert(false);
 }
