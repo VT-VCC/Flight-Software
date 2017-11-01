@@ -127,7 +127,7 @@ i2c_error_t i2c_read_byte(i2c_t * channel, uint8_t slave_address, uint8_t * byte
     return I2C_NO_ERROR;
 }
 
-void i2c_close(i2c_t * channel) {
+i2c_error_t i2c_close(i2c_t * channel) {
     EUSCI_B_I2C_disable(BASE_ADDRESSES[channel->eusci]);
     return I2C_NO_ERROR;
 }

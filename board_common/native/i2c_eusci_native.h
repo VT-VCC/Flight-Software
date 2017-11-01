@@ -59,13 +59,11 @@ typedef struct i2c {
 
 bool i2c_open(eusci_t eusci, i2c_t * out);
 
-// TODO: should be able to accept a slave address
-void i2c_write_byte(i2c_t * channel, uint8_t byte);
+i2c_error_t i2c_write_byte(i2c_t * channel, uint8_t slave_address, uint8_t byte);
 
-// TODO: should be able to accept a slave address
-void i2c_read_byte(i2c_t * channel, uint8_t byte);
+i2c_error_t i2c_read_byte(i2c_t * channel, uint8_t slave_address, uint8_t * byte);
 
-void i2c_close(i2c_t channel);
+i2c_error_t i2c_close(i2c_t * channel);
 
 #ifdef __cplusplus
 }
