@@ -1,3 +1,13 @@
+//
+//  spi_eusci_native.h
+//  
+//
+//  Created by Rohan J Dani on 10/11/17.
+//
+//
+
+#ifndef spi_eusci_native_h
+#define spi_eusci_native_h
 #ifndef _BOARD_COMMON_NATIVE_SPI_H_
 #define _BOARD_COMMON_NATIVE_SPI_H_
 
@@ -18,48 +28,59 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * Represents which EUSCI module we're hooked up to
- */
-typedef enum eusci {
+    
+    /**
+     * Represents which EUSCI module we're hooked up to
+     */
+    typedef enum eusci {
 #ifdef EUSCI_A0_BASE
-    EUSCI_A0,
+        EUSCI_A0,
 #endif
 #ifdef EUSCI_A1_BASE
-    EUSCI_A1,
+        EUSCI_A1,
 #endif
 #ifdef EUSCI_A2_BASE
-    EUSCI_A2,
+        EUSCI_A2,
 #endif
 #ifdef EUSCI_A3_BASE
-    EUSCI_A3,
+        EUSCI_A3,
 #endif
 #ifdef EUSCI_B0_BASE
-    EUSCI_B0,
+        EUSCI_B0,
 #endif
 #ifdef EUSCI_B1_BASE
-    EUSCI_B1,
+        EUSCI_B1,
 #endif
 #ifdef EUSCI_B2_BASE
-    EUSCI_B2,
+        EUSCI_B2,
 #endif
 #ifdef EUSCI_B3_BASE
-    EUSCI_B3,
+        EUSCI_B3,
 #endif
-    EUSCI_count
-} eusci_t;
-
-struct spi {
+        EUSCI_count
+    } eusci_t;
+    
+    typedef struct spi {
+        /**
+         * Which EUSCI module this UART is connected to
+         */
+        eusci_t eusci;
+    };
+    
     /**
-     * Which EUSCI module this SPI is connected to
+     * Open a connection to a UART channel
+     *
+     * @param eusci The EUSCI channel to use
+     * @param baud_rate The baud rate at which we will run
+     * @param out The UART structure to fill
+     *
      */
-    eusci_t eusci;
-};
-
-
+    bool spi_open(eusci_t eusci, spi_t * out);
+    
 #ifdef __cplusplus
 }
 #endif
 
 #endif // _BOARD_COMMON_NATIVE_SPI_H_
+
+#endif /* spi_eusci_native_h */
