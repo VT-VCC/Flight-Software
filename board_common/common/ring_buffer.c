@@ -18,23 +18,23 @@ static size_t next_position(ring_buffer_t * ring, size_t position) {
 	return (position + 1) % ring->size;
 }
 
-int ring_buffer_get(ring_buffer_t * ring, int * item) {
+bool ring_buffer_get(ring_buffer_t * ring, int * item) {
 	if (ring_buffer_is_empty(ring)) {
-		return 0;
+		return false;
 	} else {
 		*item = ring->buffer[ring->tail];
 		ring->tail = next_position(ring, ring->tail);
-		return 1;
+		return true;
 	}
 }
 
-int ring_buffer_put(ring_buffer_t * ring, int item) {
+bool ring_buffer_put(ring_buffer_t * ring, int item) {
 	if (ring_buffer_is_full(ring)) {
-		return 0;
+		return false;
 	} else {
 		ring->buffer[ring->head] = item;
 		ring->head = next_position(ring, ring->head);
-		return 1;
+		return true;
 	}
 }
 

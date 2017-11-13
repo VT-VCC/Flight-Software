@@ -1,18 +1,23 @@
 #ifndef _RING_BUFFER_H_
 #define _RING_BUFFER_H_
 
+#include <stdbool.h>
+#include <stddef.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * The internal representation of the ring buffer. This should not be relied
  * upon. Assume it will change. Direct member access is discouraged.
  */
-struct ring_buffer {
+typedef struct ring_buffer {
 	size_t head;
 	size_t tail;
 	size_t size;
 	int * buffer;
-};
-
-typedef struct ring_buffer ring_buffer_t;
+} ring_buffer_t;
 
 /**
  * Create a ring buffer with the given size over the given buffer. Note that if
@@ -23,7 +28,7 @@ typedef struct ring_buffer ring_buffer_t;
  * @param buffer The buffer to write to. This must not be freed before the user
  *               is done using the buffer.
  */
-void ring_buffer_t ring_buffer_init(size_t size, int * buffer);
+void ring_buffer_init(size_t size, int * buffer, ring_buffer_t * out);
 
 /**
  * Get a value from the ring buffer.
@@ -33,7 +38,7 @@ void ring_buffer_t ring_buffer_init(size_t size, int * buffer);
  *         if the buffer will be empty, you should always check the return
  *         value.
  */
-int ring_buffer_get(ring_buffer_t ring, int * item);
+bool ring_buffer_get(ring_buffer_t * ring, int * item);
 
 /**
  * Put a value into the ring buffer.
@@ -42,7 +47,7 @@ int ring_buffer_get(ring_buffer_t ring, int * item);
  * @return True on success. False if the buffer was full. If you are not sure
  *         if the bfufer will be full, you should always check the return value.
  */
-int ring_buffer_put(ring_buffer_t ring, int item);
+bool ring_buffer_put(ring_buffer_t * ring, int item);
 
 /**
  * Provides the size of the ring buffer. This function doesn't assume anything
@@ -65,6 +70,10 @@ bool ring_buffer_is_empty(ring_buffer_t * ring);
  * @return Whether the ring buffer is full.
  */
 bool ring_buffer_is_full(ring_buffer_t * ring);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 
