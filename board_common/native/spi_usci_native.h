@@ -62,7 +62,7 @@ typedef struct spi {
  * @param out The SPI structure to fill
  *
  */
-bool spi_open(usci_t on, uint32_t clock_rate, uart_t * out);
+bool spi_open(usci_t usci, uint32_t clock_rate, uart_t * out);
 
 #ifdef __cplusplus
 }

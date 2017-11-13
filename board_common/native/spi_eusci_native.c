@@ -92,7 +92,13 @@ static bool is_eusci_a_block(uint16_t base_address) {
         );
 }
 
-static bool eusci_a_spi_open(uint16_t base_address, uint32_t clock_rate, spi_t * out) {
+static bool eusci_a_spi_open(eusci_t eusci, uint16_t base_address, uint32_t clock_rate, spi_t * out) {
+    // Check if the SPI bus is already enabled
+    bool is_in_reset_state = HWREG16(base_address + OFS_UCAxCTLW0) & UCSWRST;
+    if (!is_in_reset_state) {
+        return false;
+    }
+
     // Configure the SPI master block
     EUSCI_A_SPI_initMasterParam param = {0};
     param.selectClockSource = EUSCI_A_SPI_CLOCKSOURCE_ACLK;
@@ -126,7 +132,13 @@ static bool eusci_a_spi_open(uint16_t base_address, uint32_t clock_rate, spi_t *
     return true;
 }
 
-static bool eusci_b_spi_open(uint16_t base_address, uint32_t clock_rate, spi_t * out) {
+static bool eusci_b_spi_open(eusci_t eusci, uint16_t base_address, uint32_t clock_rate, spi_t * out) {
+    // Check if the SPI bus is already enabled
+    bool is_in_reset_state = HWREG16(base_address + OFS_UCBxCTLW0) & UCSWRST;
+    if (!is_in_reset_state) {
+        return false;
+    }
+
     // Configure the SPI master block
     EUSCI_B_SPI_initMasterParam param = {0};
     param.selectClockSource = EUSCI_B_SPI_CLOCKSOURCE_ACLK;
@@ -157,17 +169,11 @@ static bool eusci_b_spi_open(uint16_t base_address, uint32_t clock_rate, spi_t *
 bool spi_open(eusci_t eusci, uint32_t clock_rate, spi_t * out) {
     uint16_t base_address = BASE_ADDRESSES[eusci];
 
-    // Check if the SPI bus is already enabled
-    bool is_in_reset_state = HWREG16(base_address + OFS_UCBxCTLW0) & UCSWRST;
-    if (!is_in_reset_state) {
-        return false;
-    }
-
     if (is_eusci_a_block(base_address)) {
-        return eusci_a_spi_open(base_address, clock_rate, out);
+        return eusci_a_spi_open(eusci, base_address, clock_rate, out);
     }
     else {
-        return eusci_b_spi_open(base_address, clock_rate, out);
+        return eusci_b_spi_open(eusci, base_address, clock_rate, out);
     }
 }
 
@@ -299,16 +305,13 @@ spi_error_t spi_transfer_byte(spi_t * channel, uint8_t send_byte, uint8_t * rece
 }
 */
 
-spi_error_t spi_send_byte(spi_t * channel, uint8_t byte) {
-    uint8_t received = 0;
-    return spi_transfer_byte(channel, byte, &received);
-}
-
-spi_error_t spi_receive_byte(spi_t * channel, uint8_t * byte) {
-    return spi_transfer_byte(channel, 0, byte);
-}
-
 static spi_error_t eusci_a_spi_transfer_byte(uint16_t base_address, uint8_t send_byte, uint8_t * receive_byte) {
+    // Check if the SPI bus is not enabled
+    bool is_in_reset_state = HWREG16(base_address + OFS_UCAxCTLW0) & UCSWRST;
+    if (is_in_reset_state) {
+        return SPI_CHANNEL_CLOSED;
+    }
+
     // Wait for the TX buffer to be ready, and by extension the RX buffer
     // (transmitting while UCxxIFG & UCTXIFG == 0 is undefined behavior)
     while(!EUSCI_A_SPI_getInterruptStatus(base_address,
@@ -321,6 +324,12 @@ static spi_error_t eusci_a_spi_transfer_byte(uint16_t base_address, uint8_t send
 }
 
 static spi_error_t eusci_b_spi_transfer_byte(uint16_t base_address, uint8_t send_byte, uint8_t * receive_byte) {
+    // Check if the SPI bus is not enabled
+    bool is_in_reset_state = HWREG16(base_address + OFS_UCBxCTLW0) & UCSWRST;
+    if (is_in_reset_state) {
+        return SPI_CHANNEL_CLOSED;
+    }
+
     // Wait for the TX buffer to be ready, and by extension the RX buffer
     // (transmitting while UCxxIFG & UCTXIFG == 0 is undefined behavior)
     while(!EUSCI_B_SPI_getInterruptStatus(base_address,
@@ -334,12 +343,6 @@ static spi_error_t eusci_b_spi_transfer_byte(uint16_t base_address, uint8_t send
 
 spi_error_t spi_transfer_byte(spi_t * channel, uint8_t send_byte, uint8_t * receive_byte) {
     uint16_t base_address = BASE_ADDRESSES[channel->eusci];
-
-    // Check if the SPI bus is not enabled
-    bool is_in_reset_state = HWREG16(base_address + OFS_UCBxCTLW0) & UCSWRST;
-    if (is_in_reset_state) {
-        return SPI_CHANNEL_CLOSED;
-    }
 
     if (is_eusci_a_block(base_address)) {
         return eusci_a_spi_transfer_byte(base_address, send_byte, receive_byte);

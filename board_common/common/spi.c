@@ -3,6 +3,15 @@
 /******************************************************************************\
  *  Public interface implementations                                          *
 \******************************************************************************/
+spi_error_t spi_send_byte(spi_t * channel, uint8_t byte) {
+    uint8_t received = 0;
+    return spi_transfer_byte(channel, byte, &received);
+}
+
+spi_error_t spi_receive_byte(spi_t * channel, uint8_t * byte) {
+    return spi_transfer_byte(channel, 0, byte);
+}
+
 spi_error_t spi_send_bytes(spi_t * channel, uint8_t * send_bytes, size_t length) {
     spi_error_t err;
 
