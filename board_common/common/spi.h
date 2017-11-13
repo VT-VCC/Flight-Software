@@ -47,19 +47,35 @@ void spi_close(spi_t * out);
 
 /** Transfer a byte by SPI.
  * @param channel The SPI channel to send to.
- * @param byte The byte to send.
+ * @param send_byte The byte to send.
  * @return An error code. This should always be checked.
  */
-spi_error_t spi_send_byte(spi_t * channel,
-			  uint8_t byte);
+spi_error_t spi_send_byte(spi_t * channel, uint8_t send_byte);
+
+/** Transfer bytes by SPI.
+ * @param channel The SPI channel to send to.
+ * @param send_bytes The bytes to send.
+ * @param length The number of bytes to send.
+ * @return An error code. This should always be checked.
+ */
+spi_error_t spi_send_bytes(spi_t * channel,
+    uint8_t * send_byte, size_t length);
 
 /** Receive a byte from the SPI buffer.
  * @param channel The SPI channel to read from.
- * @param byte The address to write the byte to.
+ * @param receive_byte The address to write the byte to.
  * @return An error code. This should always be checked.
  */
-spi_error_t spi_receive_byte(spi_t * channel,
-			     uint8_t * byte);
+spi_error_t spi_receive_byte(spi_t * channel, uint8_t * receive_byte);
+
+/** Receive bytes from the SPI buffer.
+ * @param channel The SPI channel to read from.
+ * @param receive_byte The address to write the byte to.
+ * @param length The number of bytes to receive.
+ * @return An error code. This should always be checked.
+ */
+spi_error_t spi_receive_bytes(spi_t * channel,
+    uint8_t * receive_byte, size_t length);
   
 /** Transfer a byte from SPI and save the return byte.
  * @param channel The channel to read from.
@@ -69,8 +85,18 @@ spi_error_t spi_receive_byte(spi_t * channel,
  * @return An error code. This should always be checked.
  */
 spi_error_t spi_transfer_byte(spi_t * channel,
-			      uint8_t send_byte,
-			      uint8_t * receive_byte);
+    uint8_t send_byte, uint8_t * receive_byte);
+
+/** Transfer bytes from SPI and save the return bytes.
+ * @param channel The channel to read from.
+ * @param send_bytes The bytes to send.
+ * @param receive_bytes The address of the bytes to save to.
+ * @param length The length of the bytes to send and receive.
+ *
+ * @return An error code. This should always be checked.
+ */
+spi_error_t spi_transfer_bytes(spi_t * channel,
+    uint8_t * send_bytes, uint8_t * receive_bytes, size_t length);
 
 /** @} */
 
