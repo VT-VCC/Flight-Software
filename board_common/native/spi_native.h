@@ -6,10 +6,8 @@
 //
 //
 
-#ifndef spi_native_h
-#define spi_native_h
-#ifndef _BOARD_COMMON_UART_NATIVE_H_
-#define _BOARD_COMMON_UART_NATIVE_H_
+#ifndef _BOARD_COMMON_NATIVE_SPI_H_
+#define _BOARD_COMMON_NATIVE_SPI_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,4 +25,4 @@ extern "C" {
 }
 #endif
 
-#endif // _BOARD_COMMON_SPI_NATIVE_H_
+#endif // _BOARD_COMMON_NATIVE_SPI_H_

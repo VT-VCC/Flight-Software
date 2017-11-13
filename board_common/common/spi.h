@@ -9,15 +9,13 @@
 extern "C" {
 #endif
 
-//TODO! Rewrite these to be meaningful SPI errors. This is just copied over from the UART code.
 /******************************************************************************\
  *  Macro list for the ways writing to a SPI can fail                        *
 \******************************************************************************/
 /// Macro for defining thing related to SPI errors
 #define SPI_ERROR_LIST(OP) \
     OP(NO_ERROR) \
-    OP(CHANNEL_CLOSED) \
-    OP(SIGNAL_FAULT)
+    OP(CHANNEL_CLOSED)
 
 /// Enum representing possible error states for a SPI channel.
 typedef enum spi_error {
@@ -73,7 +71,6 @@ spi_error_t spi_receive_byte(spi_t * channel,
 spi_error_t spi_transfer_byte(spi_t * channel,
 			      uint8_t send_byte,
 			      uint8_t * receive_byte);
-
 
 /** @} */
 
