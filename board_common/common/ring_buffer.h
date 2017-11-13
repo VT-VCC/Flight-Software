@@ -50,7 +50,21 @@ int ring_buffer_put(ring_buffer_t ring, int item);
  * @param ring The ring buffer to get the size of.
  * @return The size of the ring buffer.
  */
-size_t ring_buffer_size(ring_buffer_t ring);
+size_t ring_buffer_size(ring_buffer_t * ring);
+
+/**
+ * Get whether or not the buffer is empty.
+ * @param ring The ring buffer to get the capacity of.
+ * @return Whether the ring buffer is empty.
+ */
+bool ring_buffer_is_empty(ring_buffer_t * ring);
+
+/**
+ * Get whether or not the ring buffer is full.
+ * @param ring The ring buffer to get the capacity of.
+ * @return Whether the ring buffer is full.
+ */
+bool ring_buffer_is_full(ring_buffer_t * ring);
 
 #endif
 
