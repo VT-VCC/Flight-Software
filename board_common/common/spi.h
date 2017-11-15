@@ -1,4 +1,4 @@
-#ifndef _BOARD_COMMON_SPI_H__
+#ifndef _BOARD_COMMON_SPI_H_
 #define _BOARD_COMMON_SPI_H_
 
 #include <stdbool.h>
