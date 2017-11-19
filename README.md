@@ -73,7 +73,7 @@ Run the `build.sh` script.
 Two tools are required to flash the binaries on to an MSP430:
   - [MSP 430 flasher](http://www.ti.com/tool/msp430-flasher).
   - `msp430-elf-objcopy` from the [MSP430 GCC toolchain](http://www.ti.com/tool/MSP430-GCC-OPENSOURCE) (you should have this already since the native builds use `msp430-elf-gcc`).
-The build system should automatically generate an intel hex formatted `.hex` file for all of the bboard builds.
+The build system should automatically generate an intel hex formatted `.hex` file for all of the board builds.
 To flash these on to a board using the `MSP430Flasher` command line tool, use the command:
 
 ```
@@ -90,8 +90,12 @@ If the MCU does not match the one you currently have, tweak the appropriate `cma
 
 
 ### MSP430, on Windows
-Not yet implemented.
-You may be able to build things using commands similar to what `build.sh` does but this hasn't been testd.
+Run the `build.bat` script.
+
+Make sure that `vcvarsall.bat` is in the environment's path. For example, it can be found in `C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC` for Visual Studio 2015, and `C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build` for Visual Studio 2017 Enterprise.
+
+#### Flashing the MSP430 from Windows
+[TI's UniFlash](http://processors.wiki.ti.com/index.php/Category:CCS_UniFlash) tool provides a simple GUI for flashing `hex` files onto MSP430 devices. It should automatically detect attached Launchpad devices, and can seamlessly flash and verify binaries. Beyond this, the process is largely similar to as on UNIX.
 
 # About
 For more information email: vtcubesat@gmail.com

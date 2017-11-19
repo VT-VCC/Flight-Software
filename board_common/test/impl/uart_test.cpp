@@ -30,7 +30,7 @@ std::ostream & operator<<(std::ostream & o, const uart_t & t) {
 }
 
 std::ostream & operator<<(std::ostream & o, const uart_error_t & err) {
-    o << uart_error_string(err);
+    return o << uart_error_string(err);
 }
 
 /******************************************************************************\
