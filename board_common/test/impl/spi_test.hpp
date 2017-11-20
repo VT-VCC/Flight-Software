@@ -29,11 +29,10 @@ struct spi_impl {
   spi_impl() : open(false) {}
 };
 
+/** Open the given SPI channel so that it can be used.
+ * @param The SPI channel to open.
+ */
 void spi_open(spi_t * out);
-void spi_close(spi_t * out);
-spi_error_t spi_send_byte(spi_t * channel, uint8_t byte);
-spi_error_t spi_receive_byte(spi_t * channel, uint8_t & byte);
-spi_transfer_byte(spi_t * channel, uint8_t send_byte, uint8_t * receive_byte);
 
 std::ostream & operator<<(std::ostream & o, const spi_t & t);
 std::ostream & operator<<(std::ostream & o, const spi_error_t & err);

@@ -35,11 +35,6 @@ const char * spi_error_string(spi_error_t t);
  */
 typedef struct spi spi_t;
 
-/** Open the given SPI channel so that it can be used.
- * @param The SPI channel to open.
- */
-void spi_open(spi_t * out);
-
 /** Safely close the SPI channel so that it can be reused later.
  * @param The SPI channel to close.
  */

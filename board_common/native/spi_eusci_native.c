@@ -64,12 +64,6 @@ static bool eusci_a_spi_open(eusci_t eusci, uint16_t base_address, uint32_t cloc
     param.clockPolarity = EUSCI_A_SPI_CLOCKPOLARITY_INACTIVITY_HIGH;
     param.spiMode = EUSCI_A_SPI_3PIN;
 
-    // Check if the bus is currently enabled
-    bool is_in_reset_state = HWREG16(base_address + OFS_UCAxCTLW0) & UCSWRST;
-    if (!is_in_reset_state) {
-        return false;
-    }
-
     // Initialize the SPI master block
     EUSCI_A_SPI_initMaster(base_address, &param);
 
@@ -154,7 +148,7 @@ static spi_error_t eusci_a_spi_transfer_byte(uint16_t base_address, uint8_t send
         EUSCI_A_SPI_TRANSMIT_INTERRUPT));
 
     EUSCI_A_SPI_transmitData(base_address, send_byte);
-    *receive_byte = EUSCI_A_SPI_receiveData(receive_byte);
+    *receive_byte = EUSCI_A_SPI_receiveData(base_address);
 
     return SPI_NO_ERROR;
 }
@@ -172,7 +166,7 @@ static spi_error_t eusci_b_spi_transfer_byte(uint16_t base_address, uint8_t send
         EUSCI_B_SPI_TRANSMIT_INTERRUPT));
 
     EUSCI_B_SPI_transmitData(base_address, send_byte);
-    *receive_byte = EUSCI_B_SPI_receiveData(receive_byte);
+    *receive_byte = EUSCI_B_SPI_receiveData(base_address);
 
     return SPI_NO_ERROR;
 }
