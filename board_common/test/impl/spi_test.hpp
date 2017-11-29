@@ -37,6 +37,28 @@ void spi_open(spi_t * out);
 std::ostream & operator<<(std::ostream & o, const spi_t & t);
 std::ostream & operator<<(std::ostream & o, const spi_error_t & err);
 
+class HasMasterInSlaveOutBytes : public Catch::MatcherBase<spi_t> {
+    private:
+        std::vector<uint8_t> _bytes;
+    public:
+        HasMasterInSlaveOutBytes(const std::initializer_list<uint8_t> data);
+        HasMasterInSlaveOutBytes(const std::vector<uint8_t> data);
+
+        virtual bool match(const spi_t & e) const override;
+        virtual std::string describe() const override;
+};
+
+class HasMasterOutSlaveInBytes : public Catch::MatcherBase<spi_t> {
+    private:
+        std::vector<uint8_t> _bytes;
+    public:
+        HasMasterOutSlaveInBytes(const std::initializer_list<uint8_t> data);
+        HasMasterOutSlaveInBytes(const std::vector<uint8_t> data);
+
+        virtual bool match(const spi_t & e) const override;
+        virtual std::string describe() const override;
+};
+
 #endif
 
 #endif // _TEST_SPI_HPP_
