@@ -23,3 +23,16 @@ TEST_CASE("Test SPI interface with bulk data on stub that increments bytes.", "[
 
   spi_close(&t);
 }
+
+TEST_CASE("Test SPI interface with closed channel.", "[spi]") {
+  spi_t t;
+  uint8_t send[] = { 0x02, 0x03, 0x04 };
+  uint8_t receive[3];
+
+  REQUIRE(spi_transfer_bytes(&t, send, receive, 3) == SPI_CHANNEL_CLOSED);
+  
+  spi_open(&t);
+  REQUIRE_THAT(t, HasMasterOutSlaveInBytes({}));
+  REQUIRE_THAT(t, HasMasterInSlaveOutBytes({}));
+  spi_close(&t);
+}

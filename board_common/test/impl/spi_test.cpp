@@ -106,8 +106,12 @@ std::string HasMasterOutSlaveInBytes::describe() const {
 }
 
 std::ostream & operator<<(std::ostream & o, const spi_t & t) {
-    o << "{spi: output { miso: ";
-    
+     if (t._impl == NULL) {
+       o << "{spi: closed}";
+       return o;
+     }
+     o << "{spi: output { miso: ";
+   
     auto f = o.flags();
     o.setf(std::ios::hex);
     for (const auto & i : t._impl->miso_bytes) {
