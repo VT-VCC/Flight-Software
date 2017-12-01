@@ -28,7 +28,7 @@ i2c_error_t i2c_read_byte(i2_t * channel, const uint8_t byte) {
 }
 
 i2c_error_t i2c_write_byte(i2_t * channel, const uint8_t * byte) {
-    return i2c_read_bytes(byte, 1);
+    return i2c_write_byte(byte, 1);
 }
 
 #ifndef NDEBUG
