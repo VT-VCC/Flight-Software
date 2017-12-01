@@ -23,6 +23,14 @@ i2c_error_t i2c_read_bytes(i2_t * channel, const uint8_t * bytes, size_t n) {
     return err;
 }
 
+i2c_error_t i2c_read_byte(i2_t * channel, const uint8_t byte) {
+    return i2c_read_bytes(&byte, 1);
+}
+
+i2c_error_t i2c_write_byte(i2_t * channel, const uint8_t * byte) {
+    return i2c_read_bytes(byte, 1);
+}
+
 #ifndef NDEBUG
 const char * i2c_error_string(i2c_error_t t) {
     switch(t) {

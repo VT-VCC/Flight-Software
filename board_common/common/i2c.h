@@ -44,6 +44,11 @@ i2c_error_t i2c_write_bytes(i2_t * channel, const uint8_t * bytes, size_t n);
 
 i2c_error_t i2c_read_bytes(i2_t * channel, const uint8_t * bytes, size_t n);
 
+
+i2c_error_t i2c_read_byte(i2_t * channel, const uint8_t * bytes);
+
+i2c_error_t i2c_write(i2_t * channel, const uint8_t bytes);
+
 #ifdef USIP_NATIVE
 #   include "i2c_native.h"
 #else
