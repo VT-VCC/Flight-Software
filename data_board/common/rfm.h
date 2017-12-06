@@ -21,7 +21,8 @@ typedef struct rfm {
  * Macro list for results of operations on the RFM
  */
 #define RFM_RESULT_LIST(OP) \
-    OP(NO_ERROR)
+    OP(NO_ERROR) \
+    OP(SPI_ERROR)
 
 /**
  * Enumeration of possible results for trying to communicate with the RFM
@@ -57,13 +58,13 @@ rfm_result_t rfm_read_reg(rfm_t * radio, uint8_t addr, uint8_t * value);
 
 rfm_result_t rfm_write_reg(rfm_t * radio, uint8_t addr, uint8_t value);
 
-rfm_result_t rfm_read_fifo(rfm_t * radio, uint8_t * data, uint16_t size);
+rfm_result_t rfm_read_fifo(rfm_t * radio, uint8_t * data, uint8_t size);
 
-rfm_result_t rfm_write_fifo(rfm_t * radio, uint8_t * data, uint16_t size);
+rfm_result_t rfm_write_fifo(rfm_t * radio, uint8_t * data, uint8_t size);
 
-rfm_result_t rfm_set_frequency(rfm_t * radio, int frequency);
+rfm_result_t rfm_set_frequency(rfm_t * radio, uint32_t frequency);
 
-rfm_result_t rfm_get_frequency(rfm_t * radio, int * frequency);
+rfm_result_t rfm_get_frequency(rfm_t * radio, uint32_t * frequency);
 
 rfm_result_t rfm_set_mode(rfm_t * radio, int mode);
 
