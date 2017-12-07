@@ -81,7 +81,7 @@ rfm_result_t rfm_set_mode(rfm_t * radio, rfm_mode_t mode);
 
 rfm_result_t rfm_set_address(rfm_t * radio, uint8_t address);
 
-rfm_result_t rfm_set_sync_word(rfm_t * radio, int sync_word);
+rfm_result_t rfm_set_sync_word(rfm_t * radio, uint8_t * sync_word, uint8_t length);
 
 rfm_result_t rfm_set_power_level(rfm_t * radio, uint8_t level);
 

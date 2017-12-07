@@ -134,7 +134,7 @@ rfm_result_t rfm_set_mode(rfm_t * radio, rfm_mode_t mode) {
         case RFM_MODE_RX:
         case RFM_MODE_SLEEP:
         case RFM_MODE_STDBY:
-        case RFM_MODE_FS:
+        case RFM_MODE_FS: {
             uint8_t old_mode;
             rfm_result_t res = rfm_read_reg(radio, REG_OPMODE, &old_mode);
             if (res != RFM_NO_ERROR) {
@@ -157,6 +157,7 @@ rfm_result_t rfm_set_mode(rfm_t * radio, rfm_mode_t mode) {
             }
 
             break;
+        }
 
         default:
             return RFM_NO_ERROR; //TODO put an actual error here
