@@ -37,6 +37,17 @@ typedef enum rfm_result {
 #undef RFM_RESULT_LIST
 
 /**
+ * Enumeration of transceiver operating modes. Values correspond to RegOpModes
+ */
+typedef enum rfm_mode {
+    RFM_MODE_SLEEP = (0x00 << 2),
+    RFM_MODE_STDBY = (0x01 << 2),
+    RFM_MODE_FS = (0x02 << 2),
+    RFM_MODE_TX = (0x03 << 2),
+    RFM_MODE_RX = (0x04 << 2)
+} rfm_mode_t;
+
+/**
  * Open a connection to an RFM radio
  *
  * @param radio The output radio object
@@ -66,17 +77,13 @@ rfm_result_t rfm_set_frequency(rfm_t * radio, uint32_t frequency);
 
 rfm_result_t rfm_get_frequency(rfm_t * radio, uint32_t * frequency);
 
-rfm_result_t rfm_set_mode(rfm_t * radio, int mode);
+rfm_result_t rfm_set_mode(rfm_t * radio, rfm_mode_t mode);
 
-rfm_result_t rfm_set_address(rfm_t * radio, int address);
-
-rfm_result_t rfm_set_network_id(rfm_t * radio, int network_id);
+rfm_result_t rfm_set_address(rfm_t * radio, uint8_t address);
 
 rfm_result_t rfm_set_sync_word(rfm_t * radio, int sync_word);
 
-rfm_result_t rfm_set_power_mode(rfm_t * radio, int power_mode);
-
-rfm_result_t rfm_set_high_power(rfm_t * radio, bool status);
+rfm_result_t rfm_set_power_level(rfm_t * radio, uint8_t level);
 
 #ifdef __cplusplus
 }

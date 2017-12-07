@@ -1,9 +1,10 @@
-#ifndef _COMMON_LITHIUM_H_
-#define _COMMON_LITHIUM_H_
+#ifndef _COMMON_RFM_INTERNAL_H_
+#define _COMMON_RFM_INTERNAL_H_
 
 //TODO make sure this is accurate for our processor
-#define RF69_FSTEP  61.03515625
+#define FSTEP  61.03515625
 
+// Register addresses
 #define REG_FIFO          0x00
 #define REG_OPMODE        0x01
 #define REG_DATAMODUL     0x02
@@ -84,4 +85,4 @@
 #define REG_TESTPA1       0x5A
 #define REG_TESTPA2       0x5C
 
-#endif // _COMMON_LITHIUM_H_
+#endif // _COMMON_RFM_INTERNAL_H_
