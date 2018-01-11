@@ -15,7 +15,8 @@ extern "C" {
 /// Macro for defining thing related to SPI errors
 #define SPI_ERROR_LIST(OP) \
     OP(NO_ERROR) \
-    OP(CHANNEL_CLOSED)
+    OP(CHANNEL_CLOSED) \
+    OP(INCOMPLETE)
 
 /// Enum representing possible error states for a SPI channel.
 typedef enum spi_error {

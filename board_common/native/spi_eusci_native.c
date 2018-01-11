@@ -1,5 +1,9 @@
 #include "spi.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+
 #include <assert.h>
 
 static uint16_t BASE_ADDRESSES[EUSCI_count] = {
@@ -28,6 +32,29 @@ static uint16_t BASE_ADDRESSES[EUSCI_count] = {
     EUSCI_B3_BASE,
 #endif
 };
+
+StaticSemaphore_t spi_semaphore_buffer[EUSCI_count];
+SemaphoreHandle_t spi_semaphore[EUSCI_count];
+static uint8_t spi_recv_buffer[EUSCI_count];
+
+//TODO merge this to a common UART/I2C/SPI ISR handler?
+#ifdef EUSCI_A3_BASE
+__attribute__((interrupt(USCI_A3_VECTOR)))
+void USCI_A3_ISR(void) {
+    switch (__even_in_range(UCA3IV, 4)) {
+        case USCI_SPI_UCRXIFG:
+            //TODO is this needed?
+            while (!EUSCI_A_SPI_getInterruptStatus(EUSCI_A3_BASE, EUSCI_A_SPI_TRANSMIT_INTERRUPT));
+            spi_recv_buffer[EUSCI_A3] = EUSCI_A_SPI_receiveData(EUSCI_A3_BASE);
+
+            // Unblock the transfer
+            BaseType_t higher_task_taken;
+            xSemaphoreGiveFromISR(spi_semaphore[EUSCI_A3], &higher_task_taken);
+            portYIELD_FROM_ISR(higher_task_taken);
+            break;
+    }
+}
+#endif
 
 // Is a block's base address that of an A or B block
 static bool is_eusci_a_block(uint16_t base_address) {
@@ -70,7 +97,13 @@ static bool eusci_a_spi_open(eusci_t eusci, uint16_t base_address, uint32_t cloc
     // Enable the SPI block
     EUSCI_A_SPI_enable(base_address);
 
+    // Clear and enable the RX interrupt
+    EUSCI_A_SPI_clearInterrupt(base_address, EUSCI_A_SPI_RECEIVE_INTERRUPT);
+    EUSCI_A_SPI_enableInterrupt(base_address, EUSCI_A_SPI_RECEIVE_INTERRUPT);
+
     out->eusci = eusci;
+
+    spi_semaphore[eusci] = xSemaphoreCreateBinaryStatic(&spi_semaphore_buffer[eusci]);
 
     return true;
 }
@@ -98,7 +131,13 @@ static bool eusci_b_spi_open(eusci_t eusci, uint16_t base_address, uint32_t cloc
     // Enable the SPI block
     EUSCI_B_SPI_enable(base_address);
 
+    // Clear and enable the RX interrupt
+    EUSCI_B_SPI_clearInterrupt(base_address, EUSCI_B_SPI_RECEIVE_INTERRUPT);
+    EUSCI_B_SPI_enableInterrupt(base_address, EUSCI_B_SPI_RECEIVE_INTERRUPT);
+
     out->eusci = eusci;
+
+    spi_semaphore[eusci] = xSemaphoreCreateBinaryStatic(&spi_semaphore_buffer[eusci]);
 
     return true;
 }
@@ -135,7 +174,7 @@ void spi_close(spi_t * out) {
     }
 }
 
-static spi_error_t eusci_a_spi_transfer_byte(uint16_t base_address, uint8_t send_byte, uint8_t * receive_byte) {
+static spi_error_t eusci_a_spi_transfer_byte(eusci_t eusci, uint16_t base_address, uint8_t send_byte, uint8_t * receive_byte) {
     // Check if the SPI bus is not enabled
     bool is_in_reset_state = HWREG16(base_address + OFS_UCAxCTLW0) & UCSWRST;
     if (is_in_reset_state) {
@@ -148,12 +187,19 @@ static spi_error_t eusci_a_spi_transfer_byte(uint16_t base_address, uint8_t send
         EUSCI_A_SPI_TRANSMIT_INTERRUPT));
 
     EUSCI_A_SPI_transmitData(base_address, send_byte);
-    *receive_byte = EUSCI_A_SPI_receiveData(base_address);
 
-    return SPI_NO_ERROR;
+    // Block until the ISR is fired
+    if (xSemaphoreTake(spi_semaphore[eusci], 1) == pdTRUE) {
+        *receive_byte = spi_recv_buffer[eusci];
+        return SPI_NO_ERROR;
+    }
+    else {
+        // The timeout was hit and our transfer was never completed
+        return SPI_INCOMPLETE;
+    }
 }
 
-static spi_error_t eusci_b_spi_transfer_byte(uint16_t base_address, uint8_t send_byte, uint8_t * receive_byte) {
+static spi_error_t eusci_b_spi_transfer_byte(eusci_t eusci, uint16_t base_address, uint8_t send_byte, uint8_t * receive_byte) {
     // Check if the SPI bus is not enabled
     bool is_in_reset_state = HWREG16(base_address + OFS_UCBxCTLW0) & UCSWRST;
     if (is_in_reset_state) {
@@ -166,18 +212,25 @@ static spi_error_t eusci_b_spi_transfer_byte(uint16_t base_address, uint8_t send
         EUSCI_B_SPI_TRANSMIT_INTERRUPT));
 
     EUSCI_B_SPI_transmitData(base_address, send_byte);
-    *receive_byte = EUSCI_B_SPI_receiveData(base_address);
-
-    return SPI_NO_ERROR;
+    
+        // Block until the ISR is fired
+    if (xSemaphoreTake(spi_semaphore[eusci], 1) == pdTRUE) {
+        *receive_byte = spi_recv_buffer[eusci];
+        return SPI_NO_ERROR;
+    }
+    else {
+        // The timeout was hit and our transfer was never completed
+        return SPI_INCOMPLETE;
+    }
 }
 
 spi_error_t spi_transfer_byte(spi_t * channel, uint8_t send_byte, uint8_t * receive_byte) {
     uint16_t base_address = BASE_ADDRESSES[channel->eusci];
 
     if (is_eusci_a_block(base_address)) {
-        return eusci_a_spi_transfer_byte(base_address, send_byte, receive_byte);
+        return eusci_a_spi_transfer_byte(channel->eusci, base_address, send_byte, receive_byte);
     }
     else {
-        return eusci_b_spi_transfer_byte(base_address, send_byte, receive_byte);
+        return eusci_b_spi_transfer_byte(channel->eusci, base_address, send_byte, receive_byte);
     }
 }

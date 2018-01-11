@@ -1,13 +1,13 @@
 #include <msp430.h>
 #include <driverlib.h>
 
-
 /* Scheduler include files. */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
 
 #include "uart.h"
+#include "spi.h"
 
 #define PERSISTENT __attribute__((section(".persistent")))
 
@@ -18,12 +18,7 @@
 /// Standard UART output
 static uart_t standard_output;
 
-/// LED flash queue
-#define BLINK_QUEUE_LENGTH 8
-typedef uint16_t blink_queue_item_t;
-static QueueHandle_t PERSISTENT blink_queue_handle;
-static StaticQueue_t PERSISTENT blink_queue;
-static uint8_t PERSISTENT blink_queue_storage[BLINK_QUEUE_LENGTH * sizeof(blink_queue_item_t)];
+static spi_t spi_output;
 
 const char * output_str = "hello, world!\r\n";
 const char * got_data = "got data\r\n";
@@ -33,8 +28,6 @@ const char * got_data = "got data\r\n";
 \******************************************************************************/
 /// Configures I/O pins
 static void hardware_config();
-/// Flasshes LEDs if the ACLK is configured at the expected frequency
-static void test_aclk();
 
 /* Prototypes for the standard FreeRTOS callback/hook functions implemented
 within this file. */
@@ -42,42 +35,23 @@ void vApplicationIdleHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 void vApplicationTickHook( void );
 
-static TaskHandle_t PERSISTENT blink_led_task;
-void task_blink_led_start();
-void task_blink_led(void * params);
-
 static TaskHandle_t PERSISTENT transmit_blink_signal_task;
-void task_transmit_blink_signal_start();
-void task_transmit_blink_signal(void * params);
+void task_spi_start();
+void task_spi(void * params);
 
 /******************************************************************************\
  *  Function implementations                                                  *
 \******************************************************************************/
 int main(void) {
-
     hardware_config();
 
-    P4OUT |= 0xFF;
-    P1OUT |= 0xFF;
-
-    test_aclk();
-
-    P1OUT |= 0xFF;
-
     uart_open(EUSCI_A0, BAUD_9600, &standard_output);
+    spi_open(EUSCI_A3, 9600, &spi_output);
 
-    blink_queue_handle = xQueueCreateStatic(
-            BLINK_QUEUE_LENGTH,
-            sizeof(blink_queue_item_t),
-            blink_queue_storage,
-            &blink_queue);
-
-    task_blink_led_start();
-    task_transmit_blink_signal_start();
+    task_spi_start();
 
     uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
 
-    P1OUT ^= 1 << 6;
     vTaskStartScheduler();
 
     // there is no way to get here since we are using statically allocated
@@ -102,18 +76,19 @@ static void hardware_config() {
     GPIO_setAsOutputPin(GPIO_PORT_P3, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setAsOutputPin(GPIO_PORT_PJ, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7|GPIO_PIN8|GPIO_PIN9|GPIO_PIN10|GPIO_PIN11|GPIO_PIN12|GPIO_PIN13|GPIO_PIN14|GPIO_PIN15);
-    // Configure UCA0RXD for input
+    
+    // Configure UCA0TXD, UCA0RXD for UART over eUSCI_A0
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P2, GPIO_PIN1, GPIO_SECONDARY_MODULE_FUNCTION);
-    // Configure UCA0TXD for output
     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN0, GPIO_SECONDARY_MODULE_FUNCTION);
 
-    // Configure GPIO to use LFXT
-    GPIO_setAsPeripheralModuleFunctionInputPin(
-           GPIO_PORT_PJ,
-           GPIO_PIN4 + GPIO_PIN5,
-           GPIO_PRIMARY_MODULE_FUNCTION
-           );
+    // Configure UCA3SIMO, UCA3SOMI for SPI over eUSCI_A3
+    GPIO_setOutputLowOnPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3);
+    GPIO_setAsOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3);
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, GPIO_PIN1, GPIO_PRIMARY_MODULE_FUNCTION);
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN2|GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
 
+    // Configure GPIO to use LFXT
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_PJ, GPIO_PIN4|GPIO_PIN5, GPIO_PRIMARY_MODULE_FUNCTION);
     // Set DCO frequency to 8 MHz
     CS_setDCOFreq(CS_DCORSEL_0, CS_DCOFSEL_6);
     //Set external clock frequency to 32.768 KHz
@@ -130,23 +105,6 @@ static void hardware_config() {
     __enable_interrupt();
 }
 
-static void test_aclk() {
-    if (CS_getACLK() != 32768) {
-        // Flash red LED if clock is bad
-        for (int i = 0; i < 10; ++i) {
-            __delay_cycles(600000);
-            P4OUT ^= 1 << 6;
-        }
-    } else {
-        // Flash green LED if clock is good
-        P1OUT = 0;
-        for (int i = 0; i < 10; ++i) {
-            __delay_cycles(600000);
-            P1OUT ^= 1;
-        }
-    }
-}
-
 void vApplicationIdleHook( void ) {
     P1OUT = 0;
 }
@@ -158,63 +116,46 @@ void vApplicationTickHook( void ) {
 }
 
 /******************************************************************************\
- *  task_blink_led implementation                                             *
+ *  task_spi implementation                                 *
 \******************************************************************************/
-StaticTask_t PERSISTENT blink_task;
-StackType_t PERSISTENT blink_task_stack[configMINIMAL_STACK_SIZE];
 
-void task_blink_led_start() {
+StaticTask_t PERSISTENT spi_task;
+StackType_t PERSISTENT spi_task_stack[configMINIMAL_STACK_SIZE];
 
-    blink_led_task = xTaskCreateStatic(
-        task_blink_led,
-        "blink_led",
-        configMINIMAL_STACK_SIZE,
-        NULL,
-        1,
-        blink_task_stack,
-        &blink_task
-    );
-}
-
-void task_blink_led(void * params) {
-    volatile unsigned int sentinal = 0xBEEF;
-    // taskENTER_CRITICAL();
-    // uart_write_string(&standard_output, "Starting blink task\n");
-    // taskEXIT_CRITICAL();
-    for (;;) {
-        // uart_write_string(&standard_output, "T1\n");
-        // P1OUT++;
-        P1OUT ^= 0x1;
-        vTaskDelay(1);
-    }
-}
-
-/******************************************************************************\
- *  task_transmit_blink_signal implementation                                 *
-\******************************************************************************/
-StaticTask_t PERSISTENT transmit_task;
-StackType_t PERSISTENT transmit_task_stack[configMINIMAL_STACK_SIZE];
-void task_transmit_blink_signal_start() {
-
+void task_spi_start() {
     transmit_blink_signal_task = xTaskCreateStatic(
-        task_transmit_blink_signal,
-        "transmit_blink_signal",
+        task_spi,
+        "spi",
         configMINIMAL_STACK_SIZE,
         NULL,
         2,
-        transmit_task_stack,
-        &transmit_task
+        spi_task_stack,
+        &spi_task
     );
 }
 
-void task_transmit_blink_signal(void * params) {
+void task_spi(void * params) {
     taskENTER_CRITICAL();
-    uart_write_string(&standard_output, "Starting signal task\n");
+    uart_write_string(&standard_output, "Starting SPI task\n");
     taskEXIT_CRITICAL();
+
+    P3OUT = 0;
+
     for(;;) {
-        P4OUT ^= 1 << 6;
-        uart_write_string(&standard_output, "T2\n");
-        vTaskDelay(10);
+        uint8_t send[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        uint8_t recv[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        
+        uart_write_string(&standard_output, "Transmitting\n");
+
+        // P3.0 is chip select (active high)
+        P3OUT |= 1;
+        spi_transfer_bytes(&spi_output, send, recv, 5);
+        P3OUT &= ~(1);
+
+        uart_write_bytes(&standard_output, recv, 5);
+        uart_write_string(&standard_output, "\n");
+
+        vTaskDelay(5); // wait 5*100 ms
     }
 }
 
