@@ -85,8 +85,10 @@ spi_error_t spi_transfer_byte(spi_t * channel,
 
 /** Transfer bytes from SPI and save the return bytes.
  * @param channel The channel to read from.
- * @param send_bytes The bytes to send.
- * @param receive_bytes The address of the bytes to save to.
+ * @param send_bytes The bytes to send. This value can be 0 to indcate that
+ *   only 0x00 bytes should be sent
+ * @param receive_bytes The address of the bytes to save to. This value can
+ *   be 0 to indcate that no receive bytes should be kept.
  * @param length The length of the bytes to send and receive.
  *
  * @return An error code. This should always be checked.
