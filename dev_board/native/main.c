@@ -8,6 +8,7 @@
 
 #include "uart.h"
 #include "spi.h"
+#include "rfm.h"
 
 #define PERSISTENT __attribute__((section(".persistent")))
 
@@ -36,8 +37,8 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 void vApplicationTickHook( void );
 
 static TaskHandle_t PERSISTENT transmit_blink_signal_task;
-void task_spi_start();
-void task_spi(void * params);
+void task_rfm_start();
+void task_rfm(void * params);
 
 /******************************************************************************\
  *  Function implementations                                                  *
@@ -46,9 +47,8 @@ int main(void) {
     hardware_config();
 
     uart_open(EUSCI_A0, BAUD_9600, &standard_output);
-    spi_open(EUSCI_A3, 32768/4, &spi_output);
 
-    task_spi_start();
+    task_rfm_start();
 
     uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
 
@@ -67,9 +67,11 @@ static void hardware_config() {
     // Set all GPIO pins to output low for low power
     GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
-    GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setOutputLowOnPin(GPIO_PORT_PJ, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7|GPIO_PIN8|GPIO_PIN9|GPIO_PIN10|GPIO_PIN11|GPIO_PIN12|GPIO_PIN13|GPIO_PIN14|GPIO_PIN15);
+
+    GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
 
     GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
@@ -116,48 +118,35 @@ void vApplicationTickHook( void ) {
 }
 
 /******************************************************************************\
- *  task_spi implementation                                 *
+ *  task_rfm implementation                                 *
 \******************************************************************************/
 
-StaticTask_t PERSISTENT spi_task;
-StackType_t PERSISTENT spi_task_stack[configMINIMAL_STACK_SIZE];
+StaticTask_t PERSISTENT rfm_task;
+StackType_t PERSISTENT rfm_task_stack[configMINIMAL_STACK_SIZE];
 
-void task_spi_start() {
+void task_rfm_start() {
     transmit_blink_signal_task = xTaskCreateStatic(
-        task_spi,
-        "spi",
+        task_rfm,
+        "rfm",
         configMINIMAL_STACK_SIZE,
         NULL,
         2,
-        spi_task_stack,
-        &spi_task
+        rfm_task_stack,
+        &rfm_task
     );
 }
 
-void task_spi(void * params) {
+void task_rfm(void * params) {
     taskENTER_CRITICAL();
-    uart_write_string(&standard_output, "Starting SPI task\n");
+    uart_write_string(&standard_output, "Starting RFM task\n");
     taskEXIT_CRITICAL();
 
-    // P3.0 is chip select (active high)
-    P3OUT = 0;
+    spi_open(EUSCI_A3, 32768/4, &spi_output);
 
-    for(;;) {
-        uint8_t send[10] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J' };
-        uint8_t recv[10] = { 0 };
-        
-        uart_write_string(&standard_output, "Transmitting\n");
+    rfm_t radio;
+    rfm_open(&radio, &spi_output, &P3OUT, 1);
 
-        P3OUT |= 1;
-        spi_error_t res = spi_transfer_bytes(&spi_output, send, recv, 10);
-        P3OUT &= ~(1);
-
-        uart_write_string(&standard_output, (res == SPI_NO_ERROR ? "T " : "F "));
-        uart_write_bytes(&standard_output, recv, 10);
-        uart_write_string(&standard_output, "\n");
-
-        vTaskDelay(5); // wait 5*100 ms
-    }
+    uart_write_string(&standard_output, "RFM initialized\n");
 }
 
 /******************************************************************************\

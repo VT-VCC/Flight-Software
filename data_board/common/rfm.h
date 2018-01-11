@@ -15,6 +15,8 @@ typedef struct rfm {
      * The owned SPI channel over which we talk
      */
     spi_t spi;
+    volatile uint8_t *cs_value;
+    uint8_t cs_bit;
 } rfm_t;
 
 /**
@@ -22,7 +24,8 @@ typedef struct rfm {
  */
 #define RFM_RESULT_LIST(OP) \
     OP(NO_ERROR) \
-    OP(SPI_ERROR)
+    OP(SPI_ERROR) \
+    OP(INVALID_ARG)
 
 /**
  * Enumeration of possible results for trying to communicate with the RFM
@@ -56,7 +59,7 @@ typedef enum rfm_mode {
  *
  * @return True if and only if the radio connection succeeds
  */
-bool rfm_open(rfm_t * radio, spi_t * spi);
+bool rfm_open(rfm_t * radio, spi_t * spi, volatile uint8_t *cs_value, uint8_t cs_bit);
 
 /**
  * Close a connection to an RFM radio

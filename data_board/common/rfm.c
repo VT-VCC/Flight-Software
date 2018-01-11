@@ -1,21 +1,37 @@
 #include "rfm.h"
 #include "rfm_internal.h"
 
-bool rfm_open(rfm_t * radio, spi_t * spi) {
+static bool chip_select(rfm_t * radio) {
+    bool selected = *(radio->cs_value) & radio->cs_bit;
+    // Set NSS low when in use
+    *(radio->cs_value) &= ~(radio->cs_bit);
+    return selected;
+}
+
+static void chip_unselect(rfm_t * radio) {
+    // Set NSS high when not in use
+    *(radio->cs_value) |= radio->cs_bit;
+}
+
+bool rfm_open(rfm_t * radio, spi_t * spi, volatile uint8_t *cs_value, uint8_t cs_bit) {
     radio->spi = *spi;
+
+    radio->cs_value = cs_value;
+    radio->cs_bit = cs_bit;
+    chip_select(radio);
 
     //TODO initialize non-default registers
 
     // Enable overload current protection for the PA
     rfm_result_t res = rfm_write_reg(radio, REG_OCP, 0x1a);
     if (res != RFM_NO_ERROR) {
-        return res;
+        return false;
     }
 
     uint8_t old_pa_level;
     res = rfm_read_reg(radio, REG_PALEVEL, &old_pa_level);
     if (res != RFM_NO_ERROR) {
-        return res;
+        return false;
     }
 
     // Discard old PA level state
@@ -24,8 +40,10 @@ bool rfm_open(rfm_t * radio, spi_t * spi) {
     // Enable PA 1 and 2 for high power mode
     res = rfm_write_reg(radio, REG_PALEVEL, old_pa_level | 0x40 | 0x20);
     if (res != RFM_NO_ERROR) {
-        return res;
+        return false;
     }
+
+    chip_unselect(radio);
 
     return true;
 }
@@ -35,28 +53,32 @@ void rfm_close(rfm_t * radio) {
 }
 
 rfm_result_t rfm_read_reg(rfm_t * radio, uint8_t addr, uint8_t * value) {
-    //TODO select and unselect slave
+    bool selected = chip_select(radio);
 
-    if (spi_send_byte(&radio->spi, addr & 0x7F) != SPI_NO_ERROR) {
+    uint8_t send[2] = { addr & 0x7F }, recv[2];
+    if (spi_transfer_bytes(&radio->spi, send, recv, 2) != SPI_NO_ERROR) {
         return RFM_SPI_ERROR;
     }
 
-    if (spi_receive_byte(&radio->spi, value) != SPI_NO_ERROR) {
-        return RFM_SPI_ERROR;
+    *value = recv[1];
+
+    if (selected) {
+        chip_unselect(radio);
     }
 
     return RFM_NO_ERROR;
 }
 
 rfm_result_t rfm_write_reg(rfm_t * radio, uint8_t addr, uint8_t value) {
-    //TODO select and unselect slave
+    bool selected = chip_select(radio);
 
-    if (spi_send_byte(&radio->spi, addr | 0x80) != SPI_NO_ERROR) {
+    uint8_t send[2] = { addr | 0x80, value };
+    if (spi_send_bytes(&radio->spi, send, 2) != SPI_NO_ERROR) {
         return RFM_SPI_ERROR;
     }
 
-    if (spi_send_byte(&radio->spi, value) != SPI_NO_ERROR) {
-        return RFM_SPI_ERROR;
+    if (selected) {
+        chip_unselect(radio);
     }
 
     return RFM_NO_ERROR;
@@ -67,20 +89,27 @@ rfm_result_t rfm_read_fifo(rfm_t * radio, uint8_t * data, uint8_t size) {
 }
 
 rfm_result_t rfm_write_fifo(rfm_t * radio, uint8_t * data, uint8_t size) {
-    //TODO select and unselect slave
+    bool selected = chip_select(radio);
 
+    // Start write to FIFO register
     if (spi_send_byte(&radio->spi, REG_FIFO | 0x80) != SPI_NO_ERROR) {
         return RFM_SPI_ERROR;
     }
 
+    //TODO is this necessary?
     if (spi_send_byte(&radio->spi, size) != SPI_NO_ERROR) {
         return RFM_SPI_ERROR;
     }
 
-    for (uint16_t i = 0; i < size; i++) {
+    // Write data bytes to the FIFO
+    for (uint16_t i = 0; i < size; ++i) {
         if (spi_send_byte(&radio->spi, data[i]) != SPI_NO_ERROR) {
             return RFM_SPI_ERROR;
         }
+    }
+
+    if (selected) {
+        chip_unselect(radio);
     }
 
     return RFM_SPI_ERROR;
@@ -105,8 +134,8 @@ rfm_result_t rfm_set_frequency(rfm_t * radio, uint32_t frequency) {
 }
 
 rfm_result_t rfm_get_frequency(rfm_t * radio, uint32_t * frequency) {
+    // Read individual bit components
     uint8_t freq_lsb, freq_mid, freq_msb;
-
     rfm_result_t res = rfm_read_reg(radio, REG_FRFLSB, &freq_lsb);
     if (res != RFM_NO_ERROR) {
         return res;
@@ -120,6 +149,7 @@ rfm_result_t rfm_get_frequency(rfm_t * radio, uint32_t * frequency) {
         return res;
     }
 
+    // Concatenate bits and scale by frequency stepping
     uint32_t carrier_freq = ((uint32_t)freq_msb << 16) | ((uint32_t)freq_mid << 8) | (freq_lsb);
     *frequency = (uint32_t)(FSTEP * carrier_freq);
 
@@ -144,6 +174,7 @@ rfm_result_t rfm_set_mode(rfm_t * radio, rfm_mode_t mode) {
             // Discard the existing mode bits
             old_mode &= 0xE3;
 
+            // Change to the new mode
             res = rfm_write_reg(radio, REG_OPMODE, old_mode | mode);
             if (res != RFM_NO_ERROR) {
                 return res;
@@ -160,7 +191,7 @@ rfm_result_t rfm_set_mode(rfm_t * radio, rfm_mode_t mode) {
         }
 
         default:
-            return RFM_NO_ERROR; //TODO put an actual error here
+            return RFM_INVALID_ARG;
     }
 
     return RFM_NO_ERROR;
@@ -172,7 +203,7 @@ rfm_result_t rfm_set_address(rfm_t * radio, uint8_t address) {
 
 rfm_result_t rfm_set_sync_word(rfm_t * radio, uint8_t * sync_word, uint8_t length) {
     if (length > 8) {
-        return RFM_NO_ERROR; //TODO put an actual error here
+        return RFM_INVALID_ARG;
     }
 
     uint8_t old_config;
@@ -197,7 +228,7 @@ rfm_result_t rfm_set_sync_word(rfm_t * radio, uint8_t * sync_word, uint8_t lengt
 
 rfm_result_t rfm_set_power_level(rfm_t * radio, uint8_t level) {
     if (level > 31) {
-        return RFM_NO_ERROR; //TODO put an actual error here
+        return RFM_INVALID_ARG;
     }
 
     //TODO figure out PA levels for high power mode

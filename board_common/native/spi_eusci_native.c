@@ -207,8 +207,6 @@ static spi_error_t eusci_a_spi_transfer_bytes(eusci_t eusci, uint16_t base_addre
     spi_recv_buffer[eusci] = receive_bytes;
     taskEXIT_CRITICAL();
 
-    P3OUT |= 1;
-
     // Wait for the TX buffer to be ready, and by extension the RX buffer
     // (transmitting while UCxxIFG & UCTXIFG == 0 is undefined behavior)
     while(!EUSCI_A_SPI_getInterruptStatus(base_address, EUSCI_A_SPI_TRANSMIT_INTERRUPT));
@@ -217,13 +215,11 @@ static spi_error_t eusci_a_spi_transfer_bytes(eusci_t eusci, uint16_t base_addre
 
     // Block until the ISR is fired
     if (xSemaphoreTake(spi_semaphore[eusci], 5) == pdTRUE) {
-        P3OUT &= ~(1);
         memcpy(receive_bytes, spi_recv_buffer[eusci], length);
         return SPI_NO_ERROR;
     }
     else {
         // The timeout was hit and our transfer was never completed
-        P3OUT &= ~(1);
         return SPI_INCOMPLETE;
     }
 }
@@ -242,8 +238,6 @@ static spi_error_t eusci_b_spi_transfer_bytes(eusci_t eusci, uint16_t base_addre
     spi_recv_buffer[eusci] = receive_bytes;
     taskEXIT_CRITICAL();
 
-    P3OUT |= 1;
-
     // Wait for the TX buffer to be ready, and by extension the RX buffer
     // (transmitting while UCxxIFG & UCTXIFG == 0 is undefined behavior)
     while(!EUSCI_B_SPI_getInterruptStatus(base_address, EUSCI_B_SPI_TRANSMIT_INTERRUPT));
@@ -252,13 +246,11 @@ static spi_error_t eusci_b_spi_transfer_bytes(eusci_t eusci, uint16_t base_addre
 
     // Block until the ISR is fired
     if (xSemaphoreTake(spi_semaphore[eusci], 5) == pdTRUE) {
-        P3OUT &= ~(1);
         memcpy(receive_bytes, spi_recv_buffer[eusci], length);
         return SPI_NO_ERROR;
     }
     else {
         // The timeout was hit and our transfer was never completed
-        P3OUT &= ~(1);
         return SPI_INCOMPLETE;
     }
 }
