@@ -6,4 +6,5 @@ add_sources(BOARD_COMMON_SOURCES
   "spi.cpp"
   "impl/spi_test.cpp"
   "impl/spi_test.hpp"
+  "rfm.cpp"
 )

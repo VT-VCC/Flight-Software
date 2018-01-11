@@ -3,4 +3,5 @@ add_sources(BOARD_COMMON_SOURCES
   "uart.h"
   "spi.c"
   "spi.h"
+  "rfm.c"
 )
