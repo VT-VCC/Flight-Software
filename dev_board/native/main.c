@@ -46,7 +46,7 @@ int main(void) {
     hardware_config();
 
     uart_open(EUSCI_A0, BAUD_9600, &standard_output);
-    spi_open(EUSCI_A3, 9600, &spi_output);
+    spi_open(EUSCI_A3, 32768/4, &spi_output);
 
     task_spi_start();
 
@@ -139,20 +139,21 @@ void task_spi(void * params) {
     uart_write_string(&standard_output, "Starting SPI task\n");
     taskEXIT_CRITICAL();
 
+    // P3.0 is chip select (active high)
     P3OUT = 0;
 
     for(;;) {
-        uint8_t send[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-        uint8_t recv[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        uint8_t send[10] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J' };
+        uint8_t recv[10] = { 0 };
         
         uart_write_string(&standard_output, "Transmitting\n");
 
-        // P3.0 is chip select (active high)
         P3OUT |= 1;
-        spi_transfer_bytes(&spi_output, send, recv, 5);
+        spi_error_t res = spi_transfer_bytes(&spi_output, send, recv, 10);
         P3OUT &= ~(1);
 
-        uart_write_bytes(&standard_output, recv, 5);
+        uart_write_string(&standard_output, (res == SPI_NO_ERROR ? "T " : "F "));
+        uart_write_bytes(&standard_output, recv, 10);
         uart_write_string(&standard_output, "\n");
 
         vTaskDelay(5); // wait 5*100 ms

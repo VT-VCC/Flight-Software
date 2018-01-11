@@ -1,5 +1,6 @@
 #include "spi.h"
 
+#include <string.h>
 #include <assert.h>
 
 static uint16_t BASE_ADDRESSES[USCI_count] = {
@@ -133,49 +134,7 @@ void spi_close(spi_t * out) {
     }
 }
 
-static spi_error_t usci_a_spi_transfer_byte(uint16_t base_address, uint8_t send_byte, uint8_t * receive_byte) {
-    // Check if the SPI bus is not enabled
-    bool is_in_reset_state = HWREG16(base_address + OFS_UCAxCTL1) & UCSWRST;
-    if (is_in_reset_state) {
-        return SPI_CHANNEL_CLOSED;
-    }
-
-    // Wait for the TX buffer to be ready, and by extension the RX buffer
-    // (transmitting while UCxxIFG & UCTXIFG == 0 is undefined behavior)
-    while(!USCI_A_SPI_getInterruptStatus(base_address,
-        USCI_A_SPI_TRANSMIT_INTERRUPT));
-
-    USCI_A_SPI_transmitData(base_address, send_byte);
-    *receive_byte = USCI_A_SPI_receiveData(base_address);
-
-    return SPI_NO_ERROR;
-}
-
-static spi_error_t usci_b_spi_transfer_byte(uint16_t base_address, uint8_t send_byte, uint8_t * receive_byte) {
-    // Check if the SPI bus is not enabled
-    bool is_in_reset_state = HWREG16(base_address + OFS_UCBxCTL1) & UCSWRST;
-    if (is_in_reset_state) {
-        return SPI_CHANNEL_CLOSED;
-    }
-
-    // Wait for the TX buffer to be ready, and by extension the RX buffer
-    // (transmitting while UCxxIFG & UCTXIFG == 0 is undefined behavior)
-    while(!USCI_B_SPI_getInterruptStatus(base_address,
-        USCI_B_SPI_TRANSMIT_INTERRUPT));
-
-    USCI_B_SPI_transmitData(base_address, send_byte);
-    *receive_byte = USCI_B_SPI_receiveData(base_address);
-
-    return SPI_NO_ERROR;
-}
-
-spi_error_t spi_transfer_byte(spi_t * channel, uint8_t send_byte, uint8_t * receive_byte) {
-    uint16_t base_address = BASE_ADDRESSES[channel->usci];
-
-    if (is_usci_a_block(base_address)) {
-        return usci_a_spi_transfer_byte(base_address, send_byte, receive_byte);
-    }
-    else {
-        return usci_b_spi_transfer_byte(base_address, send_byte, receive_byte);
-    }
+spi_error_t spi_transfer_bytes(spi_t * channel, uint8_t * send_bytes, uint8_t * receive_bytes, size_t length) {
+    //TODO
+    return SPI_INCOMPLETE;
 }

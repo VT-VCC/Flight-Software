@@ -40,18 +40,10 @@ spi_error_t spi_receive_bytes(spi_t * channel, uint8_t * receive_bytes, size_t l
     return SPI_NO_ERROR;
 }
 
-spi_error_t spi_transfer_bytes(spi_t * channel, uint8_t * send_bytes, uint8_t * receive_bytes, size_t length) {
-    spi_error_t err;
+spi_error_t spi_transfer_byte(spi_t * channel, uint8_t send_byte, uint8_t * receive_byte) {
+    uint8_t send_bytes[1] = { send_byte };
 
-    for (size_t i = 0; i < length; i++) {
-        err = spi_transfer_byte(channel, *send_bytes++, receive_bytes++);
-
-        if (err != SPI_NO_ERROR) {
-            return err;
-        }
-    }
-
-    return SPI_NO_ERROR;
+    return spi_transfer_bytes(channel, send_bytes, receive_byte, 1);
 }
 
 #ifndef NDEBUG

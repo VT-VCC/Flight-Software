@@ -4,6 +4,7 @@
 #include "task.h"
 #include "semphr.h"
 
+#include <string.h>
 #include <assert.h>
 
 static uint16_t BASE_ADDRESSES[EUSCI_count] = {
@@ -33,9 +34,14 @@ static uint16_t BASE_ADDRESSES[EUSCI_count] = {
 #endif
 };
 
+// Semaphore for locking a task while transmitting
 StaticSemaphore_t spi_semaphore_buffer[EUSCI_count];
 SemaphoreHandle_t spi_semaphore[EUSCI_count];
-static uint8_t spi_recv_buffer[EUSCI_count];
+
+static uint8_t *spi_send_buffer[EUSCI_count];
+static uint8_t *spi_recv_buffer[EUSCI_count];
+static size_t spi_buffer_index[EUSCI_count];
+static size_t spi_buffer_size[EUSCI_count];
 
 //TODO merge this to a common UART/I2C/SPI ISR handler?
 #ifdef EUSCI_A3_BASE
@@ -43,14 +49,22 @@ __attribute__((interrupt(USCI_A3_VECTOR)))
 void USCI_A3_ISR(void) {
     switch (__even_in_range(UCA3IV, 4)) {
         case USCI_SPI_UCRXIFG:
-            //TODO is this needed?
             while (!EUSCI_A_SPI_getInterruptStatus(EUSCI_A3_BASE, EUSCI_A_SPI_TRANSMIT_INTERRUPT));
-            spi_recv_buffer[EUSCI_A3] = EUSCI_A_SPI_receiveData(EUSCI_A3_BASE);
 
-            // Unblock the transfer
-            BaseType_t higher_task_taken;
-            xSemaphoreGiveFromISR(spi_semaphore[EUSCI_A3], &higher_task_taken);
-            portYIELD_FROM_ISR(higher_task_taken);
+            // Read the current byte
+            spi_recv_buffer[EUSCI_A3][spi_buffer_index[EUSCI_A3]] = EUSCI_A_SPI_receiveData(EUSCI_A3_BASE);
+
+            spi_buffer_index[EUSCI_A3]++;
+            if (spi_buffer_index[EUSCI_A3] < spi_buffer_size[EUSCI_A3]) {
+                // Send the next byte
+                EUSCI_A_SPI_transmitData(EUSCI_A3_BASE, spi_send_buffer[EUSCI_A3][spi_buffer_index[EUSCI_A3]]);
+            }
+            else {
+                // Unblock the transfer
+                BaseType_t higher_task_taken;
+                xSemaphoreGiveFromISR(spi_semaphore[EUSCI_A3], &higher_task_taken);
+                portYIELD_FROM_ISR(higher_task_taken);
+            }
             break;
     }
 }
@@ -88,7 +102,7 @@ static bool eusci_a_spi_open(eusci_t eusci, uint16_t base_address, uint32_t cloc
     param.desiredSpiClock = clock_rate;
     param.msbFirst = EUSCI_A_SPI_MSB_FIRST;
     param.clockPhase = EUSCI_A_SPI_PHASE_DATA_CHANGED_ONFIRST_CAPTURED_ON_NEXT;
-    param.clockPolarity = EUSCI_A_SPI_CLOCKPOLARITY_INACTIVITY_HIGH;
+    param.clockPolarity = EUSCI_A_SPI_CLOCKPOLARITY_INACTIVITY_LOW;
     param.spiMode = EUSCI_A_SPI_3PIN;
 
     // Initialize the SPI master block
@@ -122,7 +136,7 @@ static bool eusci_b_spi_open(eusci_t eusci, uint16_t base_address, uint32_t cloc
     param.desiredSpiClock = clock_rate;
     param.msbFirst = EUSCI_B_SPI_MSB_FIRST;
     param.clockPhase = EUSCI_B_SPI_PHASE_DATA_CHANGED_ONFIRST_CAPTURED_ON_NEXT;
-    param.clockPolarity = EUSCI_B_SPI_CLOCKPOLARITY_INACTIVITY_HIGH;
+    param.clockPolarity = EUSCI_B_SPI_CLOCKPOLARITY_INACTIVITY_LOW;
     param.spiMode = EUSCI_B_SPI_3PIN;
 
     // Initialize the SPI master block
@@ -174,23 +188,29 @@ void spi_close(spi_t * out) {
     }
 }
 
-static spi_error_t eusci_a_spi_transfer_byte(eusci_t eusci, uint16_t base_address, uint8_t send_byte, uint8_t * receive_byte) {
+static spi_error_t eusci_a_spi_transfer_bytes(eusci_t eusci, uint16_t base_address, uint8_t * send_bytes, uint8_t * receive_bytes, size_t length) {
     // Check if the SPI bus is not enabled
     bool is_in_reset_state = HWREG16(base_address + OFS_UCAxCTLW0) & UCSWRST;
     if (is_in_reset_state) {
         return SPI_CHANNEL_CLOSED;
     }
 
+    taskENTER_CRITICAL();
+    spi_buffer_index[eusci] = 0;
+    spi_buffer_size[eusci] = length;
+    spi_send_buffer[eusci] = send_bytes;
+    spi_recv_buffer[eusci] = receive_bytes;
+    taskEXIT_CRITICAL();
+
     // Wait for the TX buffer to be ready, and by extension the RX buffer
     // (transmitting while UCxxIFG & UCTXIFG == 0 is undefined behavior)
-    while(!EUSCI_A_SPI_getInterruptStatus(base_address,
-        EUSCI_A_SPI_TRANSMIT_INTERRUPT));
+    while(!EUSCI_A_SPI_getInterruptStatus(base_address, EUSCI_A_SPI_TRANSMIT_INTERRUPT));
 
-    EUSCI_A_SPI_transmitData(base_address, send_byte);
+    EUSCI_A_SPI_transmitData(base_address, send_bytes[0]);
 
     // Block until the ISR is fired
-    if (xSemaphoreTake(spi_semaphore[eusci], 1) == pdTRUE) {
-        *receive_byte = spi_recv_buffer[eusci];
+    if (xSemaphoreTake(spi_semaphore[eusci], 5) == pdTRUE) {
+        memcpy(receive_bytes, spi_recv_buffer[eusci], length);
         return SPI_NO_ERROR;
     }
     else {
@@ -199,23 +219,29 @@ static spi_error_t eusci_a_spi_transfer_byte(eusci_t eusci, uint16_t base_addres
     }
 }
 
-static spi_error_t eusci_b_spi_transfer_byte(eusci_t eusci, uint16_t base_address, uint8_t send_byte, uint8_t * receive_byte) {
+static spi_error_t eusci_b_spi_transfer_bytes(eusci_t eusci, uint16_t base_address, uint8_t * send_bytes, uint8_t * receive_bytes, size_t length) {
     // Check if the SPI bus is not enabled
     bool is_in_reset_state = HWREG16(base_address + OFS_UCBxCTLW0) & UCSWRST;
     if (is_in_reset_state) {
         return SPI_CHANNEL_CLOSED;
     }
 
+    taskENTER_CRITICAL();
+    spi_buffer_index[eusci] = 0;
+    spi_buffer_size[eusci] = length;
+    spi_send_buffer[eusci] = send_bytes;
+    spi_recv_buffer[eusci] = receive_bytes;
+    taskEXIT_CRITICAL();
+
     // Wait for the TX buffer to be ready, and by extension the RX buffer
     // (transmitting while UCxxIFG & UCTXIFG == 0 is undefined behavior)
-    while(!EUSCI_B_SPI_getInterruptStatus(base_address,
-        EUSCI_B_SPI_TRANSMIT_INTERRUPT));
+    while(!EUSCI_B_SPI_getInterruptStatus(base_address, EUSCI_B_SPI_TRANSMIT_INTERRUPT));
 
-    EUSCI_B_SPI_transmitData(base_address, send_byte);
-    
-        // Block until the ISR is fired
-    if (xSemaphoreTake(spi_semaphore[eusci], 1) == pdTRUE) {
-        *receive_byte = spi_recv_buffer[eusci];
+    EUSCI_B_SPI_transmitData(base_address, send_bytes[0]);
+
+    // Block until the ISR is fired
+    if (xSemaphoreTake(spi_semaphore[eusci], 5) == pdTRUE) {
+        memcpy(receive_bytes, spi_recv_buffer[eusci], length);
         return SPI_NO_ERROR;
     }
     else {
@@ -224,13 +250,13 @@ static spi_error_t eusci_b_spi_transfer_byte(eusci_t eusci, uint16_t base_addres
     }
 }
 
-spi_error_t spi_transfer_byte(spi_t * channel, uint8_t send_byte, uint8_t * receive_byte) {
+spi_error_t spi_transfer_bytes(spi_t * channel, uint8_t * send_bytes, uint8_t * receive_bytes, size_t length) {
     uint16_t base_address = BASE_ADDRESSES[channel->eusci];
 
     if (is_eusci_a_block(base_address)) {
-        return eusci_a_spi_transfer_byte(channel->eusci, base_address, send_byte, receive_byte);
+        return eusci_a_spi_transfer_bytes(channel->eusci, base_address, send_bytes, receive_bytes, length);
     }
     else {
-        return eusci_b_spi_transfer_byte(channel->eusci, base_address, send_byte, receive_byte);
+        return eusci_b_spi_transfer_bytes(channel->eusci, base_address, send_bytes, receive_bytes, length);
     }
 }
