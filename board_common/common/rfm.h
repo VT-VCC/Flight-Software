@@ -8,24 +8,11 @@ extern "C" {
 #endif
 
 /**
- * The connection to an RFM radio
- */
-typedef struct rfm {
-    /**
-     * The owned SPI channel over which we talk
-     */
-    spi_t spi;
-    volatile uint8_t *cs_value;
-    uint8_t cs_bit;
-} rfm_t;
-
-/**
  * Macro list for results of operations on the RFM
  */
 #define RFM_RESULT_LIST(OP) \
     OP(NO_ERROR) \
-    OP(SPI_ERROR) \
-    OP(INVALID_ARG)
+    OP(SPI_ERROR)
 
 /**
  * Enumeration of possible results for trying to communicate with the RFM
@@ -49,6 +36,19 @@ typedef enum rfm_mode {
     RFM_MODE_TX = (0x03 << 2),
     RFM_MODE_RX = (0x04 << 2)
 } rfm_mode_t;
+
+/**
+ * The connection to an RFM radio
+ */
+typedef struct rfm {
+    /**
+     * The owned SPI channel over which we talk
+     */
+    spi_t spi;
+    rfm_mode_t mode;
+    volatile uint8_t *cs_value;
+    uint8_t cs_bit;
+} rfm_t;
 
 /**
  * Open a connection to an RFM radio

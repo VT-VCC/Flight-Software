@@ -85,4 +85,91 @@
 #define REG_TESTPA1       0x5A
 #define REG_TESTPA2       0x5C
 
+#define DATAMODUL_DATAMODE_PACKET            0x00
+#define DATAMODUL_DATAMODE_CONTINUOUS        0x40
+#define DATAMODUL_DATAMODE_CONTINUOUSNOBSYNC 0x60
+
+#define DATAMODUL_MODULATIONTYPE_FSK         0x00 
+#define DATAMODUL_MODULATIONTYPE_OOK         0x08
+
+#define DATAMODUL_MODULATIONSHAPING_00       0x00
+#define DATAMODUL_MODULATIONSHAPING_01       0x01
+#define DATAMODUL_MODULATIONSHAPING_10       0x02
+#define DATAMODUL_MODULATIONSHAPING_11       0x03
+
+#define BITRATEMSB_1200            0x68
+#define BITRATELSB_1200            0x2B
+#define BITRATEMSB_2400            0x34
+#define BITRATELSB_2400            0x15
+#define BITRATEMSB_4800            0x1A
+#define BITRATELSB_4800            0x0B
+#define BITRATEMSB_9600            0x0D
+#define BITRATELSB_9600            0x05
+#define BITRATEMSB_19200           0x06
+#define BITRATELSB_19200           0x83
+#define BITRATEMSB_38400           0x03
+#define BITRATELSB_38400           0x41
+
+#define BITRATEMSB_38323           0x03
+#define BITRATELSB_38323           0x43
+
+#define BITRATEMSB_34482           0x03
+#define BITRATELSB_34482           0xA0
+
+#define BITRATEMSB_76800           0x01
+#define BITRATELSB_76800           0xA1
+#define BITRATEMSB_153600          0x00
+#define BITRATELSB_153600          0xD0
+#define BITRATEMSB_57600           0x02
+#define BITRATELSB_57600           0x2C
+#define BITRATEMSB_115200          0x01
+#define BITRATELSB_115200          0x16
+#define BITRATEMSB_12500           0x0A
+#define BITRATELSB_12500           0x00
+#define BITRATEMSB_25000           0x05
+#define BITRATELSB_25000           0x00
+#define BITRATEMSB_50000           0x02
+#define BITRATELSB_50000           0x80
+#define BITRATEMSB_100000          0x01
+#define BITRATELSB_100000          0x40
+#define BITRATEMSB_150000          0x00
+#define BITRATELSB_150000          0xD5
+#define BITRATEMSB_200000          0x00
+#define BITRATELSB_200000          0xA0
+#define BITRATEMSB_250000          0x00
+#define BITRATELSB_250000          0x80
+#define BITRATEMSB_300000          0x00
+#define BITRATELSB_300000          0x6B
+#define BITRATEMSB_32768           0x03
+#define BITRATELSB_32768           0xD1
+
+#define PALEVEL_PA0_ON     0x80
+#define PALEVEL_PA0_OFF    0x00
+#define PALEVEL_PA1_ON     0x40
+#define PALEVEL_PA1_OFF    0x00
+#define PALEVEL_PA2_ON     0x20
+#define PALEVEL_PA2_OFF    0x00
+
+#define IRQFLAGS1_MODEREADY            0x80
+#define IRQFLAGS1_RXREADY              0x40
+#define IRQFLAGS1_TXREADY              0x20
+#define IRQFLAGS1_PLLLOCK              0x10
+#define IRQFLAGS1_RSSI                 0x08
+#define IRQFLAGS1_TIMEOUT              0x04
+#define IRQFLAGS1_AUTOMODE             0x02
+#define IRQFLAGS1_SYNCADDRESSMATCH     0x01
+
+#define IRQFLAGS2_FIFOFULL             0x80
+#define IRQFLAGS2_FIFONOTEMPTY         0x40
+#define IRQFLAGS2_FIFOLEVEL            0x20
+#define IRQFLAGS2_FIFOOVERRUN          0x10
+#define IRQFLAGS2_PACKETSENT           0x08
+#define IRQFLAGS2_PAYLOADREADY         0x04
+#define IRQFLAGS2_CRCOK                0x02
+
+#define TESTPA1_NORMAL 	0x55
+#define TESTPA1_20DBM 	0x5D
+#define TESTPA2_NORMAL	0x70
+#define TESTPA2_20DBM	0x7C
+
 #endif // _COMMON_RFM_INTERNAL_H_

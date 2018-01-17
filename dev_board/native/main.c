@@ -21,9 +21,6 @@ static uart_t standard_output;
 
 static spi_t spi_output;
 
-const char * output_str = "hello, world!\r\n";
-const char * got_data = "got data\r\n";
-
 /******************************************************************************\
  *  Private functions                                                         *
 \******************************************************************************/
@@ -36,7 +33,7 @@ void vApplicationIdleHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 void vApplicationTickHook( void );
 
-static TaskHandle_t PERSISTENT transmit_blink_signal_task;
+static TaskHandle_t PERSISTENT rfm_task;
 void task_rfm_start();
 void task_rfm(void * params);
 
@@ -65,15 +62,13 @@ static void hardware_config() {
     PM5CTL0 &= ~LOCKLPM5;                   // Disable the GPIO power-on default high-impedance mode
                                             // to activate previously configured port settings
     // Set all GPIO pins to output low for low power
-    GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN6|GPIO_PIN7);
     GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setOutputLowOnPin(GPIO_PORT_PJ, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7|GPIO_PIN8|GPIO_PIN9|GPIO_PIN10|GPIO_PIN11|GPIO_PIN12|GPIO_PIN13|GPIO_PIN14|GPIO_PIN15);
 
-    GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
-
-    GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN6|GPIO_PIN7);
     GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setAsOutputPin(GPIO_PORT_P3, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
@@ -84,10 +79,19 @@ static void hardware_config() {
     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN0, GPIO_SECONDARY_MODULE_FUNCTION);
 
     // Configure UCA3SIMO, UCA3SOMI for SPI over eUSCI_A3
-    GPIO_setOutputLowOnPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3);
-    GPIO_setAsOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3);
+    GPIO_setOutputLowOnPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2);
+    GPIO_setAsOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2);
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, GPIO_PIN1, GPIO_PRIMARY_MODULE_FUNCTION);
-    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN2|GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION);
+
+    // Use P3.0 as the RFM69's NSS (chip select)
+    GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
+
+    // Use P1.5 as the RFM69's DIO0/IRQ interrupt
+    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN5);
+    GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN5);
+    GPIO_selectInterruptEdge(GPIO_PORT_P1, GPIO_PIN5, GPIO_LOW_TO_HIGH_TRANSITION);
+    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN5);
 
     // Configure GPIO to use LFXT
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_PJ, GPIO_PIN4|GPIO_PIN5, GPIO_PRIMARY_MODULE_FUNCTION);
@@ -121,20 +125,22 @@ void vApplicationTickHook( void ) {
  *  task_rfm implementation                                 *
 \******************************************************************************/
 
-StaticTask_t PERSISTENT rfm_task;
-StackType_t PERSISTENT rfm_task_stack[configMINIMAL_STACK_SIZE];
+StaticTask_t PERSISTENT rfm_task_buffer;
+StackType_t PERSISTENT rfm_task_stack[200];
 
 void task_rfm_start() {
-    transmit_blink_signal_task = xTaskCreateStatic(
+    rfm_task = xTaskCreateStatic(
         task_rfm,
         "rfm",
-        configMINIMAL_STACK_SIZE,
+        sizeof(rfm_task_stack)/sizeof(rfm_task_stack[0]),
         NULL,
         2,
         rfm_task_stack,
-        &rfm_task
+        &rfm_task_buffer
     );
 }
+
+void dump_rfm_regs(rfm_t * radio);
 
 void task_rfm(void * params) {
     taskENTER_CRITICAL();
@@ -144,9 +150,293 @@ void task_rfm(void * params) {
     spi_open(EUSCI_A3, 32768/4, &spi_output);
 
     rfm_t radio;
-    rfm_open(&radio, &spi_output, &P3OUT, 1);
+    if (rfm_open(&radio, &spi_output, &P3OUT, 1)) {
+        uart_write_string(&standard_output, "RFM initialized\n");
+    }
+    else {
+        uart_write_string(&standard_output, "RFM failed to initialize\n");
+    }
 
-    uart_write_string(&standard_output, "RFM initialized\n");
+    // Set frequency to 433 MHz
+    if (rfm_set_frequency(&radio, 433000000) != RFM_NO_ERROR) {
+        uart_write_string(&standard_output, "[ERROR] rfm_set_frequency\n");
+        return;
+    }
+
+    // Put a packet into the buffer
+    uint8_t msg[6] = { 'H', 'e', 'l', 'l', 'o', '\0' };
+    if (rfm_write_fifo(&radio, msg, 6) != RFM_NO_ERROR) {
+        uart_write_string(&standard_output, "[ERROR] rfm_write_fifo\n");
+        return;
+    }
+
+    if (rfm_set_mode(&radio, RFM_MODE_TX) != RFM_NO_ERROR) {
+        uart_write_string(&standard_output, "[ERROR] rfm_set_mode\n");
+        return;
+    }
+
+    //dump_rfm_regs(&radio);
+}
+
+void dump_rfm_regs(rfm_t * radio) {
+    uart_write_string(&standard_output, "==============================\nDumping RFM Registers\n==============================\n");
+
+    char buffer[100];
+    int len;
+
+    int capVal;
+    uint8_t modeFSK = 0;
+    int bitRate = 0;
+    int freqDev = 0;
+    long freqCenter = 0;
+
+    for (uint8_t addr = 1; addr <= 0x4f; ++addr) {
+        uint8_t value;
+        if (rfm_read_reg(radio, addr, &value) != RFM_NO_ERROR) {
+            uart_write_string(&standard_output, "Failed to read RFM address\n");
+            continue;
+        }
+
+        len = snprintf(buffer, 100, "%02x: %02x\n", addr, value);
+        uart_write_bytes(&standard_output, buffer, len);
+
+        switch ( addr ) 
+        {
+            case 0x1 : {
+                uart_write_string(&standard_output, "Controls the automatic Sequencer ( see section 4.2 )\nSequencerOff : " );
+                if ( 0x80 & value ) {
+                    uart_write_string(&standard_output, "1 -> Mode is forced by the user\n" );
+                } else {
+                    uart_write_string(&standard_output, "0 -> Operating mode as selected with Mode bits in RegOpMode is automatically reached with the Sequencer\n" );
+                }
+                
+                uart_write_string(&standard_output, "\nEnables Listen mode, should be enabled whilst in Standby mode:\nListenOn : " );
+                if ( 0x40 & value ) {
+                    uart_write_string(&standard_output, "1 -> On\n" );
+                } else {
+                    uart_write_string(&standard_output, "0 -> Off ( see section 4.3)\n" );
+                }
+                
+                uart_write_string(&standard_output, "\nAborts Listen mode when set together with ListenOn=0 See section 4.3.4 for details (Always reads 0.)\n" );
+                if ( 0x20 & value ) {
+                    uart_write_string(&standard_output, "ERROR - ListenAbort should NEVER return 1 this is a write only register\n" );
+                }
+                
+                uart_write_string(&standard_output,"\nTransceiver's operating modes:\nMode : ");
+                capVal = (value >> 2) & 0x7;
+                if ( capVal == 0b000 ) {
+                    uart_write_string(&standard_output, "000 -> Sleep mode (SLEEP)\n" );
+                } else if ( capVal = 0b001 ) {
+                    uart_write_string(&standard_output, "001 -> Standby mode (STDBY)\n" );
+                } else if ( capVal = 0b010 ) {
+                    uart_write_string(&standard_output, "010 -> Frequency Synthesizer mode (FS)\n" );
+                } else if ( capVal = 0b011 ) {
+                    uart_write_string(&standard_output, "011 -> Transmitter mode (TX)\n" );
+                } else if ( capVal = 0b100 ) {
+                    uart_write_string(&standard_output, "100 -> Receiver Mode (RX)\n" );
+                } else {
+                    len = snprintf(buffer, 100, "%02x", capVal);
+                    uart_write_bytes(&standard_output, buffer, len);
+                    uart_write_string(&standard_output, " -> RESERVED\n" );
+                }
+                uart_write_string(&standard_output, "\n" );
+                break;
+            }
+            
+            case 0x2 : {
+            
+                uart_write_string(&standard_output,"Data Processing mode:\nDataMode : ");
+                capVal = (value >> 5) & 0x3;
+                if ( capVal == 0b00 ) {
+                    uart_write_string(&standard_output, "00 -> Packet mode\n" );
+                } else if ( capVal == 0b01 ) {
+                    uart_write_string(&standard_output, "01 -> reserved\n" );
+                } else if ( capVal == 0b10 ) {
+                    uart_write_string(&standard_output, "10 -> Continuous mode with bit synchronizer\n" );
+                } else if ( capVal == 0b11 ) {
+                    uart_write_string(&standard_output, "11 -> Continuous mode without bit synchronizer\n" );
+                }
+                
+                uart_write_string(&standard_output,"\nModulation scheme:\nModulation Type : ");
+                capVal = (value >> 3) & 0x3;
+                if ( capVal == 0b00 ) {
+                    uart_write_string(&standard_output, "00 -> FSK\n" );
+                    modeFSK = 1;
+                } else if ( capVal == 0b01 ) {
+                    uart_write_string(&standard_output, "01 -> OOK\n" );
+                } else if ( capVal == 0b10 ) {
+                    uart_write_string(&standard_output, "10 -> reserved\n" );
+                } else if ( capVal == 0b11 ) {
+                    uart_write_string(&standard_output, "11 -> reserved\n" );
+                }
+                
+                uart_write_string(&standard_output,"\nData shaping: ");
+                if ( modeFSK ) {
+                    uart_write_string(&standard_output, "in FSK:\n" );
+                } else {
+                    uart_write_string(&standard_output, "in OOK:\n" );
+                }
+                uart_write_string(&standard_output,"ModulationShaping : ");
+                capVal = value & 0x3;
+                if ( modeFSK ) {
+                    if ( capVal == 0b00 ) {
+                        uart_write_string(&standard_output, "00 -> no shaping\n" );
+                    } else if ( capVal == 0b01 ) {
+                        uart_write_string(&standard_output, "01 -> Gaussian filter, BT = 1.0\n" );
+                    } else if ( capVal == 0b10 ) {
+                        uart_write_string(&standard_output, "10 -> Gaussian filter, BT = 0.5\n" );
+                    } else if ( capVal == 0b11 ) {
+                        uart_write_string(&standard_output, "11 -> Gaussian filter, BT = 0.3\n" );
+                    }
+                } else {
+                    if ( capVal == 0b00 ) {
+                        uart_write_string(&standard_output, "00 -> no shaping\n" );
+                    } else if ( capVal == 0b01 ) {
+                        uart_write_string(&standard_output, "01 -> filtering with f(cutoff) = BR\n" );
+                    } else if ( capVal == 0b10 ) {
+                        uart_write_string(&standard_output, "10 -> filtering with f(cutoff) = 2*BR\n" );
+                    } else if ( capVal == 0b11 ) {
+                        uart_write_string(&standard_output, "ERROR - 11 is reserved\n" );
+                    }
+                }
+                
+                uart_write_string(&standard_output, "\n" );
+                break;
+            }
+            
+            case 0x3 : {
+                bitRate = (value << 8);
+                break;
+            }
+            
+            case 0x4 : {
+                bitRate |= value;
+                uart_write_string(&standard_output, "Bit Rate (Chip Rate when Manchester encoding is enabled)\nBitRate : ");
+                unsigned long val = 32UL * 1000UL * 1000UL / bitRate;
+                len = snprintf(buffer, 100, "%d\n", val);
+                uart_write_bytes(&standard_output, buffer, len);
+                break;
+            }
+            
+            case 0x5 : {
+                freqDev = ( (value & 0x3f) << 8 );
+                break;
+            }
+            
+            case 0x6 : {
+                freqDev |= value;
+                uart_write_string(&standard_output, "Frequency deviation\nFdev : " );
+                unsigned long val = 61UL * freqDev;
+                len = snprintf(buffer, 100, "%d\n", val);
+                uart_write_bytes(&standard_output, buffer, len);
+                break;
+            }
+            
+            case 0x7 : {
+                unsigned long tempVal = value;
+                freqCenter = ( tempVal << 16 );
+                break;
+            }
+           
+            case 0x8 : {
+                unsigned long tempVal = value;
+                freqCenter = freqCenter | ( tempVal << 8 );
+                break;
+            }
+
+            case 0x9 : {        
+                freqCenter = freqCenter | value;
+                uart_write_string(&standard_output, "RF Carrier frequency\nFRF : " );
+                unsigned long val = 61UL * freqCenter;
+                len = snprintf(buffer, 100, "%d\n", val);
+                uart_write_bytes(&standard_output, buffer, len);
+                break;
+            }
+
+            case 0xa : {
+                uart_write_string(&standard_output, "RC calibration control & status\nRcCalDone : " );
+                if ( 0x40 & value ) {
+                    uart_write_string(&standard_output, "1 -> RC calibration is over\n" );
+                } else {
+                    uart_write_string(&standard_output, "0 -> RC calibration is in progress\n" );
+                }
+            
+                uart_write_string(&standard_output, "\n" );
+                break;
+            }
+
+            case 0xb : {
+                uart_write_string(&standard_output, "Improved AFC routine for signals with modulation index lower than 2.  Refer to section 3.4.16 for details\nAfcLowBetaOn : " );
+                if ( 0x20 & value ) {
+                    uart_write_string(&standard_output, "1 -> Improved AFC routine\n" );
+                } else {
+                    uart_write_string(&standard_output, "0 -> Standard AFC routine\n" );
+                }
+                uart_write_string(&standard_output, "\n" );
+                break;
+            }
+            
+            case 0xc : {
+                uart_write_string(&standard_output, "Reserved\n\n" );
+                break;
+            }
+
+            case 0xd : {
+                uint8_t val;
+                uart_write_string(&standard_output, "Resolution of Listen mode Idle time (calibrated RC osc):\nListenResolIdle : " );
+                val = value >> 6;
+                if ( val == 0b00 ) {
+                    uart_write_string(&standard_output, "00 -> reserved\n" );
+                } else if ( val == 0b01 ) {
+                    uart_write_string(&standard_output, "01 -> 64 us\n" );
+                } else if ( val == 0b10 ) {
+                    uart_write_string(&standard_output, "10 -> 4.1 ms\n" );
+                } else if ( val == 0b11 ) {
+                    uart_write_string(&standard_output, "11 -> 262 ms\n" );
+                }
+                
+                uart_write_string(&standard_output, "\nResolution of Listen mode Rx time (calibrated RC osc):\nListenResolRx : " );
+                val = (value >> 4) & 0x3;
+                if ( val == 0b00 ) {
+                    uart_write_string(&standard_output, "00 -> reserved\n" );
+                } else if ( val == 0b01 ) {
+                    uart_write_string(&standard_output, "01 -> 64 us\n" );
+                } else if ( val == 0b10 ) {
+                    uart_write_string(&standard_output, "10 -> 4.1 ms\n" );
+                } else if ( val == 0b11 ) {
+                    uart_write_string(&standard_output, "11 -> 262 ms\n" );
+                }
+
+                uart_write_string(&standard_output, "\nCriteria for packet acceptance in Listen mode:\nListenCriteria : " );
+                if ( 0x8 & value ) {
+                    uart_write_string(&standard_output, "1 -> signal strength is above RssiThreshold and SyncAddress matched\n" );
+                } else {
+                    uart_write_string(&standard_output, "0 -> signal strength is above RssiThreshold\n" );
+                }
+                
+                uart_write_string(&standard_output, "\nAction taken after acceptance of a packet in Listen mode:\nListenEnd : " );
+                val = (value >> 1 ) & 0x3;
+                if ( val == 0b00 ) {
+                    uart_write_string(&standard_output, "00 -> chip stays in Rx mode. Listen mode stops and must be disabled (see section 4.3)\n" );
+                } else if ( val == 0b01 ) {
+                    uart_write_string(&standard_output, "01 -> chip stays in Rx mode until PayloadReady or Timeout interrupt occurs.  It then goes to the mode defined by Mode. Listen mode stops and must be disabled (see section 4.3)\n" );
+                } else if ( val == 0b10 ) {
+                    uart_write_string(&standard_output, "10 -> chip stays in Rx mode until PayloadReady or Timeout occurs.  Listen mode then resumes in Idle state.  FIFO content is lost at next Rx wakeup.\n" );
+                } else if ( val == 0b11 ) {
+                    uart_write_string(&standard_output, "11 -> Reserved\n" );
+                }
+                
+                
+                uart_write_string(&standard_output, "\n" );
+                break;
+            }
+            
+            default : {
+            }
+        }
+    }
+
+    uart_write_string(&standard_output, "==============================\nEnd of RFM Dump\n==============================\n");
 }
 
 /******************************************************************************\
