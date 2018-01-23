@@ -1,3 +1,4 @@
+#include <cstring>
 #include "spi_test.hpp"
 
 void spi_open(spi_t * channel) {

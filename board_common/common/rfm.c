@@ -29,14 +29,19 @@ bool rfm_open(rfm_t * radio, spi_t * spi, volatile uint8_t *cs_value, uint8_t cs
 
     //TODO reset chip to clear FIFO and restore default register values
 
-    //TODO populate all needed register values
+    // These defaults assume that the chip is in a reset state
     struct { uint8_t addr; uint8_t value; } default_config[] = {
         { REG_DATAMODUL, DATAMODUL_DATAMODE_PACKET | DATAMODUL_MODULATIONTYPE_FSK | DATAMODUL_MODULATIONSHAPING_10 },
         { REG_BITRATEMSB, BITRATEMSB_9600 },
         { REG_BITRATELSB, BITRATELSB_9600 },
+        { REG_FDEVMSB, RF_FDEVMSB_5000 },
+        { REG_FDEVLSB, RF_FDEVLSB_5000 },
+        { REG_RXBW, RF_RXBW_DCCFREQ_010 | RF_RXBW_MANT_16 | RF_RXBW_EXP_2 },
+        { REG_DIOMAPPING2, RF_DIOMAPPING2_DIO4_01 | RF_DIOMAPPING2_CLKOUT_OFF }, 
+
     };
 
-    // Load default register values
+    // Load our register values
     for (int i = 0; i < sizeof(default_config)/sizeof(default_config[0]); ++i) {
         if (rfm_write_reg(radio, default_config[i].addr, default_config[i].value) != RFM_NO_ERROR) {
             return false;
@@ -183,7 +188,7 @@ rfm_result_t rfm_set_mode(rfm_t * radio, rfm_mode_t mode) {
         mode == RFM_MODE_RX);
 
     if (mode == radio->mode) {
-        return SPI_NO_ERROR;
+        return RFM_NO_ERROR;
     }
 
     uint8_t old_mode;

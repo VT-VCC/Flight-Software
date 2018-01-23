@@ -19,7 +19,15 @@
 /// Standard UART output
 static uart_t standard_output;
 
+/// RFM SPI output
 static spi_t spi_output;
+
+// Print a formatted message across the UART output
+#define DEBUG(format, ...) do { \
+        char buffer[255]; \
+        int len = snprintf(buffer, 255, (format), __VA_ARGS__); \
+        uart_write_bytes(&standard_output, buffer, len); \
+    } while(0);
 
 /******************************************************************************\
  *  Private functions                                                         *
@@ -144,45 +152,47 @@ void dump_rfm_regs(rfm_t * radio);
 
 void task_rfm(void * params) {
     taskENTER_CRITICAL();
-    uart_write_string(&standard_output, "Starting RFM task\n");
+    DEBUG("Starting RFM task\n");
     taskEXIT_CRITICAL();
 
     spi_open(EUSCI_A3, 32768/4, &spi_output);
 
     rfm_t radio;
     if (rfm_open(&radio, &spi_output, &P3OUT, 1)) {
-        uart_write_string(&standard_output, "RFM initialized\n");
+        DEBUG("RFM initialized\n");
     }
     else {
-        uart_write_string(&standard_output, "RFM failed to initialize\n");
+        DEBUG("RFM failed to initialize\n");
     }
+
+    //dump_rfm_regs(&radio);
 
     // Set frequency to 433 MHz
     if (rfm_set_frequency(&radio, 433000000) != RFM_NO_ERROR) {
-        uart_write_string(&standard_output, "[ERROR] rfm_set_frequency\n");
+       DEBUG("[ERROR] rfm_set_frequency\n");
         return;
     }
 
     // Put a packet into the buffer
     uint8_t msg[6] = { 'H', 'e', 'l', 'l', 'o', '\0' };
     if (rfm_write_fifo(&radio, msg, 6) != RFM_NO_ERROR) {
-        uart_write_string(&standard_output, "[ERROR] rfm_write_fifo\n");
+        DEBUG("[ERROR] rfm_write_fifo\n");
         return;
     }
 
+    // Enter TX
     if (rfm_set_mode(&radio, RFM_MODE_TX) != RFM_NO_ERROR) {
-        uart_write_string(&standard_output, "[ERROR] rfm_set_mode\n");
+        DEBUG("[ERROR] rfm_set_mode\n");
         return;
     }
 
-    //dump_rfm_regs(&radio);
+
+    // Check that we haven't overflowed the stack
+    DEBUG("RFM task high water mark: %d\n", uxTaskGetStackHighWaterMark(NULL));
 }
 
 void dump_rfm_regs(rfm_t * radio) {
-    uart_write_string(&standard_output, "==============================\nDumping RFM Registers\n==============================\n");
-
-    char buffer[100];
-    int len;
+    DEBUG("==============================\nDumping RFM Registers\n==============================\n");
 
     int capVal;
     uint8_t modeFSK = 0;
@@ -193,114 +203,111 @@ void dump_rfm_regs(rfm_t * radio) {
     for (uint8_t addr = 1; addr <= 0x4f; ++addr) {
         uint8_t value;
         if (rfm_read_reg(radio, addr, &value) != RFM_NO_ERROR) {
-            uart_write_string(&standard_output, "Failed to read RFM address\n");
+            DEBUG("Failed to read RFM address\n");
             continue;
         }
 
-        len = snprintf(buffer, 100, "%02x: %02x\n", addr, value);
-        uart_write_bytes(&standard_output, buffer, len);
+        DEBUG("%02x: %02x\n", addr, value);
 
         switch ( addr ) 
         {
             case 0x1 : {
-                uart_write_string(&standard_output, "Controls the automatic Sequencer ( see section 4.2 )\nSequencerOff : " );
+                DEBUG("Controls the automatic Sequencer ( see section 4.2 )\nSequencerOff : " );
                 if ( 0x80 & value ) {
-                    uart_write_string(&standard_output, "1 -> Mode is forced by the user\n" );
+                    DEBUG("1 -> Mode is forced by the user\n" );
                 } else {
-                    uart_write_string(&standard_output, "0 -> Operating mode as selected with Mode bits in RegOpMode is automatically reached with the Sequencer\n" );
+                    DEBUG("0 -> Operating mode as selected with Mode bits in RegOpMode is automatically reached with the Sequencer\n" );
                 }
                 
-                uart_write_string(&standard_output, "\nEnables Listen mode, should be enabled whilst in Standby mode:\nListenOn : " );
+                DEBUG("\nEnables Listen mode, should be enabled whilst in Standby mode:\nListenOn : " );
                 if ( 0x40 & value ) {
-                    uart_write_string(&standard_output, "1 -> On\n" );
+                    DEBUG("1 -> On\n" );
                 } else {
-                    uart_write_string(&standard_output, "0 -> Off ( see section 4.3)\n" );
+                    DEBUG("0 -> Off ( see section 4.3)\n" );
                 }
                 
-                uart_write_string(&standard_output, "\nAborts Listen mode when set together with ListenOn=0 See section 4.3.4 for details (Always reads 0.)\n" );
+                DEBUG("\nAborts Listen mode when set together with ListenOn=0 See section 4.3.4 for details (Always reads 0.)\n" );
                 if ( 0x20 & value ) {
-                    uart_write_string(&standard_output, "ERROR - ListenAbort should NEVER return 1 this is a write only register\n" );
+                    DEBUG("ERROR - ListenAbort should NEVER return 1 this is a write only register\n" );
                 }
                 
                 uart_write_string(&standard_output,"\nTransceiver's operating modes:\nMode : ");
                 capVal = (value >> 2) & 0x7;
                 if ( capVal == 0b000 ) {
-                    uart_write_string(&standard_output, "000 -> Sleep mode (SLEEP)\n" );
+                    DEBUG("000 -> Sleep mode (SLEEP)\n" );
                 } else if ( capVal = 0b001 ) {
-                    uart_write_string(&standard_output, "001 -> Standby mode (STDBY)\n" );
+                    DEBUG("001 -> Standby mode (STDBY)\n" );
                 } else if ( capVal = 0b010 ) {
-                    uart_write_string(&standard_output, "010 -> Frequency Synthesizer mode (FS)\n" );
+                    DEBUG("010 -> Frequency Synthesizer mode (FS)\n" );
                 } else if ( capVal = 0b011 ) {
-                    uart_write_string(&standard_output, "011 -> Transmitter mode (TX)\n" );
+                    DEBUG("011 -> Transmitter mode (TX)\n" );
                 } else if ( capVal = 0b100 ) {
-                    uart_write_string(&standard_output, "100 -> Receiver Mode (RX)\n" );
+                    DEBUG("100 -> Receiver Mode (RX)\n" );
                 } else {
-                    len = snprintf(buffer, 100, "%02x", capVal);
-                    uart_write_bytes(&standard_output, buffer, len);
-                    uart_write_string(&standard_output, " -> RESERVED\n" );
+                    DEBUG("%02x -> RESERVED\n", capVal);
                 }
-                uart_write_string(&standard_output, "\n" );
+                DEBUG("\n" );
                 break;
             }
             
             case 0x2 : {
             
-                uart_write_string(&standard_output,"Data Processing mode:\nDataMode : ");
+                DEBUG("Data Processing mode:\nDataMode : ");
                 capVal = (value >> 5) & 0x3;
                 if ( capVal == 0b00 ) {
-                    uart_write_string(&standard_output, "00 -> Packet mode\n" );
+                    DEBUG("00 -> Packet mode\n" );
                 } else if ( capVal == 0b01 ) {
-                    uart_write_string(&standard_output, "01 -> reserved\n" );
+                    DEBUG("01 -> reserved\n" );
                 } else if ( capVal == 0b10 ) {
-                    uart_write_string(&standard_output, "10 -> Continuous mode with bit synchronizer\n" );
+                    DEBUG("10 -> Continuous mode with bit synchronizer\n" );
                 } else if ( capVal == 0b11 ) {
-                    uart_write_string(&standard_output, "11 -> Continuous mode without bit synchronizer\n" );
+                    DEBUG("11 -> Continuous mode without bit synchronizer\n" );
                 }
                 
-                uart_write_string(&standard_output,"\nModulation scheme:\nModulation Type : ");
+                DEBUG("\nModulation scheme:\nModulation Type : ");
                 capVal = (value >> 3) & 0x3;
                 if ( capVal == 0b00 ) {
-                    uart_write_string(&standard_output, "00 -> FSK\n" );
+                    DEBUG("00 -> FSK\n" );
                     modeFSK = 1;
                 } else if ( capVal == 0b01 ) {
-                    uart_write_string(&standard_output, "01 -> OOK\n" );
+                    DEBUG("01 -> OOK\n" );
                 } else if ( capVal == 0b10 ) {
-                    uart_write_string(&standard_output, "10 -> reserved\n" );
+                    DEBUG("10 -> reserved\n" );
                 } else if ( capVal == 0b11 ) {
-                    uart_write_string(&standard_output, "11 -> reserved\n" );
+                    DEBUG("11 -> reserved\n" );
                 }
                 
-                uart_write_string(&standard_output,"\nData shaping: ");
+                DEBUG("\nData shaping: ");
                 if ( modeFSK ) {
-                    uart_write_string(&standard_output, "in FSK:\n" );
+                    DEBUG("in FSK:\n" );
                 } else {
-                    uart_write_string(&standard_output, "in OOK:\n" );
+                    DEBUG("in OOK:\n" );
                 }
-                uart_write_string(&standard_output,"ModulationShaping : ");
+                DEBUG("ModulationShaping : ");
                 capVal = value & 0x3;
                 if ( modeFSK ) {
                     if ( capVal == 0b00 ) {
-                        uart_write_string(&standard_output, "00 -> no shaping\n" );
+                        DEBUG("00 -> no shaping\n" );
                     } else if ( capVal == 0b01 ) {
-                        uart_write_string(&standard_output, "01 -> Gaussian filter, BT = 1.0\n" );
+                        DEBUG("01 -> Gaussian filter, BT = 1.0\n" );
                     } else if ( capVal == 0b10 ) {
-                        uart_write_string(&standard_output, "10 -> Gaussian filter, BT = 0.5\n" );
+                        DEBUG("10 -> Gaussian filter, BT = 0.5\n" );
                     } else if ( capVal == 0b11 ) {
-                        uart_write_string(&standard_output, "11 -> Gaussian filter, BT = 0.3\n" );
+                        DEBUG("11 -> Gaussian filter, BT = 0.3\n" );
                     }
                 } else {
                     if ( capVal == 0b00 ) {
-                        uart_write_string(&standard_output, "00 -> no shaping\n" );
+                        DEBUG("00 -> no shaping\n" );
                     } else if ( capVal == 0b01 ) {
-                        uart_write_string(&standard_output, "01 -> filtering with f(cutoff) = BR\n" );
+                        DEBUG("01 -> filtering with f(cutoff) = BR\n" );
                     } else if ( capVal == 0b10 ) {
-                        uart_write_string(&standard_output, "10 -> filtering with f(cutoff) = 2*BR\n" );
+                        DEBUG("10 -> filtering with f(cutoff) = 2*BR\n" );
                     } else if ( capVal == 0b11 ) {
-                        uart_write_string(&standard_output, "ERROR - 11 is reserved\n" );
+                        DEBUG("ERROR - 11 is reserved\n" );
                     }
                 }
                 
-                uart_write_string(&standard_output, "\n" );
+                DEBUG("\n" );
                 break;
             }
             
@@ -311,10 +318,8 @@ void dump_rfm_regs(rfm_t * radio) {
             
             case 0x4 : {
                 bitRate |= value;
-                uart_write_string(&standard_output, "Bit Rate (Chip Rate when Manchester encoding is enabled)\nBitRate : ");
                 unsigned long val = 32UL * 1000UL * 1000UL / bitRate;
-                len = snprintf(buffer, 100, "%d\n", val);
-                uart_write_bytes(&standard_output, buffer, len);
+                DEBUG("Bit Rate (Chip Rate when Manchester encoding is enabled)\nBitRate : %d\n", val);
                 break;
             }
             
@@ -325,10 +330,8 @@ void dump_rfm_regs(rfm_t * radio) {
             
             case 0x6 : {
                 freqDev |= value;
-                uart_write_string(&standard_output, "Frequency deviation\nFdev : " );
                 unsigned long val = 61UL * freqDev;
-                len = snprintf(buffer, 100, "%d\n", val);
-                uart_write_bytes(&standard_output, buffer, len);
+                DEBUG("Frequency deviation\nFdev : %d\n", val);
                 break;
             }
             
@@ -346,88 +349,86 @@ void dump_rfm_regs(rfm_t * radio) {
 
             case 0x9 : {        
                 freqCenter = freqCenter | value;
-                uart_write_string(&standard_output, "RF Carrier frequency\nFRF : " );
                 unsigned long val = 61UL * freqCenter;
-                len = snprintf(buffer, 100, "%d\n", val);
-                uart_write_bytes(&standard_output, buffer, len);
+                DEBUG("RF Carrier frequency\nFRF : %d\n", val);
                 break;
             }
 
             case 0xa : {
-                uart_write_string(&standard_output, "RC calibration control & status\nRcCalDone : " );
+                DEBUG("RC calibration control & status\nRcCalDone : " );
                 if ( 0x40 & value ) {
-                    uart_write_string(&standard_output, "1 -> RC calibration is over\n" );
+                    DEBUG("1 -> RC calibration is over\n" );
                 } else {
-                    uart_write_string(&standard_output, "0 -> RC calibration is in progress\n" );
+                    DEBUG("0 -> RC calibration is in progress\n" );
                 }
             
-                uart_write_string(&standard_output, "\n" );
+                DEBUG("\n" );
                 break;
             }
 
             case 0xb : {
-                uart_write_string(&standard_output, "Improved AFC routine for signals with modulation index lower than 2.  Refer to section 3.4.16 for details\nAfcLowBetaOn : " );
+                DEBUG("Improved AFC routine for signals with modulation index lower than 2.  Refer to section 3.4.16 for details\nAfcLowBetaOn : " );
                 if ( 0x20 & value ) {
-                    uart_write_string(&standard_output, "1 -> Improved AFC routine\n" );
+                    DEBUG("1 -> Improved AFC routine\n" );
                 } else {
-                    uart_write_string(&standard_output, "0 -> Standard AFC routine\n" );
+                    DEBUG("0 -> Standard AFC routine\n" );
                 }
-                uart_write_string(&standard_output, "\n" );
+                DEBUG("\n" );
                 break;
             }
             
             case 0xc : {
-                uart_write_string(&standard_output, "Reserved\n\n" );
+                DEBUG("Reserved\n\n" );
                 break;
             }
 
             case 0xd : {
                 uint8_t val;
-                uart_write_string(&standard_output, "Resolution of Listen mode Idle time (calibrated RC osc):\nListenResolIdle : " );
+                DEBUG("Resolution of Listen mode Idle time (calibrated RC osc):\nListenResolIdle : " );
                 val = value >> 6;
                 if ( val == 0b00 ) {
-                    uart_write_string(&standard_output, "00 -> reserved\n" );
+                    DEBUG("00 -> reserved\n" );
                 } else if ( val == 0b01 ) {
-                    uart_write_string(&standard_output, "01 -> 64 us\n" );
+                    DEBUG("01 -> 64 us\n" );
                 } else if ( val == 0b10 ) {
-                    uart_write_string(&standard_output, "10 -> 4.1 ms\n" );
+                    DEBUG("10 -> 4.1 ms\n" );
                 } else if ( val == 0b11 ) {
-                    uart_write_string(&standard_output, "11 -> 262 ms\n" );
+                    DEBUG("11 -> 262 ms\n" );
                 }
                 
-                uart_write_string(&standard_output, "\nResolution of Listen mode Rx time (calibrated RC osc):\nListenResolRx : " );
+                DEBUG("\nResolution of Listen mode Rx time (calibrated RC osc):\nListenResolRx : " );
                 val = (value >> 4) & 0x3;
                 if ( val == 0b00 ) {
-                    uart_write_string(&standard_output, "00 -> reserved\n" );
+                    DEBUG("00 -> reserved\n" );
                 } else if ( val == 0b01 ) {
-                    uart_write_string(&standard_output, "01 -> 64 us\n" );
+                    DEBUG("01 -> 64 us\n" );
                 } else if ( val == 0b10 ) {
-                    uart_write_string(&standard_output, "10 -> 4.1 ms\n" );
+                    DEBUG("10 -> 4.1 ms\n" );
                 } else if ( val == 0b11 ) {
-                    uart_write_string(&standard_output, "11 -> 262 ms\n" );
+                    DEBUG("11 -> 262 ms\n" );
                 }
 
-                uart_write_string(&standard_output, "\nCriteria for packet acceptance in Listen mode:\nListenCriteria : " );
+                DEBUG("\nCriteria for packet acceptance in Listen mode:\nListenCriteria : " );
                 if ( 0x8 & value ) {
-                    uart_write_string(&standard_output, "1 -> signal strength is above RssiThreshold and SyncAddress matched\n" );
+                    DEBUG("1 -> signal strength is above RssiThreshold and SyncAddress matched\n" );
                 } else {
-                    uart_write_string(&standard_output, "0 -> signal strength is above RssiThreshold\n" );
+                    DEBUG("0 -> signal strength is above RssiThreshold\n" );
                 }
                 
-                uart_write_string(&standard_output, "\nAction taken after acceptance of a packet in Listen mode:\nListenEnd : " );
+                DEBUG("\nAction taken after acceptance of a packet in Listen mode:\nListenEnd : " );
                 val = (value >> 1 ) & 0x3;
                 if ( val == 0b00 ) {
-                    uart_write_string(&standard_output, "00 -> chip stays in Rx mode. Listen mode stops and must be disabled (see section 4.3)\n" );
+                    DEBUG("00 -> chip stays in Rx mode. Listen mode stops and must be disabled (see section 4.3)\n" );
                 } else if ( val == 0b01 ) {
-                    uart_write_string(&standard_output, "01 -> chip stays in Rx mode until PayloadReady or Timeout interrupt occurs.  It then goes to the mode defined by Mode. Listen mode stops and must be disabled (see section 4.3)\n" );
+                    DEBUG("01 -> chip stays in Rx mode until PayloadReady or Timeout interrupt occurs.  It then goes to the mode defined by Mode. Listen mode stops and must be disabled (see section 4.3)\n" );
                 } else if ( val == 0b10 ) {
-                    uart_write_string(&standard_output, "10 -> chip stays in Rx mode until PayloadReady or Timeout occurs.  Listen mode then resumes in Idle state.  FIFO content is lost at next Rx wakeup.\n" );
+                    DEBUG("10 -> chip stays in Rx mode until PayloadReady or Timeout occurs.  Listen mode then resumes in Idle state.  FIFO content is lost at next Rx wakeup.\n" );
                 } else if ( val == 0b11 ) {
-                    uart_write_string(&standard_output, "11 -> Reserved\n" );
+                    DEBUG("11 -> Reserved\n" );
                 }
                 
                 
-                uart_write_string(&standard_output, "\n" );
+                DEBUG("\n" );
                 break;
             }
             
@@ -436,7 +437,7 @@ void dump_rfm_regs(rfm_t * radio) {
         }
     }
 
-    uart_write_string(&standard_output, "==============================\nEnd of RFM Dump\n==============================\n");
+    DEBUG("==============================\nEnd of RFM Dump\n==============================\n");
 }
 
 /******************************************************************************\
