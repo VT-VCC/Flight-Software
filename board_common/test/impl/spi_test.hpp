@@ -26,7 +26,7 @@ struct spi_impl {
 
   void send_byte();
 
-  spi_impl() : open(false) {}
+  spi_impl() : open(false), miso_bytes(), mosi_bytes() {}
 };
 
 /** Open the given SPI channel so that it can be used.

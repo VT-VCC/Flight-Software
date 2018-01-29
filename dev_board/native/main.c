@@ -23,9 +23,10 @@ static uart_t standard_output;
 static spi_t spi_output;
 
 // Print a formatted message across the UART output
+#define DEBUG_VA_ARGS(...) , ## __VA_ARGS__
 #define DEBUG(format, ...) do { \
         char buffer[255]; \
-        int len = snprintf(buffer, 255, (format), __VA_ARGS__); \
+        int len = snprintf(buffer, 255, (format) DEBUG_VA_ARGS(__VA_ARGS__)); \
         uart_write_bytes(&standard_output, buffer, len); \
     } while(0);
 
@@ -86,6 +87,9 @@ static void hardware_config() {
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P2, GPIO_PIN1, GPIO_SECONDARY_MODULE_FUNCTION);
     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN0, GPIO_SECONDARY_MODULE_FUNCTION);
 
+    
+    /****** START RFM ***/
+
     // Configure UCA3SIMO, UCA3SOMI for SPI over eUSCI_A3
     GPIO_setOutputLowOnPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2);
     GPIO_setAsOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2);
@@ -95,11 +99,17 @@ static void hardware_config() {
     // Use P3.0 as the RFM69's NSS (chip select)
     GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
 
+    // Use P as the RFM69's RST (reset)
+    GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
+
     // Use P1.5 as the RFM69's DIO0/IRQ interrupt
     GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN5);
     GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN5);
     GPIO_selectInterruptEdge(GPIO_PORT_P1, GPIO_PIN5, GPIO_LOW_TO_HIGH_TRANSITION);
     GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN5);
+
+    /****** END RFM ***/
+
 
     // Configure GPIO to use LFXT
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_PJ, GPIO_PIN4|GPIO_PIN5, GPIO_PRIMARY_MODULE_FUNCTION);
@@ -133,14 +143,16 @@ void vApplicationTickHook( void ) {
  *  task_rfm implementation                                 *
 \******************************************************************************/
 
+#define RFM_TASK_STACK_DEPTH 200
+
 StaticTask_t PERSISTENT rfm_task_buffer;
-StackType_t PERSISTENT rfm_task_stack[200];
+StackType_t PERSISTENT rfm_task_stack[RFM_TASK_STACK_DEPTH];
 
 void task_rfm_start() {
     rfm_task = xTaskCreateStatic(
         task_rfm,
         "rfm",
-        sizeof(rfm_task_stack)/sizeof(rfm_task_stack[0]),
+        RFM_TASK_STACK_DEPTH,
         NULL,
         2,
         rfm_task_stack,
@@ -188,7 +200,8 @@ void task_rfm(void * params) {
 
 
     // Check that we haven't overflowed the stack
-    DEBUG("RFM task high water mark: %d\n", uxTaskGetStackHighWaterMark(NULL));
+    DEBUG("!!! %d frames left on the stack !!!\n",
+        RFM_TASK_STACK_DEPTH - uxTaskGetStackHighWaterMark(NULL));
 }
 
 void dump_rfm_regs(rfm_t * radio) {

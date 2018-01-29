@@ -12,17 +12,23 @@ void spi_close(spi_t * out) {
 }
 
 spi_error_t spi_transfer_bytes(spi_t * channel, uint8_t * send_bytes, uint8_t * receive_bytes, size_t length) {
-  if (!channel->_impl || !channel->_impl->open) {
+  if (!channel || !channel->_impl || !channel->_impl->open) {
     return SPI_CHANNEL_CLOSED;
   }
   //This is just an example SPI device where the returned value is
   //always one greater than the given value. This doesn't actually
   //make sense since SPI is sychrnonous, but whatever. It's an
   //exmaple.
-  memcpy(receive_bytes, send_bytes, length);
+  if (send_bytes && receive_bytes) {
+    memcpy(receive_bytes, send_bytes, length);
+  }
 
-  channel->_impl->mosi_bytes.insert(channel->_impl->mosi_bytes.end(), &send_bytes[0], &send_bytes[length]);
-  channel->_impl->miso_bytes.insert(channel->_impl->miso_bytes.end(), &receive_bytes[0], &receive_bytes[length]);
+  if (send_bytes) {
+    channel->_impl->mosi_bytes.insert(channel->_impl->mosi_bytes.end(), &send_bytes[0], &send_bytes[length]);
+  }
+  if (receive_bytes) {
+    channel->_impl->miso_bytes.insert(channel->_impl->miso_bytes.end(), &receive_bytes[0], &receive_bytes[length]);
+  }
 
   return SPI_NO_ERROR;
 }

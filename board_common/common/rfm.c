@@ -34,15 +34,15 @@ bool rfm_open(rfm_t * radio, spi_t * spi, volatile uint8_t *cs_value, uint8_t cs
         { REG_DATAMODUL, DATAMODUL_DATAMODE_PACKET | DATAMODUL_MODULATIONTYPE_FSK | DATAMODUL_MODULATIONSHAPING_10 },
         { REG_BITRATEMSB, BITRATEMSB_9600 },
         { REG_BITRATELSB, BITRATELSB_9600 },
-        { REG_FDEVMSB, RF_FDEVMSB_5000 },
-        { REG_FDEVLSB, RF_FDEVLSB_5000 },
-        { REG_RXBW, RF_RXBW_DCCFREQ_010 | RF_RXBW_MANT_16 | RF_RXBW_EXP_2 },
-        { REG_DIOMAPPING2, RF_DIOMAPPING2_DIO4_01 | RF_DIOMAPPING2_CLKOUT_OFF }, 
-
+        { REG_FDEVMSB, FDEVMSB_5000 },
+        { REG_FDEVLSB, FDEVLSB_5000 },
+        { REG_RXBW, RXBW_DCCFREQ_010 | RXBW_MANT_16 | RXBW_EXP_2 },
+        { REG_DIOMAPPING2, DIOMAPPING2_DIO4_01 | DIOMAPPING2_CLKOUT_OFF }, 
+        { 0, 0 }
     };
 
     // Load our register values
-    for (int i = 0; i < sizeof(default_config)/sizeof(default_config[0]); ++i) {
+    for (int i = 0; default_config[i].addr > 0; ++i) {
         if (rfm_write_reg(radio, default_config[i].addr, default_config[i].value) != RFM_NO_ERROR) {
             return false;
         }
@@ -222,13 +222,13 @@ rfm_result_t rfm_set_mode(rfm_t * radio, rfm_mode_t mode) {
 
     // Block until ModeReady is raised
     // This should be immediate with the exception of TX mode
-    uint8_t irq_flags = 0;
+    /*uint8_t irq_flags = 0;
     while (radio->mode == RFM_MODE_SLEEP && !(irq_flags & IRQFLAGS1_MODEREADY)) {
         res = rfm_read_reg(radio, REG_IRQFLAGS1, &irq_flags);
         if (res != RFM_NO_ERROR) {
             return res;
         }
-    }
+    }*/
 
     radio->mode = mode;
 
