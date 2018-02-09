@@ -68,7 +68,7 @@ static pinav_parser_status_t verify_inputs(pinav_parse_output_t * out, uint8_t *
 	// @TODO Verify whether the CR+LF is included in the 80 char total
 	uint8_t * it;
 	uint8_t found = 0;
-	for (it = sentence; (it < sentence + 79) && (*it != '\0'); ++it) {
+	for (it = sentence; (it < sentence + PINAV_MAX_SENTENCE_LEN) && (*it != '\0'); ++it) {
 		if ((*it == '\r') && (*(it + 1) == '\n')) {
 			found = 1;
 			break;
