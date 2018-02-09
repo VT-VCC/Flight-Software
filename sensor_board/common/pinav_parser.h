@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#define PINAV_MAX_SENTENCE_LEN
+#define PINAV_MAX_SENTENCE_LEN 80
 
 // Status enum returned by parse function
 typedef enum pinav_parser_status	{	PN_PARSE_OK, 
