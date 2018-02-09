@@ -8,6 +8,7 @@
 #include "semphr.h"
 
 #include "uart.h"
+#include "pinav_parser.h"
 
 #define PERSISTENT __attribute__((section(".persistent")))
 
@@ -24,9 +25,6 @@ typedef uint16_t blink_queue_item_t;
 static QueueHandle_t PERSISTENT blink_queue_handle;
 static StaticQueue_t PERSISTENT blink_queue;
 static uint8_t PERSISTENT blink_queue_storage[BLINK_QUEUE_LENGTH * sizeof(blink_queue_item_t)];
-
-const char * output_str = "hello, world!\r\n";
-const char * got_data = "got data\r\n";
 
 /******************************************************************************\
  *  Private functions                                                         *
@@ -47,8 +45,23 @@ void task_blink_led_start();
 void task_blink_led(void * params);
 
 static TaskHandle_t PERSISTENT transmit_blink_signal_task;
-void task_transmit_blink_signal_start();
-void task_transmit_blink_signal(void * params);
+void task_pinav_start();
+void task_pinav(void * params);
+
+void pinav_accept_char_from_ISR(uint8_t chr); // buffers bytes read from uart into a sentence
+
+/*
+ * Pinav task data
+ */
+uint8_t pinav_read_buffer[PINAV_MAX_SENTENCE_LEN] = {0};
+size_t pinav_read_buffer_index = 0;
+#define PINAV_SENTENCE_QUEUE_LEN 4
+#define PINAV_SENTENCE_QUEUE_ITEM_SIZE PINAV_MAX_SENTENCE_LEN
+static QueueHandle_t pinav_sentence_queue_handle;
+static StaticQueue_t pinav_sentence_queue;
+static uint8_t pinav_sentence_queue_storage[PINAV_SENTENCE_QUEUE_LEN * PINAV_SENTENCE_QUEUE_ITEM_SIZE];
+uint8_t pinav_parse_buffer[PINAV_MAX_SENTENCE_LEN] = {0};
+pinav_parse_output_t pinav_parsed_sentence = {0};
 
 /******************************************************************************\
  *  Function implementations                                                  *
@@ -71,9 +84,16 @@ int main(void) {
             sizeof(blink_queue_item_t),
             blink_queue_storage,
             &blink_queue);
+	
+	// Setup queue for pinav sentences
+	pinav_sentence_queue_handle = xQueueCreateStatic(
+		PINAV_SENTENCE_QUEUE_LEN,
+		PINAV_SENTENCE_QUEUE_ITEM_SIZE,
+		pinav_sentence_queue_storage,
+		&pinav_sentence_queue);
 
     task_blink_led_start();
-    task_transmit_blink_signal_start();
+    task_pinav_start();
 
     uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
 
@@ -190,32 +210,78 @@ void task_blink_led(void * params) {
 }
 
 /******************************************************************************\
- *  task_transmit_blink_signal implementation                                 *
+ *  task_pinav implementation                                 *
 \******************************************************************************/
-StaticTask_t PERSISTENT transmit_task;
-StackType_t PERSISTENT transmit_task_stack[configMINIMAL_STACK_SIZE];
-void task_transmit_blink_signal_start() {
+StaticTask_t PERSISTENT pinav_task;
+StackType_t PERSISTENT pinav_task_stack[configMINIMAL_STACK_SIZE];
+void task_pinav_start() {
 
     transmit_blink_signal_task = xTaskCreateStatic(
-        task_transmit_blink_signal,
-        "transmit_blink_signal",
+        task_pinav,
+        "pinav",
         configMINIMAL_STACK_SIZE,
         NULL,
         2,
-        transmit_task_stack,
-        &transmit_task
+        pinav_task_stack,
+        &pinav_task
     );
 }
 
-void task_transmit_blink_signal(void * params) {
+void task_pinav(void * params) {
     taskENTER_CRITICAL();
-    uart_write_string(&standard_output, "Starting signal task\n");
+    uart_write_string(&standard_output, "Starting pinav processing\n");
     taskEXIT_CRITICAL();
     for(;;) {
         P4OUT ^= 1 << 6;
-        uart_write_string(&standard_output, "T2\n");
-        vTaskDelay(10);
+        // Receive and parse a message if available
+		if (uxQueueMessagesWaiting(pinav_sentence_queue_handle) > 0)){
+			xQueueReceive(pinav_sentence_queue_handle, pinav_parse_buffer, (TickType_t) 0); // TODO: handle failures on queue operations
+			pinav_parser_status_t parse_result = parse_pinav_sentence(pinav_parsed_sentence, pinav_parse_buffer);
+			switch(parse_result){
+				case PN_PARSE_OK:
+					uart_write_string(&standard_output, "PN_PARSE_OK");
+					break;
+				case PN_PARSE_NULL_OUTPUT_PTR:
+					uart_write_string(&standard_output, "PN_PARSE_NULL_OUTPUT_PTR");
+					break;
+				case PN_PARSE_NULL_SENTENCE_PTR:
+					uart_write_string(&standard_output, "PN_PARSE_NULL_SENTENCE_PTR");
+					break;
+				case PN_PARSE_UNRECOGNIZED_SENTENCE_TYPE:
+					uart_write_string(&standard_output, "PN_PARSE_UNRECOGNIZED_SENTENCE_TYPE");
+					break;
+				case PN_PARSE_IMPROPER_SENTENCE_LENGTH:
+					uart_write_string(&standard_output, "PN_PARSE_IMPROPER_SENTENCE_LENGTH");
+					break;
+				case PN_PARSE_CHECKSUM_FAILURE:
+					uart_write_string(&standard_output, "PN_PARSE_CHECKSUM_FAILURE");
+					break;
+				case PN_PARSE_SENTENCE_FORMAT_ERROR:
+					uart_write_string(&standard_output, "PN_PARSE_SENTENCE_FORMAT_ERROR");
+					break;
+				case PN_PARSE_UNEXPECTED_UNIT_ENCOUNTERED:
+					uart_write_string(&standard_output, "PN_PARSE_UNEXPECTED_UNIT_ENCOUNTERED");
+					break;
+			}
+		}
     }
+}
+
+/*
+ * buffers bytes read from uart into a sentence
+ * enqueues complete sentence once \n is received
+ */
+void pinav_accept_char_from_ISR(uint8_t chr){
+	// enqueue complete sentence when \n is received or read buffer is filled
+	if (chr == '\n' || pinav_read_buffer_index >= PINAV_MAX_SENTENCE_LEN){
+		if(xQueueSendToBack(pinav_sentence_queue_handle, pinav_read_buffer, (TickType_t) 10) != pdTRUE){
+			uart_write_string(&standard_output, "Pinav message enqueue failed");
+		}
+		pinav_read_buffer_index = 0;
+	} else {	// otherwise add char to read buffer
+		pinav_read_buffer[pinav_read_buffer_index] = chr;
+		pinav_read_buffer_index++;
+	}
 }
 
 /******************************************************************************\

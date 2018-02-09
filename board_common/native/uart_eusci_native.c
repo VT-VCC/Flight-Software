@@ -30,6 +30,7 @@ static uint16_t BASE_ADDRESSES[EUSCI_count] = {
 };
 
 volatile int read_byte = 0;
+extern void pinav_accept_char_from_ISR(uint8_t chr); // handler for bytes from pinav
 
 __attribute__((interrupt(USCI_A0_VECTOR)))
 void USCI_A0_ISR(void) {
@@ -38,6 +39,7 @@ void USCI_A0_ISR(void) {
         case USCI_UART_UCRXIFG:
             P4OUT = 1 << 6;
             read_byte = EUSCI_A_UART_receiveData(EUSCI_A0_BASE);
+			pinav_accept_char_from_ISR((uint8_t) read_byte);
             break;
         case USCI_UART_UCTXIFG: break;
         case USCI_UART_UCSTTIFG: break;
