@@ -100,8 +100,8 @@ EMIT_SEND_PAYLOAD(set_pa_level, FAST_PA_SET,
 
 lithium_result_t lithium_receive_packet(lithium_t * radio, lithium_packet_t * packet) {
     // Try to read a header
-    uint16_t raw_packet_length = MAX_PACKET_LENGTH;
-    uint8_t raw_packet[raw_packet_length];
+    const uint16_t raw_packet_length = 255;//MAX_PACKET_LENGTH;
+    uint8_t raw_packet[255];
     uart_error_t uart_err = uart_read_bytes(&radio->uart, raw_packet, HEADER_LENGTH);
     if (uart_err != UART_NO_ERROR) {
         return LITHIUM_BAD_COMMUNICATION;
