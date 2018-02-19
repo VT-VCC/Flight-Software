@@ -234,9 +234,9 @@ void task_pinav(void * params) {
     for(;;) {
         P4OUT ^= 1 << 6;
         // Receive and parse a message if available
-		if (uxQueueMessagesWaiting(pinav_sentence_queue_handle) > 0)){
+		if (uxQueueMessagesWaiting(pinav_sentence_queue_handle) > 0){
 			xQueueReceive(pinav_sentence_queue_handle, pinav_parse_buffer, (TickType_t) 0); // TODO: handle failures on queue operations
-			pinav_parser_status_t parse_result = parse_pinav_sentence(pinav_parsed_sentence, pinav_parse_buffer);
+			pinav_parser_status_t parse_result = parse_pinav_sentence(&pinav_parsed_sentence, pinav_parse_buffer);
 			switch(parse_result){
 				case PN_PARSE_OK:
 					uart_write_string(&standard_output, "PN_PARSE_OK");

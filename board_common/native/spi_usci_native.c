@@ -146,7 +146,7 @@ static spi_error_t usci_a_spi_transfer_byte(uint16_t base_address, uint8_t send_
         USCI_A_SPI_TRANSMIT_INTERRUPT));
 
     USCI_A_SPI_transmitData(base_address, send_byte);
-    *receive_byte = USCI_A_SPI_receiveData(receive_byte);
+    *receive_byte = USCI_A_SPI_receiveData(base_address);
 
     return SPI_NO_ERROR;
 }
@@ -164,7 +164,7 @@ static spi_error_t usci_b_spi_transfer_byte(uint16_t base_address, uint8_t send_
         USCI_B_SPI_TRANSMIT_INTERRUPT));
 
     USCI_B_SPI_transmitData(base_address, send_byte);
-    *receive_byte = USCI_B_SPI_receiveData(receive_byte);
+    *receive_byte = USCI_B_SPI_receiveData(base_address);
 
     return SPI_NO_ERROR;
 }
