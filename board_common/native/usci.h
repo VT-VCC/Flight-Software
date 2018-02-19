@@ -53,4 +53,4 @@ typedef enum usci {
 }
 #endif
 
-#endif
+#endif // _BOARD_COMMON_NATIVE_USCI_H_

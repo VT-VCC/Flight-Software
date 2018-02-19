@@ -43,7 +43,6 @@ static uint8_t *spi_recv_buffer[EUSCI_count];
 static size_t spi_buffer_index[EUSCI_count];
 static size_t spi_buffer_size[EUSCI_count];
 
-//TODO merge this to a common UART/I2C/SPI ISR handler?
 #ifdef EUSCI_A3_BASE
 __attribute__((interrupt(USCI_A3_VECTOR)))
 void USCI_A3_ISR(void) {

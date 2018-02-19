@@ -96,7 +96,7 @@ rfm_result_t rfm_write_reg(rfm_t * radio, uint8_t addr, uint8_t value) {
     chip_select(radio);
 
     uint8_t send[2] = { addr | 0x80, value };
-    if (spi_send_bytes(&radio->spi, send, 2) != SPI_NO_ERROR) {
+    if (spi_write_bytes(&radio->spi, send, 2) != SPI_NO_ERROR) {
         return RFM_SPI_ERROR;
     }
 
@@ -109,12 +109,12 @@ rfm_result_t rfm_read_fifo(rfm_t * radio, uint8_t * data, uint8_t size) {
     chip_select(radio);
 
     // Start write to FIFO register
-    if (spi_send_byte(&radio->spi, REG_FIFO & 0x7F) != SPI_NO_ERROR) {
+    if (spi_write_byte(&radio->spi, REG_FIFO & 0x7F) != SPI_NO_ERROR) {
         return RFM_SPI_ERROR;
     }
 
     // Write data bytes to the FIFO
-    if (spi_receive_bytes(&radio->spi, data, size) != SPI_NO_ERROR) {
+    if (spi_read_bytes(&radio->spi, data, size) != SPI_NO_ERROR) {
         return RFM_SPI_ERROR;
     }
 
@@ -127,12 +127,12 @@ rfm_result_t rfm_write_fifo(rfm_t * radio, uint8_t * data, uint8_t size) {
     chip_select(radio);
 
     // Start write to FIFO register
-    if (spi_send_byte(&radio->spi, REG_FIFO | 0x80) != SPI_NO_ERROR) {
+    if (spi_write_byte(&radio->spi, REG_FIFO | 0x80) != SPI_NO_ERROR) {
         return RFM_SPI_ERROR;
     }
 
     // Write data bytes to the FIFO
-    if (spi_send_bytes(&radio->spi, data, size) != SPI_NO_ERROR) {
+    if (spi_write_bytes(&radio->spi, data, size) != SPI_NO_ERROR) {
         return RFM_SPI_ERROR;
     }
 

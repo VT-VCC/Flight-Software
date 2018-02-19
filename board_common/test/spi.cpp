@@ -32,7 +32,7 @@ TEST_CASE("Test SPI send byte and ignore.", "[spi]") {
   uint8_t send = 0x10;
 
   spi_open(&t);
-  REQUIRE(spi_send_byte(&t, 0x10) == SPI_NO_ERROR);
+  REQUIRE(spi_write_byte(&t, 0x10) == SPI_NO_ERROR);
   REQUIRE_THAT(t, HasMasterOutSlaveInBytes({ 0x10 }));
   REQUIRE_THAT(t, HasMasterInSlaveOutBytes({ 0x10 }));
   spi_close(&t);
@@ -43,7 +43,7 @@ TEST_CASE("Test SPI send junk and receive byte.", "[spi]") {
   uint8_t receive = 0;
   
   spi_open(&t);
-  REQUIRE(spi_receive_byte(&t, &receive) == SPI_NO_ERROR);
+  REQUIRE(spi_read_byte(&t, &receive) == SPI_NO_ERROR);
   spi_close(&t);
 }
 
@@ -52,7 +52,7 @@ TEST_CASE("Test SPI send bytes and ignore.", "[spi]") {
   uint8_t send[] = { 0x10, 0x20, 0x30 };
 
   spi_open(&t);
-  REQUIRE(spi_send_bytes(&t, send, 3) == SPI_NO_ERROR);
+  REQUIRE(spi_write_bytes(&t, send, 3) == SPI_NO_ERROR);
   REQUIRE_THAT(t, HasMasterOutSlaveInBytes({ 0x10, 0x20, 0x30 }));
   REQUIRE_THAT(t, HasMasterInSlaveOutBytes({ }));
   spi_close(&t);
@@ -63,6 +63,6 @@ TEST_CASE("Test SPI send junk and receive bytes.", "[spi]") {
   uint8_t receive[3];
   
   spi_open(&t);
-  REQUIRE(spi_receive_bytes(&t, receive, 3) == SPI_NO_ERROR);
+  REQUIRE(spi_read_bytes(&t, receive, 3) == SPI_NO_ERROR);
   spi_close(&t);
 }

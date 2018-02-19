@@ -61,7 +61,7 @@ add_subdirectory(board_common)
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
   # For msp430 builds, use LTO with size optimization
   # We use GCC flag syntax here since we always know we're using msp430-elf-gcc
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto -fno-use-linker-plugin -Os")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -flto -fno-use-linker-plugin -Os")
   message(STATUS "Performing MSP430 build")
   add_definitions(-DUSIP_NATIVE)
   include_directories(board_common/native)

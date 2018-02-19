@@ -8,6 +8,9 @@
 
 #include "uart.h"
 #include "spi.h"
+#include "i2c.h"
+
+#include "imu.h"
 #include "rfm.h"
 
 #define PERSISTENT __attribute__((section(".persistent")))
@@ -19,7 +22,7 @@
 /// Standard UART output
 static uart_t standard_output;
 
-/// RFM SPI output
+/// IMU/RFM SPI output
 static spi_t spi_output;
 
 // Print a formatted message across the UART output
@@ -34,13 +37,23 @@ static spi_t spi_output;
  *  Private functions                                                         *
 \******************************************************************************/
 /// Configures I/O pins
-static void hardware_config();
+static void hardware_config(void);
+static void spi_hardware_config(void);
+static void i2c_hardware_config(void);
 
 /* Prototypes for the standard FreeRTOS callback/hook functions implemented
 within this file. */
 void vApplicationIdleHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 void vApplicationTickHook( void );
+
+static TaskHandle_t PERSISTENT i2c_task;
+void task_i2c_start();
+void task_i2c(void * params);
+
+static TaskHandle_t PERSISTENT imu_task;
+void task_imu_start();
+void task_imu(void * params);
 
 static TaskHandle_t PERSISTENT rfm_task;
 void task_rfm_start();
@@ -54,7 +67,7 @@ int main(void) {
 
     uart_open(EUSCI_A0, BAUD_9600, &standard_output);
 
-    task_rfm_start();
+    task_i2c_start();
 
     uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
 
@@ -66,7 +79,7 @@ int main(void) {
     return 0;
 }
 
-static void hardware_config() {
+static void hardware_config(void) {
     WDTCTL = WDTPW | WDTHOLD;               // Stop watchdog timer
     PM5CTL0 &= ~LOCKLPM5;                   // Disable the GPIO power-on default high-impedance mode
                                             // to activate previously configured port settings
@@ -87,30 +100,6 @@ static void hardware_config() {
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P2, GPIO_PIN1, GPIO_SECONDARY_MODULE_FUNCTION);
     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN0, GPIO_SECONDARY_MODULE_FUNCTION);
 
-    
-    /****** START RFM ***/
-
-    // Configure UCA3SIMO, UCA3SOMI for SPI over eUSCI_A3
-    GPIO_setOutputLowOnPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2);
-    GPIO_setAsOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2);
-    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, GPIO_PIN1, GPIO_PRIMARY_MODULE_FUNCTION);
-    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION);
-
-    // Use P3.0 as the RFM69's NSS (chip select)
-    GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
-
-    // Use P as the RFM69's RST (reset)
-    GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
-
-    // Use P1.5 as the RFM69's DIO0/IRQ interrupt
-    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN5);
-    GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN5);
-    GPIO_selectInterruptEdge(GPIO_PORT_P1, GPIO_PIN5, GPIO_LOW_TO_HIGH_TRANSITION);
-    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN5);
-
-    /****** END RFM ***/
-
-
     // Configure GPIO to use LFXT
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_PJ, GPIO_PIN4|GPIO_PIN5, GPIO_PRIMARY_MODULE_FUNCTION);
     // Set DCO frequency to 8 MHz
@@ -129,6 +118,33 @@ static void hardware_config() {
     __enable_interrupt();
 }
 
+static void spi_hardware_config(void) {
+    // Configure UCA3SIMO, UCA3SOMI for SPI over eUSCI_A3
+    GPIO_setOutputLowOnPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2);
+    GPIO_setAsOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2);
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, GPIO_PIN1, GPIO_PRIMARY_MODULE_FUNCTION);
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION);
+
+    // Use P3.0 as the RFM69's NSS (chip select)
+    GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
+
+    // Use P as the RFM69's RST (reset)
+    GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
+
+    // Use P1.5 as the RFM69's DIO0/IRQ interrupt
+    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN5);
+    GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN5);
+    GPIO_selectInterruptEdge(GPIO_PORT_P1, GPIO_PIN5, GPIO_LOW_TO_HIGH_TRANSITION);
+    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN5);
+}
+
+static void i2c_hardware_config(void) {
+    // Configure UCB2SDA, UCB2SCL for I2C over eUSCI_B2
+    GPIO_setOutputLowOnPin(GPIO_PORT_P7, GPIO_PIN0|GPIO_PIN1);
+    GPIO_setAsOutputPin(GPIO_PORT_P7, GPIO_PIN0|GPIO_PIN1);
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P7, GPIO_PIN0|GPIO_PIN1, GPIO_PRIMARY_MODULE_FUNCTION);
+}
+
 void vApplicationIdleHook( void ) {
     P1OUT = 0;
 }
@@ -138,6 +154,104 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName ) {
 
 void vApplicationTickHook( void ) {
 }
+
+
+
+/******************************************************************************\
+ *  task_i2c implementation                                 *
+\******************************************************************************/
+
+#define I2C_TASK_STACK_DEPTH 200
+
+StaticTask_t PERSISTENT i2c_task_buffer;
+StackType_t PERSISTENT i2c_task_stack[I2C_TASK_STACK_DEPTH];
+
+void task_i2c_start() {
+    i2c_task = xTaskCreateStatic(
+        task_i2c,
+        "i2c",
+        I2C_TASK_STACK_DEPTH,
+        NULL,
+        2,
+        i2c_task_stack,
+        &i2c_task_buffer
+    );
+}
+
+void task_i2c(void * params) {
+    taskENTER_CRITICAL();
+    i2c_hardware_config();
+    DEBUG("Starting I2C task\n");
+    taskEXIT_CRITICAL();
+
+    i2c_t device;
+    if (!i2c_open(EUSCI_B2_BASE, I2C_DATA_RATE_400KBPS, &device)) {
+        DEBUG("[ERROR] i2c_open\n");
+        return;
+    }
+
+    DEBUG("I2C device initialized\n");
+
+    i2c_error_t err = i2c_write_byte(&device, 0xab);
+    if (err != I2C_NO_ERROR) {
+        DEBUG("[ERROR] i2c_write_byte\n");
+        return;
+    }
+
+    DEBUG("Done\n");
+
+    // Check that we haven't overflowed the stack
+    int remaining_frames = I2C_TASK_STACK_DEPTH - uxTaskGetStackHighWaterMark(NULL);
+    if (remaining_frames < 20) {
+        DEBUG("!!! %d frames left on the stack !!!\n", remaining_frames);
+    }
+}
+
+
+/******************************************************************************\
+ *  task_imu implementation                                 *
+\******************************************************************************/
+
+#define IMU_TASK_STACK_DEPTH 200
+
+StaticTask_t PERSISTENT imu_task_buffer;
+StackType_t PERSISTENT imu_task_stack[IMU_TASK_STACK_DEPTH];
+
+void task_imu_start() {
+    imu_task = xTaskCreateStatic(
+        task_imu,
+        "imu",
+        IMU_TASK_STACK_DEPTH,
+        NULL,
+        2,
+        imu_task_stack,
+        &imu_task_buffer
+    );
+}
+
+void task_imu(void * params) {
+    taskENTER_CRITICAL();
+    spi_hardware_config();
+    DEBUG("Starting IMU task\n");
+    taskEXIT_CRITICAL();
+
+    spi_open(EUSCI_A3, 32768/4, &spi_output);
+
+    imu_t device;
+    if (imu_open(&device, &spi_output, &P3OUT, 1)) {
+        DEBUG("IMU initialized\n");
+    }
+    else {
+        DEBUG("IMU failed to initialize\n");
+    }
+
+    // Check that we haven't overflowed the stack
+    int remaining_frames = IMU_TASK_STACK_DEPTH - uxTaskGetStackHighWaterMark(NULL);
+    if (remaining_frames < 20) {
+        DEBUG("!!! %d frames left on the stack !!!\n", remaining_frames);
+    }
+}
+
 
 /******************************************************************************\
  *  task_rfm implementation                                 *
@@ -157,13 +271,14 @@ void task_rfm_start() {
         2,
         rfm_task_stack,
         &rfm_task_buffer
-    );
+    );  
 }
 
 void dump_rfm_regs(rfm_t * radio);
 
 void task_rfm(void * params) {
     taskENTER_CRITICAL();
+    spi_hardware_config();
     DEBUG("Starting RFM task\n");
     taskEXIT_CRITICAL();
 

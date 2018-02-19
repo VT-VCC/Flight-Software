@@ -1,7 +1,7 @@
 #ifndef _BOARD_COMMON_NATIVE_SPI_EUSCI_H_
 #define _BOARD_COMMON_NATIVE_SPI_EUSCI_H_
 
-#include "eusci_native.h"
+#include "eusci.h"
 
 #ifdef __cplusplus
 extern "C" {
