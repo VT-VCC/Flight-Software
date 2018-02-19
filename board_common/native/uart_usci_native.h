@@ -1,7 +1,7 @@
-#ifndef _BOARD_COMMON_USCI_UART_H_
-#define _BOARD_COMMON_USCI_UART_H_
+#ifndef _BOARD_COMMON_NATIVE_UART_USCI_H_
+#define _BOARD_COMMON_NATIVE_UART_USCI_H_
 
-#include "usci_native.h"
+#include "usci.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,4 +28,4 @@ bool uart_open(usci_t usci, unsigned int baud_rate, uart_t * out);
 }
 #endif
 
-#endif // _BOARD_COMMON_USCI_UART_H_
+#endif // _BOARD_COMMON_UART_NATIVE_USCI_H_

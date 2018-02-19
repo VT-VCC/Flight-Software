@@ -1,3 +1,4 @@
+#include <cstring>
 #include "spi_test.hpp"
 
 void spi_open(spi_t * channel) {
@@ -10,17 +11,24 @@ void spi_close(spi_t * out) {
   out->_impl = nullptr;  
 }
 
-spi_error_t spi_transfer_byte(spi_t * channel, uint8_t send_byte, uint8_t * receive_byte) {
-  if (!channel->_impl || !channel->_impl->open) {
+spi_error_t spi_transfer_bytes(spi_t * channel, uint8_t * send_bytes, uint8_t * receive_bytes, size_t length) {
+  if (!channel || !channel->_impl || !channel->_impl->open) {
     return SPI_CHANNEL_CLOSED;
   }
-  *receive_byte = send_byte + 1;
   //This is just an example SPI device where the returned value is
   //always one greater than the given value. This doesn't actually
   //make sense since SPI is sychrnonous, but whatever. It's an
   //exmaple.
-  channel->_impl->mosi_bytes.push_back(send_byte);
-  channel->_impl->miso_bytes.push_back(send_byte + 1);
+  if (send_bytes && receive_bytes) {
+    memcpy(receive_bytes, send_bytes, length);
+  }
+
+  if (send_bytes) {
+    channel->_impl->mosi_bytes.insert(channel->_impl->mosi_bytes.end(), &send_bytes[0], &send_bytes[length]);
+  }
+  if (receive_bytes) {
+    channel->_impl->miso_bytes.insert(channel->_impl->miso_bytes.end(), &receive_bytes[0], &receive_bytes[length]);
+  }
 
   return SPI_NO_ERROR;
 }

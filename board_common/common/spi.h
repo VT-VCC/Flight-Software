@@ -15,7 +15,8 @@ extern "C" {
 /// Macro for defining thing related to SPI errors
 #define SPI_ERROR_LIST(OP) \
     OP(NO_ERROR) \
-    OP(CHANNEL_CLOSED)
+    OP(CHANNEL_CLOSED) \
+    OP(INCOMPLETE)
 
 /// Enum representing possible error states for a SPI channel.
 typedef enum spi_error {
@@ -45,7 +46,7 @@ void spi_close(spi_t * out);
  * @param send_byte The byte to send.
  * @return An error code. This should always be checked.
  */
-spi_error_t spi_send_byte(spi_t * channel, uint8_t send_byte);
+spi_error_t spi_write_byte(spi_t * channel, uint8_t send_byte);
 
 /** Transfer bytes by SPI.
  * @param channel The SPI channel to send to.
@@ -53,7 +54,7 @@ spi_error_t spi_send_byte(spi_t * channel, uint8_t send_byte);
  * @param length The number of bytes to send.
  * @return An error code. This should always be checked.
  */
-spi_error_t spi_send_bytes(spi_t * channel,
+spi_error_t spi_write_bytes(spi_t * channel,
     uint8_t * send_byte, size_t length);
 
 /** Receive a byte from the SPI buffer.
@@ -61,7 +62,7 @@ spi_error_t spi_send_bytes(spi_t * channel,
  * @param receive_byte The address to write the byte to.
  * @return An error code. This should always be checked.
  */
-spi_error_t spi_receive_byte(spi_t * channel, uint8_t * receive_byte);
+spi_error_t spi_read_byte(spi_t * channel, uint8_t * receive_byte);
 
 /** Receive bytes from the SPI buffer.
  * @param channel The SPI channel to read from.
@@ -69,7 +70,7 @@ spi_error_t spi_receive_byte(spi_t * channel, uint8_t * receive_byte);
  * @param length The number of bytes to receive.
  * @return An error code. This should always be checked.
  */
-spi_error_t spi_receive_bytes(spi_t * channel,
+spi_error_t spi_read_bytes(spi_t * channel,
     uint8_t * receive_byte, size_t length);
   
 /** Transfer a byte from SPI and save the return byte.
@@ -84,8 +85,10 @@ spi_error_t spi_transfer_byte(spi_t * channel,
 
 /** Transfer bytes from SPI and save the return bytes.
  * @param channel The channel to read from.
- * @param send_bytes The bytes to send.
- * @param receive_bytes The address of the bytes to save to.
+ * @param send_bytes The bytes to send. This value can be 0 to indcate that
+ *   only 0x00 bytes should be sent
+ * @param receive_bytes The address of the bytes to save to. This value can
+ *   be 0 to indcate that no receive bytes should be kept.
  * @param length The length of the bytes to send and receive.
  *
  * @return An error code. This should always be checked.

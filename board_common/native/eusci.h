@@ -53,4 +53,4 @@ typedef enum eusci {
 }
 #endif
 
-#endif
+#endif // _BOARD_COMMON_NATIVE_EUSCI_H_

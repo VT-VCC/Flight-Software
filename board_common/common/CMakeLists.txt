@@ -1,6 +1,7 @@
 add_sources(BOARD_COMMON_SOURCES
-  "uart.c"
-  "uart.h"
+  "i2c.c"
+  "imu.c"
+  "rfm.c"
   "spi.c"
-  "spi.h"
+  "uart.c"
 )
