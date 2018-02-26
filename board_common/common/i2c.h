@@ -26,6 +26,11 @@ typedef enum i2c_error {
     I2C_count
 } i2c_error_t;
 
+typedef enum i2c_flag {
+    I2C_STOP = (1 << 0),
+    I2C_NO_STOP = ~(1 << 0)
+} i2c_flag_t;
+
 #ifndef NDEBUG
 /// Get a string representation of the error. Only available in debug builds
 const char * i2c_error_string(i2c_error_t t);
@@ -40,13 +45,13 @@ typedef struct i2c i2c_t;
 }
 #endif
 
-i2c_error_t i2c_write_byte(i2c_t * channel, const uint8_t bytes);
+i2c_error_t i2c_write_byte(i2c_t * channel, uint8_t address, const uint8_t byte, i2c_flag_t flags);
 
-i2c_error_t i2c_write_bytes(i2c_t * channel, const uint8_t * bytes, size_t n);
+i2c_error_t i2c_write_bytes(i2c_t * channel, uint8_t address, const uint8_t * bytes, size_t n, i2c_flag_t flags);
 
-i2c_error_t i2c_read_byte(i2c_t * channel, uint8_t * bytes);
+i2c_error_t i2c_read_byte(i2c_t * channel, uint8_t address, uint8_t * byte);
 
-i2c_error_t i2c_read_bytes(i2c_t * channel, uint8_t * bytes, size_t n);
+i2c_error_t i2c_read_bytes(i2c_t * channel, uint8_t address, uint8_t * bytes, size_t n);
 
 #ifdef USIP_NATIVE
 #   include "i2c_native.h"

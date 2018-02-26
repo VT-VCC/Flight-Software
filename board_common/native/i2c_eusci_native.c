@@ -49,10 +49,10 @@ bool i2c_open(eusci_t eusci, i2c_data_rate_t data_rate, i2c_t * out) {
 
     // Clear and enable interrupts
     EUSCI_B_I2C_clearInterrupt(base_address,
-        EUSCI_B_I2C_RECEIVE_INTERRUPT0 | EUSCI_B_I2C_BYTE_COUNTER_INTERRUPT |
+        EUSCI_B_I2C_RECEIVE_INTERRUPT0 | EUSCI_B_I2C_TRANSMIT_INTERRUPT0 | EUSCI_B_I2C_BYTE_COUNTER_INTERRUPT |
         EUSCI_B_I2C_NAK_INTERRUPT | EUSCI_B_I2C_STOP_INTERRUPT);
     EUSCI_B_I2C_enableInterrupt(base_address,
-        EUSCI_B_I2C_RECEIVE_INTERRUPT0 | EUSCI_B_I2C_BYTE_COUNTER_INTERRUPT |
+        EUSCI_B_I2C_RECEIVE_INTERRUPT0 | EUSCI_B_I2C_TRANSMIT_INTERRUPT0 | EUSCI_B_I2C_BYTE_COUNTER_INTERRUPT |
         EUSCI_B_I2C_NAK_INTERRUPT | EUSCI_B_I2C_STOP_INTERRUPT);
 
     out->eusci = eusci;
@@ -60,10 +60,50 @@ bool i2c_open(eusci_t eusci, i2c_data_rate_t data_rate, i2c_t * out) {
     return true;
 }
 
-i2c_error_t i2c_write_byte(i2c_t * channel, const uint8_t data) {
+i2c_error_t i2c_close(i2c_t * channel) {
+    //TODO
+    return I2C_NO_ERROR;
+}
+
+static void masterSendSingleByte(uint16_t baseAddress, uint8_t txData) {
+    //Store current TXIE status
+    uint16_t txieStatus = HWREG16(baseAddress + OFS_UCBxIE) & UCTXIE;
+
+    //Disable transmit interrupt enable
+    HWREG16(baseAddress + OFS_UCBxIE) &= ~(UCTXIE);
+
+    //Send start condition.
+    HWREG16(baseAddress + OFS_UCBxCTLW0) |= UCTR + UCTXSTT;
+
+    //Poll for transmit interrupt flag.
+    while(!(HWREG16(baseAddress + OFS_UCBxIFG) & UCTXIFG))
+    {
+        ;
+    }
+
+    //Send single byte data.
+    HWREG16(baseAddress + OFS_UCBxTXBUF) = txData;
+
+    //Poll for transmit interrupt flag.
+    while(!(HWREG16(baseAddress + OFS_UCBxIFG) & UCTXIFG))
+    {
+        ;
+    }
+
+    //Send stop condition.
+    HWREG16(baseAddress + OFS_UCBxCTLW0) |= UCTXSTP;
+
+    //Clear transmit interrupt flag before enabling interrupt again
+    HWREG16(baseAddress + OFS_UCBxIFG) &= ~(UCTXIFG);
+
+    //Reinstate transmit interrupt enable
+    HWREG16(baseAddress + OFS_UCBxIE) |= txieStatus;
+}
+
+i2c_error_t i2c_write_byte(i2c_t * channel, uint8_t address, const uint8_t byte, i2c_flag_t flags) {
     uint16_t base_address = BASE_ADDRESSES[channel->eusci];
 
-    EUSCI_B_I2C_setSlaveAddress(base_address, 0x69);
+    EUSCI_B_I2C_setSlaveAddress(base_address, address);
 
     // Enter transmit mode
     EUSCI_B_I2C_setMode(base_address, EUSCI_B_I2C_TRANSMIT_MODE);
@@ -72,17 +112,19 @@ i2c_error_t i2c_write_byte(i2c_t * channel, const uint8_t data) {
     //while (EUSCI_B_I2C_isBusBusy(base_address));
 
     // Transmit the byte
-    EUSCI_B_I2C_masterSendSingleByte(base_address, data);
+    masterSendSingleByte(base_address, byte);
 
     return I2C_NO_ERROR;
 }
 
-i2c_error_t i2c_write_bytes(i2c_t * channel, const uint8_t * data, size_t length) {
+i2c_error_t i2c_write_bytes(i2c_t * channel, uint8_t address, const uint8_t * bytes, size_t n, i2c_flag_t flags) {
     return I2C_NO_ERROR;
 }
 
-i2c_error_t i2c_read_byte(i2c_t * channel, uint8_t * data) {
+i2c_error_t i2c_read_byte(i2c_t * channel, uint8_t address, uint8_t * byte) {
     uint16_t base_address = BASE_ADDRESSES[channel->eusci];
+
+    EUSCI_B_I2C_setSlaveAddress(base_address, address);
 
     // Enter transmit mode
     EUSCI_B_I2C_setMode(base_address, EUSCI_B_I2C_RECEIVE_MODE);
@@ -91,15 +133,11 @@ i2c_error_t i2c_read_byte(i2c_t * channel, uint8_t * data) {
     while (EUSCI_B_I2C_isBusBusy(base_address));
 
     // Send START and STOP then read a byte
-    *data = EUSCI_B_I2C_masterReceiveSingleByte(base_address);
+    *byte = EUSCI_B_I2C_masterReceiveSingleByte(base_address);
 
     return I2C_NO_ERROR;
 }
 
-i2c_error_t i2c_read_bytes(i2c_t * channel, uint8_t * data, size_t length) {
-    return I2C_NO_ERROR;
-}
-
-i2c_error_t i2c_close(i2c_t * channel) {
+i2c_error_t i2c_read_bytes(i2c_t * channel, uint8_t address, uint8_t * bytes, size_t n) {
     return I2C_NO_ERROR;
 }

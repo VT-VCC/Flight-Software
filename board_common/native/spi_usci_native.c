@@ -135,6 +135,7 @@ void spi_close(spi_t * out) {
 }
 
 spi_error_t spi_transfer_bytes(spi_t * channel, uint8_t * send_bytes, uint8_t * receive_bytes, size_t length) {
-    //TODO
+    assert(false);
+
     return SPI_INCOMPLETE;
 }

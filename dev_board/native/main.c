@@ -30,7 +30,8 @@ static spi_t spi_output;
         char buffer[255]; \
         int len = snprintf(buffer, 255, (format) DEBUG_VA_ARGS(__VA_ARGS__)); \
         uart_write_bytes(&standard_output, buffer, len); \
-    } while(0);
+    } while(0)
+#define WTF() DEBUG("[ERROR] %s (%s:%d)\n", __func__, __FILE__, __LINE__)
 
 /******************************************************************************\
  *  Private functions                                                         *
@@ -140,17 +141,11 @@ static void i2c_hardware_config(void) {
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P7, GPIO_PIN0|GPIO_PIN1, GPIO_PRIMARY_MODULE_FUNCTION);
 }
 
-void vApplicationIdleHook( void ) {
-    P1OUT = 0;
-}
+void vApplicationIdleHook( void ) { }
 
-void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName ) {
-}
+void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName ) { }
 
-void vApplicationTickHook( void ) {
-}
-
-
+void vApplicationTickHook( void ) { }
 
 /******************************************************************************\
  *  task_i2c implementation                                 *
@@ -181,19 +176,39 @@ void task_i2c(void * params) {
 
     i2c_t device;
     if (!i2c_open(EUSCI_B2_BASE, I2C_DATA_RATE_400KBPS, &device)) {
-        DEBUG("[ERROR] i2c_open\n");
+        WTF();
         return;
     }
 
     DEBUG("I2C device initialized\n");
 
-    i2c_error_t err = i2c_write_byte(&device, 0xab);
-    if (err != I2C_NO_ERROR) {
-        DEBUG("[ERROR] i2c_write_byte\n");
-        return;
+    i2c_error_t err;
+
+    // Get MPU WHO_AM_I
+    {
+        DEBUG("a\n");
+        const uint8_t mpu_address = 0x69;
+        const uint8_t mpu_who_am_i = 0x75;
+        err = i2c_write_byte(&device, mpu_address, mpu_who_am_i, I2C_NO_STOP);
+        if (err != I2C_NO_ERROR) {
+            WTF();
+        }
+
+        DEBUG("b\n");
+
+        uint8_t recv;
+        err = i2c_read_byte(&device, mpu_address, &recv);
+        if (err != I2C_NO_ERROR) {
+            WTF();
+        }
+
+        DEBUG("c\n");
     }
 
-    DEBUG("Done\n");
+
+    DEBUG("I2C task done\n");
+
+    DEBUG("%d\n", uxTaskGetStackHighWaterMark(NULL));
 
     // Check that we haven't overflowed the stack
     int remaining_frames = I2C_TASK_STACK_DEPTH - uxTaskGetStackHighWaterMark(NULL);
