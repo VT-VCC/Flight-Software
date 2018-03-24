@@ -44,7 +44,7 @@ static TaskHandle_t PERSISTENT blink_led_task;
 void task_blink_led_start();
 void task_blink_led(void * params);
 
-static TaskHandle_t PERSISTENT transmit_blink_signal_task;
+static TaskHandle_t PERSISTENT pinav_task_handle;
 void task_pinav_start();
 void task_pinav(void * params);
 
@@ -57,11 +57,12 @@ uint8_t pinav_read_buffer[PINAV_MAX_SENTENCE_LEN] = {0};
 size_t pinav_read_buffer_index = 0;
 #define PINAV_SENTENCE_QUEUE_LEN 4
 #define PINAV_SENTENCE_QUEUE_ITEM_SIZE PINAV_MAX_SENTENCE_LEN
-static QueueHandle_t pinav_sentence_queue_handle;
-static StaticQueue_t pinav_sentence_queue;
-static uint8_t pinav_sentence_queue_storage[PINAV_SENTENCE_QUEUE_LEN * PINAV_SENTENCE_QUEUE_ITEM_SIZE];
-uint8_t pinav_parse_buffer[PINAV_MAX_SENTENCE_LEN] = {0};
-pinav_parse_output_t pinav_parsed_sentence = {0};
+#define PINAV_TASK_STACK_SIZE 1024
+static QueueHandle_t PERSISTENT pinav_sentence_queue_handle;
+static StaticQueue_t PERSISTENT pinav_sentence_queue;
+static uint8_t PERSISTENT pinav_sentence_queue_storage[PINAV_SENTENCE_QUEUE_LEN * PINAV_SENTENCE_QUEUE_ITEM_SIZE];
+static uint8_t PERSISTENT pinav_parse_buffer[PINAV_MAX_SENTENCE_LEN] = {0};
+static pinav_parse_output_t PERSISTENT pinav_parsed_sentence = {0};
 
 /******************************************************************************\
  *  Function implementations                                                  *
@@ -70,14 +71,14 @@ int main(void) {
 
     hardware_config();
 
-    P4OUT |= 0xFF;
-    P1OUT |= 0xFF;
+    //P4OUT |= 0xFF;
+    P1OUT = 0;
 
-    test_aclk();
+    //test_aclk();
+	
+	
 
-    P1OUT |= 0xFF;
-
-    uart_open(EUSCI_A0, BAUD_9600, &standard_output);
+    uart_open(EUSCI_A3, BAUD_9600, &standard_output);
 
     blink_queue_handle = xQueueCreateStatic(
             BLINK_QUEUE_LENGTH,
@@ -97,7 +98,7 @@ int main(void) {
 
     uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
 
-    P1OUT ^= 1 << 6;
+    //P1OUT ^= 1 << 6;
     vTaskStartScheduler();
 
     // there is no way to get here since we are using statically allocated
@@ -168,7 +169,7 @@ static void test_aclk() {
 }
 
 void vApplicationIdleHook( void ) {
-    P1OUT = 0;
+    //P1OUT = 0;
 }
 
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName ) {
@@ -213,26 +214,29 @@ void task_blink_led(void * params) {
  *  task_pinav implementation                                 *
 \******************************************************************************/
 StaticTask_t PERSISTENT pinav_task;
-StackType_t PERSISTENT pinav_task_stack[configMINIMAL_STACK_SIZE];
+StackType_t PERSISTENT pinav_task_stack[PINAV_TASK_STACK_SIZE];
 void task_pinav_start() {
 
-    transmit_blink_signal_task = xTaskCreateStatic(
+    pinav_task_handle = xTaskCreateStatic(
         task_pinav,
         "pinav",
-        configMINIMAL_STACK_SIZE,
+        PINAV_TASK_STACK_SIZE,
         NULL,
-        2,
+        1,
         pinav_task_stack,
         &pinav_task
     );
+	
+	if(pinav_task_handle){
+		P1OUT |= 2;
+	}
 }
 
 void task_pinav(void * params) {
-    taskENTER_CRITICAL();
+    /*taskENTER_CRITICAL();
     uart_write_string(&standard_output, "Starting pinav processing\n");
-    taskEXIT_CRITICAL();
+    taskEXIT_CRITICAL();*/
     for(;;) {
-        P4OUT ^= 1 << 6;
         // Receive and parse a message if available
 		if (uxQueueMessagesWaiting(pinav_sentence_queue_handle) > 0){
 			xQueueReceive(pinav_sentence_queue_handle, pinav_parse_buffer, (TickType_t) 0); // TODO: handle failures on queue operations
@@ -264,6 +268,7 @@ void task_pinav(void * params) {
 					break;
 			}
 		}
+		//P1OUT ^= 2;	// Toggle LED state
     }
 }
 

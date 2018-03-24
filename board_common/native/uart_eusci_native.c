@@ -33,13 +33,14 @@ volatile int read_byte = 0;
 extern void pinav_accept_char_from_ISR(uint8_t chr); // handler for bytes from pinav
 
 __attribute__((interrupt(USCI_A0_VECTOR)))
-void USCI_A0_ISR(void) {
+void USCI_A3_ISR(void) {
     switch (__even_in_range(UCA0IV, 18)) {
         case USCI_NONE: break;
         case USCI_UART_UCRXIFG:
             P4OUT = 1 << 6;
             read_byte = EUSCI_A_UART_receiveData(EUSCI_A0_BASE);
-			pinav_accept_char_from_ISR((uint8_t) read_byte);
+			/*pinav_accept_char_from_ISR((uint8_t) read_byte);
+			P1OUT ^= 2;	// Toggle LED state*/
             break;
         case USCI_UART_UCTXIFG: break;
         case USCI_UART_UCSTTIFG: break;
@@ -53,6 +54,23 @@ void USCI_A1_ISR(void) {
         case USCI_NONE: break;
         case USCI_UART_UCRXIFG:
             read_byte = EUSCI_A_UART_receiveData(EUSCI_A1_BASE);
+            break;
+        case USCI_UART_UCTXIFG: break;
+        case USCI_UART_UCSTTIFG: break;
+        case USCI_UART_UCTXCPTIFG: break;
+    }
+}
+
+/* Added because launchpad doesn't pin out EUSCI A0 */
+__attribute__((interrupt(USCI_A3_VECTOR)))
+void USCI_A3_ISR(void) {
+    switch (__even_in_range(UCA3IV, 18)) {
+        case USCI_NONE: break;
+        case USCI_UART_UCRXIFG:
+            P4OUT = 1 << 6;
+            read_byte = EUSCI_A_UART_receiveData(EUSCI_A3_BASE);
+            pinav_accept_char_from_ISR((uint8_t) read_byte);
+            P1OUT ^= 2; // Toggle LED state
             break;
         case USCI_UART_UCTXIFG: break;
         case USCI_UART_UCSTTIFG: break;
