@@ -1,7 +1,17 @@
 @echo off
 setlocal enabledelayedexpansion
 
+if "%*" == "" (
+    set "boards_to_build=data-board dev-board sensor-board"
+) else (
+    set "boards_to_build=%*"
+)
+
 :: Setup the native build environment
+
+echo ================================================================================
+echo Building native test binaries 
+echo ================================================================================
 
 pushd \
 call vcvarsall.bat x64
@@ -17,7 +27,11 @@ popd
 
 :: Setup the MSP430 build environment
 
-for %%i in (data-board dev-board sensor-board) do (
+for %%i in (%boards_to_build%) do (
+    echo ================================================================================
+    echo Building cross-compiled MSP430 binaries for target %%i
+    echo ================================================================================
+
     mkdir build-%%i
     pushd build-%%i
 
