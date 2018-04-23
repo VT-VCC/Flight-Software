@@ -84,6 +84,9 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL msp430)
 
     add_subdirectory(sensor_board)
   endif()
+  if (USIP_DATA_BOARD OR USIP_DEV_BOARD OR USIP_SENSOR_BOARD)
+    add_definitions(-DUSIP_BOARD)
+  endif()
 
   # freertos build
   add_subdirectory("3rdparty/freertos/")

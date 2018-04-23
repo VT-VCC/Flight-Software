@@ -6,6 +6,9 @@
 #include "task.h"
 #include "semphr.h"
 
+#include "gpio.h"
+#include "gpio_native.h"
+
 #include "uart.h"
 #include "spi.h"
 #include "i2c.h"
@@ -66,6 +69,15 @@ int main(void) {
     task_i2c_start();
 
     uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
+
+    while (true) {
+        gpio_toggle(GPIO_PORT_1, GPIO_PIN_0);
+        __delay_cycles(800000UL);
+        gpio_set(GPIO_PORT_1, GPIO_PIN_1);
+        __delay_cycles(800000UL);
+        gpio_clear(GPIO_PORT_1, GPIO_PIN_1);
+        __delay_cycles(800000UL);
+    }
 
     vTaskStartScheduler();
 
