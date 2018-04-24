@@ -14,6 +14,7 @@
 #include "i2c.h"
 
 #include "imu.h"
+#include "mmc.h"
 
 #define PERSISTENT __attribute__((section(".persistent")))
 
@@ -58,6 +59,10 @@ static TaskHandle_t PERSISTENT imu_task;
 void task_imu_start();
 void task_imu(void * params);
 
+static TaskHandle_t PERSISTENT mmc_task;
+void task_mmc_start();
+void task_mmc(void * params);
+
 /******************************************************************************\
  *  Function implementations                                                  *
 \******************************************************************************/
@@ -66,18 +71,9 @@ int main(void) {
 
     uart_open(EUSCI_A0, BAUD_9600, &standard_output);
 
-    task_i2c_start();
+    task_mmc_start();
 
     uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
-
-    while (true) {
-        gpio_toggle(GPIO_PORT_1, GPIO_PIN_0);
-        __delay_cycles(800000UL);
-        gpio_set(GPIO_PORT_1, GPIO_PIN_1);
-        __delay_cycles(800000UL);
-        gpio_clear(GPIO_PORT_1, GPIO_PIN_1);
-        __delay_cycles(800000UL);
-    }
 
     vTaskStartScheduler();
 
@@ -269,6 +265,51 @@ void task_imu(void * params) {
 
     // Check that we haven't overflowed the stack
     int remaining_frames = IMU_TASK_STACK_DEPTH - uxTaskGetStackHighWaterMark(NULL);
+    if (remaining_frames < 20) {
+        DEBUG("!!! %d frames left on the stack !!!\n", remaining_frames);
+    }
+}
+
+
+/******************************************************************************\
+ *  task_mmc implementation                                 *
+\******************************************************************************/
+
+#define MMC_TASK_STACK_DEPTH 200
+
+StaticTask_t PERSISTENT mmc_task_buffer;
+StackType_t PERSISTENT mmc_task_stack[MMC_TASK_STACK_DEPTH];
+
+void task_mmc_start() {
+    mmc_task = xTaskCreateStatic(
+        task_mmc,
+        "mmc",
+        MMC_TASK_STACK_DEPTH,
+        NULL,
+        2,
+        mmc_task_stack,
+        &mmc_task_buffer
+    );
+}
+
+void task_mmc(void * params) {
+    taskENTER_CRITICAL();
+    spi_hardware_config();
+    DEBUG("Starting MMC task\n");
+    taskEXIT_CRITICAL();
+
+    spi_open(EUSCI_A3, 32768/4, &spi_output);
+
+    mmc_t device;
+    if (mmc_init(&device, &spi_output, GPIO_PORT_3, GPIO_PIN_1)) {
+        DEBUG("MMC initialized\n");
+    }
+    else {
+        DEBUG("MMC failed to initialize\n");
+    }
+
+    // Check that we haven't overflowed the stack
+    int remaining_frames = MMC_TASK_STACK_DEPTH - uxTaskGetStackHighWaterMark(NULL);
     if (remaining_frames < 20) {
         DEBUG("!!! %d frames left on the stack !!!\n", remaining_frames);
     }

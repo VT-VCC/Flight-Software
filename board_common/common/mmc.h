@@ -35,11 +35,11 @@ typedef struct mmc {
      * The aliased SPI channel over which we talk
      */
     spi_t * spi;
-    volatile uint8_t *cs_value;
-    uint8_t cs_bit;
+    gpio_port_t cs_port;
+    gpio_pin_t cs_pin;
 } mmc_t;
 
-bool mmc_init(mmc_t * device, spi_t * spi, volatile uint8_t *cs_value, uint8_t cs_bit);
+bool mmc_init(mmc_t * device, spi_t * spi, gpio_port_t cs_port, gpio_pin_t cs_pin);
 
 /*
 mmc_error_t mmc_read_register(mmc_t * device, uint8_t addr, uint8_t len, uint8_t * block);
