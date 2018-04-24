@@ -256,7 +256,7 @@ void task_imu(void * params) {
     spi_open(EUSCI_A3, 32768/4, &spi_output);
 
     imu_t device;
-    if (imu_open(&device, &spi_output, &P3OUT, 1)) {
+    if (imu_open(&device, &spi_output, GPIO_PORT_3, GPIO_PIN_1)) {
         DEBUG("IMU initialized\n");
     }
     else {

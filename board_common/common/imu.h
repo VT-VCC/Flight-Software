@@ -57,8 +57,8 @@ typedef struct imu {
      * The owned SPI channel over which we talk
      */
     spi_t spi;
-    volatile uint8_t *cs_value;
-    uint8_t cs_bit;
+    gpio_port_t cs_port;
+    gpio_pin_t cs_pin;
 } imu_t;
 
 /**
@@ -70,7 +70,7 @@ typedef struct imu {
  *
  * @return True if and only if the device connection succeeds
  */
-bool imu_open(imu_t * device, spi_t * spi, volatile uint8_t *cs_value, uint8_t cs_bit);
+bool imu_open(imu_t * device, spi_t * spi, gpio_port_t cs_port, gpio_pin_t cs_pin);
 
 /**
  * Close a connection to an IMU device

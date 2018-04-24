@@ -1,24 +1,26 @@
 #include <assert.h>
 
+#include "gpio.h"
+
 #include "imu.h"
 #include "imu_internal.h"
 
-static void chip_select(imu_t * device) {
+static void imu_select(imu_t * device) {
     // Set NSS low when in use
-    *(device->cs_value) &= ~(device->cs_bit);
+    gpio_clear(device->cs_port, device->cs_pin);
 }
 
-static void chip_unselect(imu_t * device) {
+static void imu_release(imu_t * device) {
     // Set NSS high when not in use
-    *(device->cs_value) |= device->cs_bit;
+    gpio_set(device->cs_port, device->cs_pin);
 }
 
-bool imu_open(imu_t * device, spi_t * spi, volatile uint8_t *cs_value, uint8_t cs_bit) {
+bool imu_open(imu_t * device, spi_t * spi, gpio_port_t cs_port, gpio_pin_t cs_pin) {
     device->spi = *spi;
 
-    device->cs_value = cs_value;
-    device->cs_bit = cs_bit;
-    chip_unselect(device);
+    device->cs_port = cs_port;
+    device->cs_pin = cs_pin;
+    imu_release(device);
 
     // Reset the device
     const uint8_t reset_flag = 0x80;
@@ -56,7 +58,7 @@ void imu_close(imu_t * device) {
 }
 
 imu_result_t imu_read_reg(imu_t * device, uint8_t addr, uint8_t * value) {
-    chip_select(device);
+    imu_select(device);
 
     uint8_t send[2] = { addr | 0x80 }, recv[2];
     if (spi_transfer_bytes(&device->spi, send, recv, 2) != SPI_NO_ERROR) {
@@ -64,20 +66,20 @@ imu_result_t imu_read_reg(imu_t * device, uint8_t addr, uint8_t * value) {
     }
     *value = recv[1];
 
-    chip_unselect(device);
+    imu_release(device);
 
     return IMU_NO_ERROR;
 }
 
 imu_result_t imu_write_reg(imu_t * device, uint8_t addr, uint8_t value) {
-    chip_select(device);
+    imu_select(device);
 
     uint8_t send[2] = { addr & 0x7f, value };
     if (spi_write_bytes(&device->spi, send, 2) != SPI_NO_ERROR) {
         return IMU_SPI_ERROR;
     }
 
-    chip_unselect(device);
+    imu_release(device);
 
     return IMU_NO_ERROR;
 }
