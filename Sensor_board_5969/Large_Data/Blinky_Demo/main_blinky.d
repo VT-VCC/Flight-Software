@@ -4,7 +4,7 @@ Blinky_Demo/main_blinky.obj: ../Blinky_Demo/main_blinky.c
 Blinky_Demo/main_blinky.obj: /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/FreeRTOS.h
 Blinky_Demo/main_blinky.obj: /home/souldia/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.6.LTS/include/stddef.h
 Blinky_Demo/main_blinky.obj: /home/souldia/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.6.LTS/include/stdint.h
-Blinky_Demo/main_blinky.obj: /home/souldia/Desktop/satellite/Sensor_board_5969/FreeRTOSConfig.h
+Blinky_Demo/main_blinky.obj: /home/souldia/Desktop/Flight-Software/Sensor_board_5969/FreeRTOSConfig.h
 Blinky_Demo/main_blinky.obj: /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/projdefs.h
 Blinky_Demo/main_blinky.obj: /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/portable.h
 Blinky_Demo/main_blinky.obj: /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/deprecated_definitions.h
@@ -25,7 +25,7 @@ Blinky_Demo/main_blinky.obj: /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Demo
 /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/FreeRTOS.h: 
 /home/souldia/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.6.LTS/include/stddef.h: 
 /home/souldia/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.6.LTS/include/stdint.h: 
-/home/souldia/Desktop/satellite/Sensor_board_5969/FreeRTOSConfig.h: 
+/home/souldia/Desktop/Flight-Software/Sensor_board_5969/FreeRTOSConfig.h: 
 /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/projdefs.h: 
 /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/portable.h: 
 /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/deprecated_definitions.h: 

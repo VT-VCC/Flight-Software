@@ -6,7 +6,7 @@ Full_Demo/FreeRTOS+CLI/FreeRTOS_CLI.obj: /home/souldia/ti/ccsv7/tools/compiler/t
 Full_Demo/FreeRTOS+CLI/FreeRTOS_CLI.obj: /home/souldia/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.6.LTS/include/stdint.h
 Full_Demo/FreeRTOS+CLI/FreeRTOS_CLI.obj: /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/FreeRTOS.h
 Full_Demo/FreeRTOS+CLI/FreeRTOS_CLI.obj: /home/souldia/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.6.LTS/include/stddef.h
-Full_Demo/FreeRTOS+CLI/FreeRTOS_CLI.obj: /home/souldia/Desktop/satellite/Sensor_board_5969/FreeRTOSConfig.h
+Full_Demo/FreeRTOS+CLI/FreeRTOS_CLI.obj: /home/souldia/Desktop/Flight-Software/Sensor_board_5969/FreeRTOSConfig.h
 Full_Demo/FreeRTOS+CLI/FreeRTOS_CLI.obj: /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/projdefs.h
 Full_Demo/FreeRTOS+CLI/FreeRTOS_CLI.obj: /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/portable.h
 Full_Demo/FreeRTOS+CLI/FreeRTOS_CLI.obj: /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/deprecated_definitions.h
@@ -27,7 +27,7 @@ Full_Demo/FreeRTOS+CLI/FreeRTOS_CLI.obj: /home/souldia/Desktop/FreeRTOSv10.0.1/F
 /home/souldia/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.6.LTS/include/stdint.h: 
 /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/FreeRTOS.h: 
 /home/souldia/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.6.LTS/include/stddef.h: 
-/home/souldia/Desktop/satellite/Sensor_board_5969/FreeRTOSConfig.h: 
+/home/souldia/Desktop/Flight-Software/Sensor_board_5969/FreeRTOSConfig.h: 
 /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/projdefs.h: 
 /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/portable.h: 
 /home/souldia/Desktop/FreeRTOSv10.0.1/FreeRTOS/Source/include/deprecated_definitions.h: 
