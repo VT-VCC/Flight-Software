@@ -16,6 +16,7 @@ extern "C" {
 #define I2C_ERROR_LIST(OP) \
     OP(NO_ERROR) \
     OP(CHANNEL_CLOSED) \
+    OP(INCOMPLETE) \
     OP(SIGNAL_FAULT)
 
 /// Enum representing possible error states for an I2C channel.
@@ -26,15 +27,8 @@ typedef enum i2c_error {
     I2C_count
 } i2c_error_t;
 
-typedef enum i2c_flag {
-    I2C_STOP = (1 << 0),
-    I2C_NO_STOP = ~(1 << 0)
-} i2c_flag_t;
-
-#ifndef NDEBUG
 /// Get a string representation of the error. Only available in debug builds
 const char * i2c_error_string(i2c_error_t t);
-#endif
 
 /** Opaque type for the I2C state
  *
@@ -45,9 +39,9 @@ typedef struct i2c i2c_t;
 }
 #endif
 
-i2c_error_t i2c_write_byte(i2c_t * channel, uint8_t address, const uint8_t byte, i2c_flag_t flags);
+i2c_error_t i2c_write_byte(i2c_t * channel, uint8_t address, uint8_t byte);
 
-i2c_error_t i2c_write_bytes(i2c_t * channel, uint8_t address, const uint8_t * bytes, size_t n, i2c_flag_t flags);
+i2c_error_t i2c_write_bytes(i2c_t * channel, uint8_t address, uint8_t * bytes, size_t n);
 
 i2c_error_t i2c_read_byte(i2c_t * channel, uint8_t address, uint8_t * byte);
 

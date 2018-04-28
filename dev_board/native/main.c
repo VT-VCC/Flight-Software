@@ -71,7 +71,7 @@ int main(void) {
 
     uart_open(EUSCI_A0, BAUD_9600, &standard_output);
 
-    task_mmc_start();
+    task_i2c_start();
 
     uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
 
@@ -143,10 +143,12 @@ static void spi_hardware_config(void) {
 }
 
 static void i2c_hardware_config(void) {
-    // Configure UCB2SDA, UCB2SCL for I2C over eUSCI_B2
-    GPIO_setOutputLowOnPin(GPIO_PORT_P7, GPIO_PIN0|GPIO_PIN1);
-    GPIO_setAsOutputPin(GPIO_PORT_P7, GPIO_PIN0|GPIO_PIN1);
-    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P7, GPIO_PIN0|GPIO_PIN1, GPIO_PRIMARY_MODULE_FUNCTION);
+    // Configure P7.0/UCB2SDA, P7.1/UCB2SCL for SPI over eUSCI_B2
+    GPIO_setAsPeripheralModuleFunctionInputPin(
+        GPIO_PORT_P7,
+        GPIO_PIN0 + GPIO_PIN1,
+        GPIO_PRIMARY_MODULE_FUNCTION
+    );
 }
 
 void vApplicationIdleHook( void ) { }
@@ -176,14 +178,17 @@ void task_i2c_start() {
     );
 }
 
+
+#include <driverlib.h>
+
 void task_i2c(void * params) {
     taskENTER_CRITICAL();
     i2c_hardware_config();
     DEBUG("Starting I2C task\n");
     taskEXIT_CRITICAL();
-
+    
     i2c_t device;
-    if (!i2c_open(EUSCI_B2_BASE, I2C_DATA_RATE_400KBPS, &device)) {
+    if (!i2c_open(EUSCI_B2, I2C_DATA_RATE_400KBPS, &device)) {
         WTF();
         return;
     }
@@ -192,6 +197,39 @@ void task_i2c(void * params) {
 
     i2c_error_t err;
 
+    // Read EEPROM
+
+    uint8_t values[] = { 0x12, 0x34 };
+    uint8_t value = 0xfe;
+
+    /*DEBUG("a");
+    err = i2c_write_bytes(&device, 0x50, values, 2);
+    if (err != I2C_NO_ERROR) {
+        WTF();
+        goto end;
+    }*/
+    DEBUG("b");
+    err = i2c_read_bytes(&device, 0x50, values, 2);
+    if (err != I2C_NO_ERROR) {
+        DEBUG("[ERROR] %s (%s:%d) %s\n", __func__, __FILE__, __LINE__, i2c_error_string(err));
+        goto end;
+    }
+    DEBUG(" %02x %02x\n", values[0], values[1]);
+    DEBUG("c");
+    err = i2c_write_byte(&device, 0x50, 0x56);
+    if (err != I2C_NO_ERROR) {
+        WTF();
+        goto end;
+    }
+    DEBUG("d");
+    err = i2c_read_byte(&device, 0x50, &value);
+    if (err != I2C_NO_ERROR) {
+        WTF();
+        goto end;
+    }
+    DEBUG(" %02x\n", value);
+
+    /*
     // Get MPU WHO_AM_I
     {
         DEBUG("a\n");
@@ -212,8 +250,10 @@ void task_i2c(void * params) {
 
         DEBUG("c\n");
     }
+    */
 
 
+end:
     DEBUG("I2C task done\n");
 
     DEBUG("%d\n", uxTaskGetStackHighWaterMark(NULL));
@@ -223,6 +263,8 @@ void task_i2c(void * params) {
     if (remaining_frames < 20) {
         DEBUG("!!! %d frames left on the stack !!!\n", remaining_frames);
     }
+
+    while(1);
 }
 
 

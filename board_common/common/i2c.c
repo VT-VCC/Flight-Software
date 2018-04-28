@@ -4,7 +4,6 @@
  *  Public interface implementations                                          *
 \******************************************************************************/
 
-#ifndef NDEBUG
 const char * i2c_error_string(i2c_error_t t) {
     switch(t) {
 #       define STRING_OP(E) case I2C_ ## E: return #E;
@@ -14,4 +13,3 @@ const char * i2c_error_string(i2c_error_t t) {
             return "I2C error unknown";
     }
 }
-#endif
