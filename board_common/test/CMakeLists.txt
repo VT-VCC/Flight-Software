@@ -2,6 +2,8 @@ add_sources(BOARD_COMMON_SOURCES
   "test_driver.cpp"
   "gpio.cpp"
   "impl/gpio_test.cpp"
+  "i2c.cpp"
+  "impl/i2c_test.cpp"
   "uart.cpp"
   "impl/uart_test.cpp"
   "spi.cpp"
