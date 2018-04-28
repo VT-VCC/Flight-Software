@@ -45,7 +45,7 @@
 	<variableList>
 		<variable>
 			<name>FREERTOS_ROOT</name>
-			<value>file:/C:/Users/Brandon/Development/FreeRTOS</value>
+			<value>$%7BPARENT-2-PROJECT_LOC%7D/FreeRTOSv10.0.1</value>
 		</variable>
 	</variableList>
 </projectDescription>
