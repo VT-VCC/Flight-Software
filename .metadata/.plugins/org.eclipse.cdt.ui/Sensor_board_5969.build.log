@@ -1,0 +1,403 @@
+
+**** Build of configuration Large_Data for project Sensor_board_5969 ****
+
+/opt/ti/ccsv7/utils/bin/gmake -k all 
+Building file: ../main.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="main.d"  "../main.c"
+"/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/hal/i2c_eusci_native.h", line 21: warning #303-D: typedef name has already been declared (with same type)
+"/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/hal/spi_eusci_native.h", line 15: warning #303-D: typedef name has already been declared (with same type)
+"/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/hal/uart_eusci_native.h", line 15: warning #303-D: typedef name has already been declared (with same type)
+"../main.c", line 174: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 179: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 183: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 198: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 201: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 204: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 205: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 208: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 211: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 214: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 217: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 244: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 246: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 251: warning #169-D: argument of type "char *" is incompatible with parameter of type "const uint8_t *"
+"../main.c", line 24: warning #179-D: variable "spi_output" was declared but never referenced
+"../main.c", line 112: warning #179-D: function "spi_hardware_config" was declared but never referenced
+Finished building: ../main.c
+ 
+Building file: ../CCS_Only/RegTest.asm
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="CCS_Only/RegTest.d" --obj_directory="CCS_Only"  "../CCS_Only/RegTest.asm"
+Finished building: ../CCS_Only/RegTest.asm
+ 
+Building file: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/croutine.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="FreeRTOS_Source/croutine.d" --obj_directory="FreeRTOS_Source"  "/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/croutine.c"
+Finished building: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/croutine.c
+ 
+Building file: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/event_groups.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="FreeRTOS_Source/event_groups.d" --obj_directory="FreeRTOS_Source"  "/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/event_groups.c"
+Finished building: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/event_groups.c
+ 
+Building file: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/list.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="FreeRTOS_Source/list.d" --obj_directory="FreeRTOS_Source"  "/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/list.c"
+Finished building: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/list.c
+ 
+Building file: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/queue.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="FreeRTOS_Source/queue.d" --obj_directory="FreeRTOS_Source"  "/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/queue.c"
+Finished building: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/queue.c
+ 
+Building file: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/stream_buffer.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="FreeRTOS_Source/stream_buffer.d" --obj_directory="FreeRTOS_Source"  "/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/stream_buffer.c"
+Finished building: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/stream_buffer.c
+ 
+Building file: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/tasks.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="FreeRTOS_Source/tasks.d" --obj_directory="FreeRTOS_Source"  "/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/tasks.c"
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/tasks.c", line 4133: warning #179-D: function "prvWriteNameToBuffer" was declared but never referenced
+Finished building: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/tasks.c
+ 
+Building file: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/timers.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="FreeRTOS_Source/timers.d" --obj_directory="FreeRTOS_Source"  "/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/timers.c"
+Finished building: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/timers.c
+ 
+Building file: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X/port.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="FreeRTOS_Source/portable/CCS/MSP430X/port.d" --obj_directory="FreeRTOS_Source/portable/CCS/MSP430X"  "/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X/port.c"
+Finished building: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X/port.c
+ 
+Building file: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X/portext.asm
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="FreeRTOS_Source/portable/CCS/MSP430X/portext.d" --obj_directory="FreeRTOS_Source/portable/CCS/MSP430X"  "/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X/portext.asm"
+Finished building: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X/portext.asm
+ 
+Building file: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="FreeRTOS_Source/portable/Common/mpu_wrappers.d" --obj_directory="FreeRTOS_Source/portable/Common"  "/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c"
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 77: warning #225-D: function "xTaskCreateRestrictedStatic" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 78: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 104: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 115: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 125: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 136: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 160: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 172: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 184: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 196: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 208: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 220: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 232: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 243: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 253: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 263: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 274: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 285: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 296: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 404: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 417: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 443: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 454: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 464: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 476: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 489: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 502: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 515: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 541: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 553: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 564: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 575: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 586: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 597: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 608: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 619: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 630: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 641: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 666: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 693: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 706: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 719: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 821: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 900: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 914: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 927: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 939: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 953: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 967: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 981: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 995: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1009: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1023: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1051: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1064: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1076: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1088: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1100: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1111: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1121: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1133: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1145: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1157: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1168: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1178: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1190: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1202: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1214: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1226: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1238: warning #225-D: function "vPortResetPrivilege" declared implicitly
+"/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c", line 1265: warning #225-D: function "vPortResetPrivilege" declared implicitly
+Finished building: /home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/Common/mpu_wrappers.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/adc12_b.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/adc12_b.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/adc12_b.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/adc12_b.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/aes256.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/aes256.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/aes256.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/aes256.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/comp_e.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/comp_e.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/comp_e.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/comp_e.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/crc.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/crc.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/crc.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/crc.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/crc32.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/crc32.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/crc32.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/crc32.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/cs.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/cs.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/cs.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/cs.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/dma.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/dma.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/dma.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/dma.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/esi.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/esi.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/esi.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/esi.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/eusci_a_spi.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/eusci_a_spi.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/eusci_a_spi.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/eusci_a_spi.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/eusci_a_uart.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/eusci_a_uart.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/eusci_a_uart.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/eusci_a_uart.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/eusci_b_i2c.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/eusci_b_i2c.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/eusci_b_i2c.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/eusci_b_i2c.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/eusci_b_spi.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/eusci_b_spi.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/eusci_b_spi.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/eusci_b_spi.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/framctl.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/framctl.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/framctl.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/framctl.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/gpio.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/gpio.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/gpio.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/gpio.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/lcd_c.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/lcd_c.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/lcd_c.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/lcd_c.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/mpu.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/mpu.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/mpu.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/mpu.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/mpy32.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/mpy32.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/mpy32.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/mpy32.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/pmm.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/pmm.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/pmm.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/pmm.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/ram.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/ram.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/ram.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/ram.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/ref_a.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/ref_a.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/ref_a.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/ref_a.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/rtc_b.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/rtc_b.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/rtc_b.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/rtc_b.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/rtc_c.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/rtc_c.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/rtc_c.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/rtc_c.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/sfr.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/sfr.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/sfr.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/sfr.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/sysctl.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/sysctl.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/sysctl.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/sysctl.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/timer_a.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/timer_a.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/timer_a.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/timer_a.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/timer_b.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/timer_b.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/timer_b.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/timer_b.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/tlv.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/tlv.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/tlv.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/tlv.c
+ 
+Building file: ../driverlib/MSP430FR5xx_6xx/wdt_a.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="driverlib/MSP430FR5xx_6xx/wdt_a.d" --obj_directory="driverlib/MSP430FR5xx_6xx"  "../driverlib/MSP430FR5xx_6xx/wdt_a.c"
+Finished building: ../driverlib/MSP430FR5xx_6xx/wdt_a.c
+ 
+Building file: ../hal/gpio_native.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="hal/gpio_native.d" --obj_directory="hal"  "../hal/gpio_native.c"
+Finished building: ../hal/gpio_native.c
+ 
+Building file: ../hal/i2c.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="hal/i2c.d" --obj_directory="hal"  "../hal/i2c.c"
+"../hal/i2c_eusci_native.h", line 21: warning #303-D: typedef name has already been declared (with same type)
+Finished building: ../hal/i2c.c
+ 
+Building file: ../hal/i2c_eusci_native.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="hal/i2c_eusci_native.d" --obj_directory="hal"  "../hal/i2c_eusci_native.c"
+"../hal/i2c_eusci_native.h", line 21: warning #303-D: typedef name has already been declared (with same type)
+"../hal/i2c_eusci_native.c", line 40: warning #552-D: variable "i2c_send_buffer" was set but never used
+"../hal/i2c_eusci_native.c", line 41: warning #552-D: variable "i2c_recv_buffer" was set but never used
+"../hal/i2c_eusci_native.c", line 42: warning #552-D: variable "i2c_buffer_index" was set but never used
+"../hal/i2c_eusci_native.c", line 43: warning #552-D: variable "i2c_buffer_size" was set but never used
+Finished building: ../hal/i2c_eusci_native.c
+ 
+Building file: ../hal/imu.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="hal/imu.d" --obj_directory="hal"  "../hal/imu.c"
+"../hal/spi_eusci_native.h", line 15: warning #303-D: typedef name has already been declared (with same type)
+Finished building: ../hal/imu.c
+ 
+Building file: ../hal/mmc.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="hal/mmc.d" --obj_directory="hal"  "../hal/mmc.c"
+"../hal/spi_eusci_native.h", line 15: warning #303-D: typedef name has already been declared (with same type)
+Finished building: ../hal/mmc.c
+ 
+Building file: ../hal/spi.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="hal/spi.d" --obj_directory="hal"  "../hal/spi.c"
+"../hal/spi_eusci_native.h", line 15: warning #303-D: typedef name has already been declared (with same type)
+Finished building: ../hal/spi.c
+ 
+Building file: ../hal/spi_eusci_native.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="hal/spi_eusci_native.d" --obj_directory="hal"  "../hal/spi_eusci_native.c"
+"../hal/spi_eusci_native.h", line 15: warning #303-D: typedef name has already been declared (with same type)
+"../hal/spi_eusci_native.c", line 40: warning #552-D: variable "spi_send_buffer" was set but never used
+"../hal/spi_eusci_native.c", line 42: warning #552-D: variable "spi_buffer_index" was set but never used
+"../hal/spi_eusci_native.c", line 43: warning #552-D: variable "spi_buffer_size" was set but never used
+Finished building: ../hal/spi_eusci_native.c
+ 
+Building file: ../hal/uart.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="hal/uart.d" --obj_directory="hal"  "../hal/uart.c"
+"/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/hal/uart_eusci_native.h", line 15: warning #303-D: typedef name has already been declared (with same type)
+Finished building: ../hal/uart.c
+ 
+Building file: ../hal/uart_eusci_native.c
+Invoking: MSP430 Compiler
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 --include_path="/opt/ti/ccsv7/ccs_base/msp430/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/FreeRTOSv10.0.1/FreeRTOS/Source/portable/CCS/MSP430X" --include_path="/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" --include_path="/home/souldia/Desktop/Sat/Flight-Software/CCS/Sensor_board_5969/driverlib/MSP430FR5xx_6xx" -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full --preproc_with_compile --preproc_dependency="hal/uart_eusci_native.d" --obj_directory="hal"  "../hal/uart_eusci_native.c"
+"../hal/uart_eusci_native.h", line 15: warning #303-D: typedef name has already been declared (with same type)
+Finished building: ../hal/uart_eusci_native.c
+ 
+Building target: Sensor_board_5969.out
+Invoking: MSP430 Linker
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/cl430" -vmspx --abi=eabi --data_model=large -O0 --use_hw_mpy=F5 -g --define=__MSP430FR5969__ --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --printf_support=full -z -m"Sensor_board_5969.map" --heap_size=160 --stack_size=160 --cinit_hold_wdt=on -i"/opt/ti/ccsv7/ccs_base/msp430/include" -i"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/lib" -i"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/include" -i"/opt/ti/ccsv7/ccs_base/msp430/lib/5xx_6xx_FRxx" -i"/opt/ti/ccsv7/ccs_base/msp430/lib/FR59xx" --reread_libs --priority --warn_sections --diag_wrap=off --display_error_number --xml_link_info="Sensor_board_5969_linkInfo.xml" --use_hw_mpy=F5 --rom_model -o "Sensor_board_5969.out" "./main.obj" "./CCS_Only/RegTest.obj" "./FreeRTOS_Source/croutine.obj" "./FreeRTOS_Source/event_groups.obj" "./FreeRTOS_Source/list.obj" "./FreeRTOS_Source/queue.obj" "./FreeRTOS_Source/stream_buffer.obj" "./FreeRTOS_Source/tasks.obj" "./FreeRTOS_Source/timers.obj" "./FreeRTOS_Source/portable/CCS/MSP430X/port.obj" "./FreeRTOS_Source/portable/CCS/MSP430X/portext.obj" "./FreeRTOS_Source/portable/Common/mpu_wrappers.obj" "./driverlib/MSP430FR5xx_6xx/adc12_b.obj" "./driverlib/MSP430FR5xx_6xx/aes256.obj" "./driverlib/MSP430FR5xx_6xx/comp_e.obj" "./driverlib/MSP430FR5xx_6xx/crc.obj" "./driverlib/MSP430FR5xx_6xx/crc32.obj" "./driverlib/MSP430FR5xx_6xx/cs.obj" "./driverlib/MSP430FR5xx_6xx/dma.obj" "./driverlib/MSP430FR5xx_6xx/esi.obj" "./driverlib/MSP430FR5xx_6xx/eusci_a_spi.obj" "./driverlib/MSP430FR5xx_6xx/eusci_a_uart.obj" "./driverlib/MSP430FR5xx_6xx/eusci_b_i2c.obj" "./driverlib/MSP430FR5xx_6xx/eusci_b_spi.obj" "./driverlib/MSP430FR5xx_6xx/framctl.obj" "./driverlib/MSP430FR5xx_6xx/gpio.obj" "./driverlib/MSP430FR5xx_6xx/lcd_c.obj" "./driverlib/MSP430FR5xx_6xx/mpu.obj" "./driverlib/MSP430FR5xx_6xx/mpy32.obj" "./driverlib/MSP430FR5xx_6xx/pmm.obj" "./driverlib/MSP430FR5xx_6xx/ram.obj" "./driverlib/MSP430FR5xx_6xx/ref_a.obj" "./driverlib/MSP430FR5xx_6xx/rtc_b.obj" "./driverlib/MSP430FR5xx_6xx/rtc_c.obj" "./driverlib/MSP430FR5xx_6xx/sfr.obj" "./driverlib/MSP430FR5xx_6xx/sysctl.obj" "./driverlib/MSP430FR5xx_6xx/timer_a.obj" "./driverlib/MSP430FR5xx_6xx/timer_b.obj" "./driverlib/MSP430FR5xx_6xx/tlv.obj" "./driverlib/MSP430FR5xx_6xx/wdt_a.obj" "./hal/gpio_native.obj" "./hal/i2c.obj" "./hal/i2c_eusci_native.obj" "./hal/imu.obj" "./hal/mmc.obj" "./hal/spi.obj" "./hal/spi_eusci_native.obj" "./hal/uart.obj" "./hal/uart_eusci_native.obj" "../lnk_msp430fr5969.cmd"  -llibmath.a -llibc.a 
+<Linking>
+warning #10247-D: creating output section ".persistent" without a SECTIONS specification
+Finished building target: Sensor_board_5969.out
+ 
+Invoking: MSP430 Hex Utility
+"/opt/ti/ccsv7/tools/compiler/ti-cgt-msp430_16.9.0.LTS/bin/hex430" --memwidth=8 --romwidth=8 --ti_txt -o "Sensor_board_5969.txt"  "Sensor_board_5969.out" 
+Translating to TI-TXT format...
+   "Sensor_board_5969.out" .text:_isr ==> .text:_isr
+   "Sensor_board_5969.out" .text.1 ==> .text.1
+   "Sensor_board_5969.out" .const ==> .const
+   "Sensor_board_5969.out" .cinit ==> .cinit
+   "Sensor_board_5969.out" $fill000 ==> $fill000
+   "Sensor_board_5969.out" $fill001 ==> $fill001
+   "Sensor_board_5969.out" $fill002 ==> $fill002
+   "Sensor_board_5969.out" AES256 ==> AES256
+   "Sensor_board_5969.out" RTC ==> RTC
+   "Sensor_board_5969.out" PORT4 ==> PORT4
+   "Sensor_board_5969.out" PORT3 ==> PORT3
+   "Sensor_board_5969.out" TIMER3_A1 ==> TIMER3_A1
+   "Sensor_board_5969.out" TIMER3_A0 ==> TIMER3_A0
+   "Sensor_board_5969.out" PORT2 ==> PORT2
+   "Sensor_board_5969.out" TIMER2_A1 ==> TIMER2_A1
+   "Sensor_board_5969.out" TIMER2_A0 ==> TIMER2_A0
+   "Sensor_board_5969.out" PORT1 ==> PORT1
+   "Sensor_board_5969.out" TIMER1_A1 ==> TIMER1_A1
+   "Sensor_board_5969.out" TIMER1_A0 ==> TIMER1_A0
+   "Sensor_board_5969.out" DMA ==> DMA
+   "Sensor_board_5969.out" USCI_A1 ==> USCI_A1
+   "Sensor_board_5969.out" TIMER0_A1 ==> TIMER0_A1
+   "Sensor_board_5969.out" TIMER0_A0 ==> TIMER0_A0
+   "Sensor_board_5969.out" ADC12 ==> ADC12
+   "Sensor_board_5969.out" USCI_B0 ==> USCI_B0
+   "Sensor_board_5969.out" USCI_A0 ==> USCI_A0
+   "Sensor_board_5969.out" WDT ==> WDT
+   "Sensor_board_5969.out" TIMER0_B1 ==> TIMER0_B1
+   "Sensor_board_5969.out" TIMER0_B0 ==> TIMER0_B0
+   "Sensor_board_5969.out" COMP_E ==> COMP_E
+   "Sensor_board_5969.out" UNMI ==> UNMI
+   "Sensor_board_5969.out" SYSNMI ==> SYSNMI
+   "Sensor_board_5969.out" .reset ==> .reset
+   "Sensor_board_5969.out" .text.2 ==> .text.2
+Finished building: Sensor_board_5969.txt
+ 
+
+**** Build Finished ****

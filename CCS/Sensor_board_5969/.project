@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Sensor_board_5969</name>
+	<name>VT_Build_System</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -33,7 +33,7 @@
 	</linkedResources>
 	<filteredResources>
 		<filter>
-			<id>1524595886381</id>
+			<id>1524947932729</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
