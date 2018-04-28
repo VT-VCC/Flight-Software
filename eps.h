@@ -2,6 +2,7 @@ ifndef _COMMON_EPS_H_
 #define _COMMON_EPS_H_
 
 #include "i2c.h"
+#include "eps_internals.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,7 +47,7 @@ extern "C" {
 	* if successful and returns EPS_BAD_COMMUNICATION
 	* if unsuccessful
 	*/
-	eps_t eps_write(i2c_t * channel, uint8_t * command, uint8_t * data_parameter);
+	eps_t eps_write(i2c_t * channel, uint8_t command, uint8_t data_parameter);
 
 	/**
 	* EPS read function.

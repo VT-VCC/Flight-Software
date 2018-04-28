@@ -35,8 +35,11 @@
 	 return (data[1] << 8) | data[0] ; 
  }
 
- eps_result_t eps_write(i2c_t * channel, uint8_t * command, uint8_t * data_parameter) {
+ eps_t eps_write(i2c_t * channel, uint8_t command, uint8_t data_parameter) {
 	 uint8_t slave_address = 0x2B;
+
+	 // open channel for i2c
+	 i2c_open(channel);
 
 	 // Write Slave Address via I2C
 	 i2c_error_t err = i2c_write_byte(channel, slave_address);
@@ -61,6 +64,9 @@
 	 if (value == 0xFFFF || err != I2C_NO_ERROR) {
 		 return EPS_BAD_COMMUNICATION;
 	 }
+
+	 //close channel for i2c
+	 i2c_close(channel);
 	
 	 // return the data parameter as the MSB and the command as the LSB
 	 return (data_parameter << 8) | command;
