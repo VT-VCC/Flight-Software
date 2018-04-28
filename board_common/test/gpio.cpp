@@ -2,6 +2,6 @@
 
 #include "gpio.h"
 
-TEST_CASE("Test", "[gpio]") {
+TEST_CASE("Test GPIO", "[gpio]") {
 
 }

@@ -2,6 +2,6 @@
 
 #include "i2c.h"
 
-TEST_CASE("Test", "[i2c]") {
+TEST_CASE("Test I2C", "[i2c]") {
 
 }
