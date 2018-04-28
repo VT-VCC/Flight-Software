@@ -1,172 +1,267 @@
-/*
- * FreeRTOS Kernel V10.0.1
- * Copyright (C) 2017 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * http://www.FreeRTOS.org
- * http://aws.amazon.com/freertos
- *
- * 1 tab == 4 spaces!
- */
-
-/******************************************************************************
- * This project provides two demo applications.  A simple blinky style project,
- * and a more comprehensive test and demo application.  The
- * mainCREATE_SIMPLE_BLINKY_DEMO_ONLY setting (defined in this file) is used to
- * select between the two.  The simply blinky demo is implemented and described
- * in main_blinky.c.  The more comprehensive test and demo application is
- * implemented and described in main_full.c.
- *
- * This file implements the code that is not demo specific, including the
- * hardware setup and standard FreeRTOS hook functions.
- *
- * ENSURE TO READ THE DOCUMENTATION PAGE FOR THIS PORT AND DEMO APPLICATION ON
- * THE http://www.FreeRTOS.org WEB SITE FOR FULL INFORMATION ON USING THIS DEMO
- * APPLICATION, AND ITS ASSOCIATE FreeRTOS ARCHITECTURE PORT!
- *
- */
+#include <msp430.h>
+#include <driverlib.h>
+#include <hal/i2c.h>
+#include <hal/spi.h>
+#include <hal/uart.h>
+#include <hal/gpio.h>
 
 /* Scheduler include files. */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
 
-/* Standard demo includes, used so the tick hook can exercise some FreeRTOS
-functionality in an interrupt. */
-#include "EventGroupsDemo.h"
-#include "TaskNotify.h"
-#include "partest.h" /* LEDs - a historic name for "Parallel Port". */
 
-/* TI includes. */
-#include "driverlib.h"
+#define PERSISTENT __attribute__((section(".persistent")))
 
-/* Set mainCREATE_SIMPLE_BLINKY_DEMO_ONLY to one to run the simple blinky demo,
-or 0 to run the more comprehensive test and demo application. */
-#define mainCREATE_SIMPLE_BLINKY_DEMO_ONLY	0
+/******************************************************************************\
+ *  Static variables                                                          *
+\******************************************************************************/
 
-/*-----------------------------------------------------------*/
+/// Standard UART output
+static uart_t standard_output;
 
-/*
- * Configure the hardware as necessary to run this demo.
- */
-static void prvSetupHardware( void );
+/// IMU/RFM SPI output
+static spi_t spi_output;
 
-/*
- * main_blinky() is used when mainCREATE_SIMPLE_BLINKY_DEMO_ONLY is set to 1.
- * main_full() is used when mainCREATE_SIMPLE_BLINKY_DEMO_ONLY is set to 0.
- */
-#if( mainCREATE_SIMPLE_BLINKY_DEMO_ONLY == 1 )
-	extern void main_blinky( void );
-#else
-	extern void main_full( void );
-#endif /* #if mainCREATE_SIMPLE_BLINKY_DEMO_ONLY == 1 */
+// Print a formatted message across the UART output
+#define DEBUG_VA_ARGS(...) , ## __VA_ARGS__
+#define DEBUG(format, ...) do { \
+        char buffer[255]; \
+        int len = snprintf(buffer, 255, (format) DEBUG_VA_ARGS(__VA_ARGS__)); \
+        uart_write_bytes(&standard_output, buffer, len); \
+    } while(0)
+#define WTF() DEBUG("[ERROR] %s (%s:%d)\n", __func__, __FILE__, __LINE__)
+
+/******************************************************************************\
+ *  Private functions                                                         *
+\******************************************************************************/
+/// Configures I/O pins
+static void hardware_config(void);
+static void spi_hardware_config(void);
+static void i2c_hardware_config(void);
 
 /* Prototypes for the standard FreeRTOS callback/hook functions implemented
 within this file. */
-void vApplicationMallocFailedHook( void );
 void vApplicationIdleHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 void vApplicationTickHook( void );
 
-/* The heap is allocated here so the "persistent" qualifier can be used.  This
-requires configAPPLICATION_ALLOCATED_HEAP to be set to 1 in FreeRTOSConfig.h.
-See http://www.freertos.org/a00111.html for more information. */
-#ifdef __ICC430__
-	__persistent 					/* IAR version. */
-#else
-	#pragma PERSISTENT( ucHeap ) 	/* CCS version. */
-#endif
-uint8_t ucHeap[ configTOTAL_HEAP_SIZE ] = { 0 };
+static TaskHandle_t PERSISTENT i2c_task;
+void task_i2c_start();
+void task_i2c(void * params);
 
-/*-----------------------------------------------------------*/
+/******************************************************************************\
+ *  Function implementations                                                  *
+\******************************************************************************/
+int main(void) {
+    hardware_config();
 
-int main( void )
-{
-	/* See http://www.FreeRTOS.org/MSP430FR5969_Free_RTOS_Demo.html */
+    uart_open(EUSCI_A0, BAUD_9600, &standard_output);
 
-	/* Configure the hardware ready to run the demo. */
-	prvSetupHardware();
+    task_i2c_start();
 
-	/* The mainCREATE_SIMPLE_BLINKY_DEMO_ONLY setting is described at the top
-	of this file. */
-	#if( mainCREATE_SIMPLE_BLINKY_DEMO_ONLY == 1 )
-	{
-		main_blinky();
-	}
-	#else
-	{
-		main_full();
-	}
-	#endif
+    uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
 
-	return 0;
+    vTaskStartScheduler();
+
+    // there is no way to get here since we are using statically allocated
+    // kernel structures
+
+    return 0;
 }
-/*-----------------------------------------------------------*/
 
-void vApplicationMallocFailedHook( void )
-{
-	/* Called if a call to pvPortMalloc() fails because there is insufficient
-	free memory available in the FreeRTOS heap.  pvPortMalloc() is called
-	internally by FreeRTOS API functions that create tasks, queues, software
-	timers, and semaphores.  The size of the FreeRTOS heap is set by the
-	configTOTAL_HEAP_SIZE configuration constant in FreeRTOSConfig.h. */
+static void hardware_config(void) {
+    WDTCTL = WDTPW | WDTHOLD;               // Stop watchdog timer
+    PM5CTL0 &= ~LOCKLPM5;                   // Disable the GPIO power-on default high-impedance mode
+                                            // to activate previously configured port settings
+    // Set all GPIO pins to output low for low power
+    GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setOutputLowOnPin(GPIO_PORT_PJ, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7|GPIO_PIN8|GPIO_PIN9|GPIO_PIN10|GPIO_PIN11|GPIO_PIN12|GPIO_PIN13|GPIO_PIN14|GPIO_PIN15);
 
-	/* Force an assert. */
-	configASSERT( ( volatile void * ) NULL );
+    GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setAsOutputPin(GPIO_PORT_P3, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setAsOutputPin(GPIO_PORT_PJ, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7|GPIO_PIN8|GPIO_PIN9|GPIO_PIN10|GPIO_PIN11|GPIO_PIN12|GPIO_PIN13|GPIO_PIN14|GPIO_PIN15);
+
+    // Configure UCA0TXD, UCA0RXD for UART over eUSCI_A0
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P2, GPIO_PIN1, GPIO_SECONDARY_MODULE_FUNCTION);
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN0, GPIO_SECONDARY_MODULE_FUNCTION);
+
+    // Configure GPIO to use LFXT
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_PJ, GPIO_PIN4|GPIO_PIN5, GPIO_PRIMARY_MODULE_FUNCTION);
+    // Set DCO frequency to 8 MHz
+    CS_setDCOFreq(CS_DCORSEL_0, CS_DCOFSEL_6);
+    //Set external clock frequency to 32.768 KHz
+    CS_setExternalClockSource(32768, 0);
+    //Set ACLK=LFXT
+    CS_initClockSignal(CS_ACLK, CS_LFXTCLK_SELECT, CS_CLOCK_DIVIDER_1);
+    // Set SMCLK = DCO with frequency divider of 1
+    CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
+    // Set MCLK = DCO with frequency divider of 1
+    CS_initClockSignal(CS_MCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
+    //Start XT1 with no time out
+    CS_turnOnLFXT(CS_LFXT_DRIVE_0);
+
+    __enable_interrupt();
 }
-/*-----------------------------------------------------------*/
 
-void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
-{
-	( void ) pcTaskName;
-	( void ) pxTask;
+static void spi_hardware_config(void) {
+    // Configure UCA3SIMO, UCA3SOMI for SPI over eUSCI_A3
+    GPIO_setOutputLowOnPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2);
+    GPIO_setAsOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2);
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, GPIO_PIN1, GPIO_PRIMARY_MODULE_FUNCTION);
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION);
 
-	/* Run time stack overflow checking is performed if
-	configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook
-	function is called if a stack overflow is detected.
-	See http://www.freertos.org/Stacks-and-stack-overflow-checking.html */
+    // Use P3.0 as the RFM69's NSS (chip select)
+    GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
 
-	/* Force an assert. */
-	configASSERT( ( volatile void * ) NULL );
+    // Use P as the RFM69's RST (reset)
+    GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
+
+    // Use P1.5 as the RFM69's DIO0/IRQ interrupt
+    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN5);
+    GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN5);
+    GPIO_selectInterruptEdge(GPIO_PORT_P1, GPIO_PIN5, GPIO_LOW_TO_HIGH_TRANSITION);
+    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN5);
 }
-/*-----------------------------------------------------------*/
 
-void vApplicationIdleHook( void )
-{
-    __bis_SR_register( LPM4_bits + GIE );
-    __no_operation();
+static void i2c_hardware_config(void) {
+    // Configure P7.0/UCB2SDA, P7.1/UCB2SCL for SPI over eUSCI_B2
+    GPIO_setAsPeripheralModuleFunctionInputPin(
+        GPIO_PORT_P1,
+        GPIO_PIN6 + GPIO_PIN7,
+        GPIO_PRIMARY_MODULE_FUNCTION
+    );
 }
-/*-----------------------------------------------------------*/
 
-void vApplicationTickHook( void )
-{
-	#if( mainCREATE_SIMPLE_BLINKY_DEMO_ONLY == 0 )
-	{
-		/* Call the periodic event group from ISR demo. */
-		vPeriodicEventGroupsProcessing();
+void vApplicationIdleHook( void ) { }
 
-		/* Call the code that 'gives' a task notification from an ISR. */
-		xNotifyTaskFromISR();
-	}
-	#endif
+void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName ) { }
+
+void vApplicationTickHook( void ) { }
+
+/******************************************************************************\
+ *  task_i2c implementation                                 *
+\******************************************************************************/
+
+#define I2C_TASK_STACK_DEPTH 200
+
+StaticTask_t PERSISTENT i2c_task_buffer;
+StackType_t PERSISTENT i2c_task_stack[I2C_TASK_STACK_DEPTH];
+
+void task_i2c_start() {
+    i2c_task = xTaskCreateStatic(
+        task_i2c,
+        "i2c",
+        I2C_TASK_STACK_DEPTH,
+        NULL,
+        2,
+        i2c_task_stack,
+        &i2c_task_buffer
+    );
 }
-/*-----------------------------------------------------------*/
+
+
+#include <driverlib.h>
+
+void task_i2c(void * params) {
+    taskENTER_CRITICAL();
+    i2c_hardware_config();
+    DEBUG("Starting I2C task\n");
+    taskEXIT_CRITICAL();
+
+    i2c_t device;
+    if (!i2c_open(EUSCI_B0, I2C_DATA_RATE_400KBPS, &device)) {
+        WTF();
+        return;
+    }
+
+    DEBUG("I2C device initialized\n");
+
+    i2c_error_t err;
+
+    // Read EEPROM
+
+    uint8_t values[] = { 0x12, 0x34 };
+    uint8_t value = 0xfe;
+
+    /*DEBUG("a");
+    err = i2c_write_bytes(&device, 0x50, values, 2);
+    if (err != I2C_NO_ERROR) {
+        WTF();
+        goto end;
+    }*/
+    DEBUG("b");
+    err = i2c_read_bytes(&device, 0x50, values, 2);
+    if (err != I2C_NO_ERROR) {
+        DEBUG("[ERROR] %s (%s:%d) %s\n", __func__, __FILE__, __LINE__, i2c_error_string(err));
+        goto end;
+    }
+    DEBUG(" %02x %02x\n", values[0], values[1]);
+    DEBUG("c");
+    err = i2c_write_byte(&device, 0x50, 0x56);
+    if (err != I2C_NO_ERROR) {
+        WTF();
+        goto end;
+    }
+    DEBUG("d");
+    err = i2c_read_byte(&device, 0x50, &value);
+    if (err != I2C_NO_ERROR) {
+        WTF();
+        goto end;
+    }
+    DEBUG(" %02x\n", value);
+
+    /*
+    // Get MPU WHO_AM_I
+    {
+        DEBUG("a\n");
+        const uint8_t mpu_address = 0x69;
+        const uint8_t mpu_who_am_i = 0x75;
+        err = i2c_write_byte(&device, mpu_address, mpu_who_am_i, I2C_NO_STOP);
+        if (err != I2C_NO_ERROR) {
+            WTF();
+        }
+
+        DEBUG("b\n");
+
+        uint8_t recv;
+        err = i2c_read_byte(&device, mpu_address, &recv);
+        if (err != I2C_NO_ERROR) {
+            WTF();
+        }
+
+        DEBUG("c\n");
+    }
+    */
+
+
+end:
+    DEBUG("I2C task done\n");
+
+    DEBUG("%d\n", uxTaskGetStackHighWaterMark(NULL));
+
+    // Check that we haven't overflowed the stack
+    int remaining_frames = I2C_TASK_STACK_DEPTH - uxTaskGetStackHighWaterMark(NULL);
+    if (remaining_frames < 20) {
+        DEBUG("!!! %d frames left on the stack !!!\n", remaining_frames);
+    }
+
+    while(1);
+}
+
+
+/******************************************************************************\
+ *  Random support functions and variables                                    *
+ *      All shamelesly stolen from the demos in the FreeRTOS distribution.    *
+\******************************************************************************/
+
+/* Used for maintaining a 32-bit run time stats counter from a 16-bit timer. */
+volatile uint32_t ulRunTimeCounterOverflows = 0;
 
 /* The MSP430X port uses this callback function to configure its tick interrupt.
 This allows the application to choose the tick interrupt source.
@@ -174,89 +269,98 @@ configTICK_VECTOR must also be set in FreeRTOSConfig.h to the correct
 interrupt vector for the chosen tick interrupt source.  This implementation of
 vApplicationSetupTimerInterrupt() generates the tick from timer A0, so in this
 case configTICK_VECTOR is set to TIMER0_A0_VECTOR. */
-void vApplicationSetupTimerInterrupt( void )
-{
-const unsigned short usACLK_Frequency_Hz = 32768;
+void vApplicationSetupTimerInterrupt( void ) {
+    const unsigned short usACLK_Frequency_Hz = 32768;
 
-	/* Ensure the timer is stopped. */
-	TA0CTL = 0;
+    /* Ensure the timer is stopped. */
+    TA0CTL = 0;
 
-	/* Run the timer from the ACLK. */
-	TA0CTL = TASSEL_1;
+    /* Run the timer from the ACLK. */
+    TA0CTL = TASSEL_1;
 
-	/* Clear everything to start with. */
-	TA0CTL |= TACLR;
+    /* Clear everything to start with. */
+    TA0CTL |= TACLR;
 
-	/* Set the compare match value according to the tick rate we want. */
-	TA0CCR0 = usACLK_Frequency_Hz / configTICK_RATE_HZ;
+    /* Set the compare match value according to the tick rate we want. */
+    TA0CCR0 = usACLK_Frequency_Hz / configTICK_RATE_HZ;
 
-	/* Enable the interrupts. */
-	TA0CCTL0 = CCIE;
+    /* Enable the interrupts. */
+    TA0CCTL0 = CCIE;
 
-	/* Start up clean. */
-	TA0CTL |= TACLR;
+    /* Start up clean. */
+    TA0CTL |= TACLR;
 
-	/* Up mode. */
-	TA0CTL |= MC_1;
-}
-/*-----------------------------------------------------------*/
-
-static void prvSetupHardware( void )
-{
-    /* Stop Watchdog timer. */
-    WDT_A_hold( __MSP430_BASEADDRESS_WDT_A__ );
-
-	/* Set all GPIO pins to output and low. */
-	GPIO_setOutputLowOnPin( GPIO_PORT_P1, GPIO_PIN0 | GPIO_PIN1 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7 );
-	GPIO_setOutputLowOnPin( GPIO_PORT_P2, GPIO_PIN0 | GPIO_PIN1 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7 );
-	GPIO_setOutputLowOnPin( GPIO_PORT_P3, GPIO_PIN0 | GPIO_PIN1 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7 );
-	GPIO_setOutputLowOnPin( GPIO_PORT_P4, GPIO_PIN0 | GPIO_PIN1 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7 );
-	GPIO_setOutputLowOnPin( GPIO_PORT_PJ, GPIO_PIN0 | GPIO_PIN1 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7 | GPIO_PIN8 | GPIO_PIN9 | GPIO_PIN10 | GPIO_PIN11 | GPIO_PIN12 | GPIO_PIN13 | GPIO_PIN14 | GPIO_PIN15 );
-	GPIO_setAsOutputPin( GPIO_PORT_P1, GPIO_PIN0 | GPIO_PIN1 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7 );
-	GPIO_setAsOutputPin( GPIO_PORT_P2, GPIO_PIN0 | GPIO_PIN1 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7 );
-	GPIO_setAsOutputPin( GPIO_PORT_P3, GPIO_PIN0 | GPIO_PIN1 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7 );
-	GPIO_setAsOutputPin( GPIO_PORT_P4, GPIO_PIN0 | GPIO_PIN1 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7 );
-	GPIO_setAsOutputPin( GPIO_PORT_PJ, GPIO_PIN0 | GPIO_PIN1 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7 | GPIO_PIN8 | GPIO_PIN9 | GPIO_PIN10 | GPIO_PIN11 | GPIO_PIN12 | GPIO_PIN13 | GPIO_PIN14 | GPIO_PIN15 );
-
-	/* Configure P2.0 - UCA0TXD and P2.1 - UCA0RXD. */
-	GPIO_setOutputLowOnPin( GPIO_PORT_P2, GPIO_PIN0 );
-	GPIO_setAsOutputPin( GPIO_PORT_P2, GPIO_PIN0 );
-	GPIO_setAsPeripheralModuleFunctionInputPin( GPIO_PORT_P2, GPIO_PIN1, GPIO_SECONDARY_MODULE_FUNCTION );
-	GPIO_setAsPeripheralModuleFunctionOutputPin( GPIO_PORT_P2, GPIO_PIN0, GPIO_SECONDARY_MODULE_FUNCTION );
-
-	/* Set PJ.4 and PJ.5 for LFXT. */
-	GPIO_setAsPeripheralModuleFunctionInputPin(  GPIO_PORT_PJ, GPIO_PIN4 + GPIO_PIN5, GPIO_PRIMARY_MODULE_FUNCTION  );
-
-	/* Set DCO frequency to 8 MHz. */
-	CS_setDCOFreq( CS_DCORSEL_0, CS_DCOFSEL_6 );
-
-	/* Set external clock frequency to 32.768 KHz. */
-	CS_setExternalClockSource( 32768, 0 );
-
-	/* Set ACLK = LFXT. */
-	CS_initClockSignal( CS_ACLK, CS_LFXTCLK_SELECT, CS_CLOCK_DIVIDER_1 );
-
-	/* Set SMCLK = DCO with frequency divider of 1. */
-	CS_initClockSignal( CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1 );
-
-	/* Set MCLK = DCO with frequency divider of 1. */
-	CS_initClockSignal( CS_MCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1 );
-
-	/* Start XT1 with no time out. */
-	CS_turnOnLFXT( CS_LFXT_DRIVE_0 );
-
-	/* Disable the GPIO power-on default high-impedance mode. */
-	PMM_unlockLPM5();
-}
-/*-----------------------------------------------------------*/
-
-int _system_pre_init( void )
-{
-    /* Stop Watchdog timer. */
-    WDT_A_hold( __MSP430_BASEADDRESS_WDT_A__ );
-
-    /* Return 1 for segments to be initialised. */
-    return 1;
+    /* Up mode. */
+    TA0CTL |= MC_1;
 }
 
 
+void vConfigureTimerForRunTimeStats( void ) {
+    /* Configure a timer that is used as the time base for run time stats.  See
+    http://www.freertos.org/rtos-run-time-stats.html */
+
+    /* Ensure the timer is stopped. */
+    TA1CTL = 0;
+
+    /* Start up clean. */
+    TA1CTL |= TACLR;
+
+    /* Run the timer from the ACLK/8, continuous mode, interrupt enable. */
+    TA1CTL = TASSEL_1 | ID__8 | MC__CONTINUOUS | TAIE;
+}
+__attribute__((interrupt(TIMER1_A1_VECTOR)))
+void run_time_stats_isr( void ) {
+    __bic_SR_register_on_exit( SCG1 + SCG0 + OSCOFF + CPUOFF );
+    TA1CTL &= ~TAIFG;
+    /* 16-bit overflow, so add 17th bit. */
+    ulRunTimeCounterOverflows += 0x10000;
+}
+
+
+/* If the buffers to be provided to the Idle task are declared inside this
+function then they must be declared static - otherwise they will be allocated on
+the stack and so not exists after this function exits. */
+StaticTask_t PERSISTENT xIdleTaskTCB;
+StackType_t PERSISTENT uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+/* configUSE_STATIC_ALLOCATION is set to 1, so the application must provide an
+implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
+used by the Idle task. */
+void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize )
+{
+
+    /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
+    state will be stored. */
+    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
+
+    /* Pass out the array that will be used as the Idle task's stack. */
+    *ppxIdleTaskStackBuffer = uxIdleTaskStack;
+
+    /* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configMINIMAL_STACK_SIZE is specified in words, not bytes. */
+    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+}
+
+/* If the buffers to be provided to the Timer task are declared inside this
+function then they must be declared static - otherwise they will be allocated on
+the stack and so not exists after this function exits. */
+StaticTask_t PERSISTENT xTimerTaskTCB;
+StackType_t PERSISTENT uxTimerTaskStack[ configTIMER_TASK_STACK_DEPTH ];
+/* configUSE_STATIC_ALLOCATION and configUSE_TIMERS are both set to 1, so the
+application must provide an implementation of vApplicationGetTimerTaskMemory()
+to provide the memory that is used by the Timer service task. */
+void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer, StackType_t **ppxTimerTaskStackBuffer, uint32_t *pulTimerTaskStackSize )
+{
+
+    /* Pass out a pointer to the StaticTask_t structure in which the Timer
+    task's state will be stored. */
+    *ppxTimerTaskTCBBuffer = &xTimerTaskTCB;
+
+    /* Pass out the array that will be used as the Timer task's stack. */
+    *ppxTimerTaskStackBuffer = uxTimerTaskStack;
+
+    /* Pass out the size of the array pointed to by *ppxTimerTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configMINIMAL_STACK_SIZE is specified in words, not bytes. */
+    *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
+}
