@@ -1,5 +1,6 @@
 #include <assert.h>
 #include "uart.h"
+#include "pinav_task.h"
 
 static uint16_t BASE_ADDRESSES[EUSCI_count] = {
 #ifdef EUSCI_A0_BASE
@@ -37,6 +38,10 @@ void USCI_A0_ISR(void) {
         case USCI_UART_UCRXIFG:
             P4OUT = 1 << 6;
             read_byte = EUSCI_A_UART_receiveData(EUSCI_A0_BASE);
+            pinav_accept_char_from_ISR((uint8_t) read_byte);    //  Buffer the received character for the pinav task
+                                                                //  Enqueues the buffer once a full sentence is received
+                                                                //  This must b called in the receive ISR for whichever UART
+                                                                //  is connected to the pinav.
             break;
         case USCI_UART_UCTXIFG: break;
         case USCI_UART_UCSTTIFG: break;

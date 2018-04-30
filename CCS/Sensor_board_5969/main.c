@@ -4,33 +4,25 @@
 #include <hal/spi.h>
 #include <hal/uart.h>
 #include <hal/gpio.h>
+#include "global_defines.h"
 
 /* Scheduler include files. */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
 
-
-#define PERSISTENT __attribute__((section(".persistent")))
+#include "pinav_task.h"
 
 /******************************************************************************\
  *  Static variables                                                          *
 \******************************************************************************/
 
 /// Standard UART output
-static uart_t standard_output;
+/// Not static so it can be used globally for debug
+uart_t standard_output;
 
 /// IMU/RFM SPI output
 static spi_t spi_output;
-
-// Print a formatted message across the UART output
-#define DEBUG_VA_ARGS(...) , ## __VA_ARGS__
-#define DEBUG(format, ...) do { \
-        char buffer[255]; \
-        int len = snprintf(buffer, 255, (format) DEBUG_VA_ARGS(__VA_ARGS__)); \
-        uart_write_bytes(&standard_output, buffer, len); \
-    } while(0)
-#define WTF() DEBUG("[ERROR] %s (%s:%d)\n", __func__, __FILE__, __LINE__)
 
 /******************************************************************************\
  *  Private functions                                                         *
@@ -59,6 +51,8 @@ int main(void) {
     uart_open(EUSCI_A0, BAUD_9600, &standard_output);
 
     task_i2c_start();
+
+    task_pinav_start();
 
     uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
 
