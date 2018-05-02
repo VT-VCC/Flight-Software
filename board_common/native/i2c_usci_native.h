@@ -7,6 +7,12 @@
 extern "C" {
 #endif
 
+typedef enum i2c_data_rate {
+    I2C_DATA_RATE_100KBPS = USCI_B_I2C_SET_DATA_RATE_100KBPS,
+    I2C_DATA_RATE_400KBPS = USCI_B_I2C_SET_DATA_RATE_400KBPS,
+} i2c_data_rate_t;
+
+
 typedef struct i2c {
     /**
      * Which USCI module this I2C is connected to
