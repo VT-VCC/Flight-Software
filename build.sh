@@ -21,7 +21,7 @@ do
       cmake_args='-DUSIP_DEV_BOARD=TRUE -DMSP430_MCU=msp430fr5994'
       ;;
     sensor-board)
-      cmake_args='-DUSIP_SENSOR_BOARD=TRUE -DMSP430_MCU=msp430fr5849'
+      cmake_args='-DUSIP_SENSOR_BOARD=TRUE -DMSP430_MCU=msp430fr5994'
   esac
   toolchain_file=$(pwd)/../cmake/custom_toolchains/msp430.cmake
   echo
