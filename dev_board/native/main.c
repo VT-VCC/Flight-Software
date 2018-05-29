@@ -1,13 +1,20 @@
 #include <msp430.h>
 #include <driverlib.h>
 
-
 /* Scheduler include files. */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
 
+#include "gpio.h"
+#include "gpio_native.h"
+
 #include "uart.h"
+#include "spi.h"
+#include "i2c.h"
+
+#include "imu.h"
+#include "mmc.h"
 
 #define PERSISTENT __attribute__((section(".persistent")))
 
@@ -18,23 +25,25 @@
 /// Standard UART output
 static uart_t standard_output;
 
-/// LED flash queue
-#define BLINK_QUEUE_LENGTH 8
-typedef uint16_t blink_queue_item_t;
-static QueueHandle_t PERSISTENT blink_queue_handle;
-static StaticQueue_t PERSISTENT blink_queue;
-static uint8_t PERSISTENT blink_queue_storage[BLINK_QUEUE_LENGTH * sizeof(blink_queue_item_t)];
+/// IMU/RFM SPI output
+static spi_t spi_output;
 
-const char * output_str = "hello, world!\r\n";
-const char * got_data = "got data\r\n";
+// Print a formatted message across the UART output
+#define DEBUG_VA_ARGS(...) , ## __VA_ARGS__
+#define DEBUG(format, ...) do { \
+        char buffer[255]; \
+        int len = snprintf(buffer, 255, (format) DEBUG_VA_ARGS(__VA_ARGS__)); \
+        uart_write_bytes(&standard_output, buffer, len); \
+    } while(0)
+#define WTF() DEBUG("[ERROR] %s (%s:%d)\n", __func__, __FILE__, __LINE__)
 
 /******************************************************************************\
  *  Private functions                                                         *
 \******************************************************************************/
 /// Configures I/O pins
-static void hardware_config();
-/// Flasshes LEDs if the ACLK is configured at the expected frequency
-static void test_aclk();
+static void hardware_config(void);
+static void spi_hardware_config(void);
+static void i2c_hardware_config(void);
 
 /* Prototypes for the standard FreeRTOS callback/hook functions implemented
 within this file. */
@@ -42,42 +51,30 @@ void vApplicationIdleHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 void vApplicationTickHook( void );
 
-static TaskHandle_t PERSISTENT blink_led_task;
-void task_blink_led_start();
-void task_blink_led(void * params);
+static TaskHandle_t PERSISTENT i2c_task;
+void task_i2c_start();
+void task_i2c(void * params);
 
-static TaskHandle_t PERSISTENT transmit_blink_signal_task;
-void task_transmit_blink_signal_start();
-void task_transmit_blink_signal(void * params);
+static TaskHandle_t PERSISTENT imu_task;
+void task_imu_start();
+void task_imu(void * params);
+
+static TaskHandle_t PERSISTENT mmc_task;
+void task_mmc_start();
+void task_mmc(void * params);
 
 /******************************************************************************\
  *  Function implementations                                                  *
 \******************************************************************************/
 int main(void) {
-
     hardware_config();
-
-    P4OUT |= 0xFF;
-    P1OUT |= 0xFF;
-
-    test_aclk();
-
-    P1OUT |= 0xFF;
 
     uart_open(EUSCI_A0, BAUD_9600, &standard_output);
 
-    blink_queue_handle = xQueueCreateStatic(
-            BLINK_QUEUE_LENGTH,
-            sizeof(blink_queue_item_t),
-            blink_queue_storage,
-            &blink_queue);
-
-    task_blink_led_start();
-    task_transmit_blink_signal_start();
+    task_i2c_start();
 
     uart_write_string(&standard_output, "Tasks initialized, starting scheduler\n");
 
-    P1OUT ^= 1 << 6;
     vTaskStartScheduler();
 
     // there is no way to get here since we are using statically allocated
@@ -86,34 +83,29 @@ int main(void) {
     return 0;
 }
 
-static void hardware_config() {
+static void hardware_config(void) {
     WDTCTL = WDTPW | WDTHOLD;               // Stop watchdog timer
     PM5CTL0 &= ~LOCKLPM5;                   // Disable the GPIO power-on default high-impedance mode
                                             // to activate previously configured port settings
     // Set all GPIO pins to output low for low power
-    GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN6|GPIO_PIN7);
     GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
-    GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setOutputLowOnPin(GPIO_PORT_PJ, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7|GPIO_PIN8|GPIO_PIN9|GPIO_PIN10|GPIO_PIN11|GPIO_PIN12|GPIO_PIN13|GPIO_PIN14|GPIO_PIN15);
 
-    GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN6|GPIO_PIN7);
     GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setAsOutputPin(GPIO_PORT_P3, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setAsOutputPin(GPIO_PORT_PJ, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7|GPIO_PIN8|GPIO_PIN9|GPIO_PIN10|GPIO_PIN11|GPIO_PIN12|GPIO_PIN13|GPIO_PIN14|GPIO_PIN15);
-    // Configure UCA0RXD for input
+    
+    // Configure UCA0TXD, UCA0RXD for UART over eUSCI_A0
     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P2, GPIO_PIN1, GPIO_SECONDARY_MODULE_FUNCTION);
-    // Configure UCA0TXD for output
     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN0, GPIO_SECONDARY_MODULE_FUNCTION);
 
     // Configure GPIO to use LFXT
-    GPIO_setAsPeripheralModuleFunctionInputPin(
-           GPIO_PORT_PJ,
-           GPIO_PIN4 + GPIO_PIN5,
-           GPIO_PRIMARY_MODULE_FUNCTION
-           );
-
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_PJ, GPIO_PIN4|GPIO_PIN5, GPIO_PRIMARY_MODULE_FUNCTION);
     // Set DCO frequency to 8 MHz
     CS_setDCOFreq(CS_DCORSEL_0, CS_DCOFSEL_6);
     //Set external clock frequency to 32.768 KHz
@@ -130,91 +122,238 @@ static void hardware_config() {
     __enable_interrupt();
 }
 
-static void test_aclk() {
-    if (CS_getACLK() != 32768) {
-        // Flash red LED if clock is bad
-        for (int i = 0; i < 10; ++i) {
-            __delay_cycles(600000);
-            P4OUT ^= 1 << 6;
-        }
-    } else {
-        // Flash green LED if clock is good
-        P1OUT = 0;
-        for (int i = 0; i < 10; ++i) {
-            __delay_cycles(600000);
-            P1OUT ^= 1;
-        }
-    }
+static void spi_hardware_config(void) {
+    // Configure UCA3SIMO, UCA3SOMI for SPI over eUSCI_A3
+    GPIO_setOutputLowOnPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2);
+    GPIO_setAsOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2);
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6, GPIO_PIN1, GPIO_PRIMARY_MODULE_FUNCTION);
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION);
+
+    // Use P3.0 as the RFM69's NSS (chip select)
+    GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
+
+    // Use P as the RFM69's RST (reset)
+    GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN0);
+
+    // Use P1.5 as the RFM69's DIO0/IRQ interrupt
+    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN5);
+    GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN5);
+    GPIO_selectInterruptEdge(GPIO_PORT_P1, GPIO_PIN5, GPIO_LOW_TO_HIGH_TRANSITION);
+    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN5);
 }
 
-void vApplicationIdleHook( void ) {
-    P1OUT = 0;
-}
-
-void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName ) {
-}
-
-void vApplicationTickHook( void ) {
-}
-
-/******************************************************************************\
- *  task_blink_led implementation                                             *
-\******************************************************************************/
-StaticTask_t PERSISTENT blink_task;
-StackType_t PERSISTENT blink_task_stack[configMINIMAL_STACK_SIZE];
-
-void task_blink_led_start() {
-
-    blink_led_task = xTaskCreateStatic(
-        task_blink_led,
-        "blink_led",
-        configMINIMAL_STACK_SIZE,
-        NULL,
-        1,
-        blink_task_stack,
-        &blink_task
+static void i2c_hardware_config(void) {
+    // Configure P7.0/UCB2SDA, P7.1/UCB2SCL for SPI over eUSCI_B2
+    GPIO_setAsPeripheralModuleFunctionInputPin(
+        GPIO_PORT_P7,
+        GPIO_PIN0 + GPIO_PIN1,
+        GPIO_PRIMARY_MODULE_FUNCTION
     );
 }
 
-void task_blink_led(void * params) {
-    volatile unsigned int sentinal = 0xBEEF;
-    // taskENTER_CRITICAL();
-    // uart_write_string(&standard_output, "Starting blink task\n");
-    // taskEXIT_CRITICAL();
-    for (;;) {
-        // uart_write_string(&standard_output, "T1\n");
-        // P1OUT++;
-        P1OUT ^= 0x1;
-        vTaskDelay(1);
-    }
-}
+void vApplicationIdleHook( void ) { }
+
+void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName ) { }
+
+void vApplicationTickHook( void ) { }
 
 /******************************************************************************\
- *  task_transmit_blink_signal implementation                                 *
+ *  task_i2c implementation                                 *
 \******************************************************************************/
-StaticTask_t PERSISTENT transmit_task;
-StackType_t PERSISTENT transmit_task_stack[configMINIMAL_STACK_SIZE];
-void task_transmit_blink_signal_start() {
 
-    transmit_blink_signal_task = xTaskCreateStatic(
-        task_transmit_blink_signal,
-        "transmit_blink_signal",
-        configMINIMAL_STACK_SIZE,
+#define I2C_TASK_STACK_DEPTH 200
+
+StaticTask_t PERSISTENT i2c_task_buffer;
+StackType_t PERSISTENT i2c_task_stack[I2C_TASK_STACK_DEPTH];
+
+void task_i2c_start() {
+    i2c_task = xTaskCreateStatic(
+        task_i2c,
+        "i2c",
+        I2C_TASK_STACK_DEPTH,
         NULL,
         2,
-        transmit_task_stack,
-        &transmit_task
+        i2c_task_stack,
+        &i2c_task_buffer
     );
 }
 
-void task_transmit_blink_signal(void * params) {
+
+#include <driverlib.h>
+
+void task_i2c(void * params) {
     taskENTER_CRITICAL();
-    uart_write_string(&standard_output, "Starting signal task\n");
+    i2c_hardware_config();
+    DEBUG("Starting I2C task\n");
     taskEXIT_CRITICAL();
-    for(;;) {
-        P4OUT ^= 1 << 6;
-        uart_write_string(&standard_output, "T2\n");
-        vTaskDelay(10);
+    
+    i2c_t device;
+    if (!i2c_open(EUSCI_B2, I2C_DATA_RATE_400KBPS, &device)) {
+        WTF();
+        return;
+    }
+
+    DEBUG("I2C device initialized\n");
+
+    i2c_error_t err;
+
+    // Read EEPROM
+
+    uint8_t values[] = { 0x12, 0x34 };
+    uint8_t value = 0xfe;
+
+    /*DEBUG("a");
+    err = i2c_write_bytes(&device, 0x50, values, 2);
+    if (err != I2C_NO_ERROR) {
+        WTF();
+        goto end;
+    }*/
+    DEBUG("b");
+    err = i2c_read_bytes(&device, 0x50, values, 2);
+    if (err != I2C_NO_ERROR) {
+        DEBUG("[ERROR] %s (%s:%d) %s\n", __func__, __FILE__, __LINE__, i2c_error_string(err));
+        goto end;
+    }
+    DEBUG(" %02x %02x\n", values[0], values[1]);
+    DEBUG("c");
+    err = i2c_write_byte(&device, 0x50, 0x56);
+    if (err != I2C_NO_ERROR) {
+        WTF();
+        goto end;
+    }
+    DEBUG("d");
+    err = i2c_read_byte(&device, 0x50, &value);
+    if (err != I2C_NO_ERROR) {
+        WTF();
+        goto end;
+    }
+    DEBUG(" %02x\n", value);
+
+    /*
+    // Get MPU WHO_AM_I
+    {
+        DEBUG("a\n");
+        const uint8_t mpu_address = 0x69;
+        const uint8_t mpu_who_am_i = 0x75;
+        err = i2c_write_byte(&device, mpu_address, mpu_who_am_i, I2C_NO_STOP);
+        if (err != I2C_NO_ERROR) {
+            WTF();
+        }
+
+        DEBUG("b\n");
+
+        uint8_t recv;
+        err = i2c_read_byte(&device, mpu_address, &recv);
+        if (err != I2C_NO_ERROR) {
+            WTF();
+        }
+
+        DEBUG("c\n");
+    }
+    */
+
+
+end:
+    DEBUG("I2C task done\n");
+
+    DEBUG("%d\n", uxTaskGetStackHighWaterMark(NULL));
+
+    // Check that we haven't overflowed the stack
+    int remaining_frames = I2C_TASK_STACK_DEPTH - uxTaskGetStackHighWaterMark(NULL);
+    if (remaining_frames < 20) {
+        DEBUG("!!! %d frames left on the stack !!!\n", remaining_frames);
+    }
+
+    while(1);
+}
+
+
+/******************************************************************************\
+ *  task_imu implementation                                 *
+\******************************************************************************/
+
+#define IMU_TASK_STACK_DEPTH 200
+
+StaticTask_t PERSISTENT imu_task_buffer;
+StackType_t PERSISTENT imu_task_stack[IMU_TASK_STACK_DEPTH];
+
+void task_imu_start() {
+    imu_task = xTaskCreateStatic(
+        task_imu,
+        "imu",
+        IMU_TASK_STACK_DEPTH,
+        NULL,
+        2,
+        imu_task_stack,
+        &imu_task_buffer
+    );
+}
+
+void task_imu(void * params) {
+    taskENTER_CRITICAL();
+    spi_hardware_config();
+    DEBUG("Starting IMU task\n");
+    taskEXIT_CRITICAL();
+
+    spi_open(EUSCI_A3, 32768/4, &spi_output);
+
+    imu_t device;
+    if (imu_open(&device, &spi_output, GPIO_PORT_3, GPIO_PIN_1)) {
+        DEBUG("IMU initialized\n");
+    }
+    else {
+        DEBUG("IMU failed to initialize\n");
+    }
+
+    // Check that we haven't overflowed the stack
+    int remaining_frames = IMU_TASK_STACK_DEPTH - uxTaskGetStackHighWaterMark(NULL);
+    if (remaining_frames < 20) {
+        DEBUG("!!! %d frames left on the stack !!!\n", remaining_frames);
+    }
+}
+
+
+/******************************************************************************\
+ *  task_mmc implementation                                 *
+\******************************************************************************/
+
+#define MMC_TASK_STACK_DEPTH 200
+
+StaticTask_t PERSISTENT mmc_task_buffer;
+StackType_t PERSISTENT mmc_task_stack[MMC_TASK_STACK_DEPTH];
+
+void task_mmc_start() {
+    mmc_task = xTaskCreateStatic(
+        task_mmc,
+        "mmc",
+        MMC_TASK_STACK_DEPTH,
+        NULL,
+        2,
+        mmc_task_stack,
+        &mmc_task_buffer
+    );
+}
+
+void task_mmc(void * params) {
+    taskENTER_CRITICAL();
+    spi_hardware_config();
+    DEBUG("Starting MMC task\n");
+    taskEXIT_CRITICAL();
+
+    spi_open(EUSCI_A3, 32768/4, &spi_output);
+
+    mmc_t device;
+    if (mmc_init(&device, &spi_output, GPIO_PORT_3, GPIO_PIN_1)) {
+        DEBUG("MMC initialized\n");
+    }
+    else {
+        DEBUG("MMC failed to initialize\n");
+    }
+
+    // Check that we haven't overflowed the stack
+    int remaining_frames = MMC_TASK_STACK_DEPTH - uxTaskGetStackHighWaterMark(NULL);
+    if (remaining_frames < 20) {
+        DEBUG("!!! %d frames left on the stack !!!\n", remaining_frames);
     }
 }
 

@@ -1,7 +1,7 @@
 #ifndef _BOARD_COMMON_NATIVE_SPI_USCI_H_
 #define _BOARD_COMMON_NATIVE_SPI_USCI_H_
 
-#include "usci_native.h"
+#include "usci.h"
 
 #ifdef __cplusplus
 extern "C" {
